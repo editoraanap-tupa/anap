@@ -1,0 +1,114 @@
+<div class="app">
+  <header class="barra">
+    <button class="logo" id="b-logo" aria-label="Voltar ao planeta"><svg viewBox="-8 -6 136 166" aria-hidden="true"><use href="#pingo"/></svg><span class="logo-txt">Amigos da Natureza</span></button>
+    <span class="esp"></span>
+    <button class="chip" id="b-pass" aria-label="Passaporte"><svg aria-hidden="true"><use href="#i-passaporte"/></svg><span id="n-carimbos">0</span>/<span id="n-paradas">12</span></button>
+    <button class="chip" id="b-album" aria-label="Álbum de figurinhas"><svg aria-hidden="true"><use href="#i-album"/></svg><span id="n-figs">0</span>/<span id="n-figs-tot">12</span></button>
+    <button class="redondo" id="b-som" aria-pressed="true" aria-label="Som e voz ligados"><svg aria-hidden="true"><use href="#i-som"/></svg></button>
+  </header>
+
+  <!-- PLANETA -->
+  <section id="t-planeta" class="tela">
+    <div class="hero">
+      <div class="hero-txt">
+        <p class="eyebrow">Amigos da Natureza · Água</p>
+        <h1>A volta ao mundo do <em>Pingo</em></h1>
+        <div class="fala">
+          <svg class="avatar" viewBox="-8 -6 136 166" aria-hidden="true"><use href="#pingo"/></svg>
+          <div class="bolha" id="fala-inicio"></div>
+        </div>
+        <div><button class="btn" id="b-comecar">Viajar com o Pingo</button></div>
+      </div>
+      <div class="globo-box">
+        <canvas class="globo" id="globo" role="img" aria-label="Planeta Terra. Arraste para girar e toque num ponto brilhante para viajar."></canvas>
+        <svg class="pingo-voa" viewBox="-8 -6 136 166" aria-hidden="true"><use href="#pingo"/></svg>
+        <span class="dica-giro">Gire o planeta com o dedo</span>
+      </div>
+    </div>
+    <div class="secao-tit" style="margin-top:20px"><h2>Paradas da viagem</h2><p id="n-abertas">3 abertas, 9 chegando</p></div>
+    <div class="trilha" id="trilha"></div>
+    <button class="educ" id="b-educ">Para educadores</button>
+  </section>
+
+  <!-- PARADA -->
+  <section id="t-parada" class="tela" hidden>
+    <div class="cab"><button class="voltar" id="b-volta-planeta">← Planeta</button><h2 id="p-nome"></h2><span class="lugar" id="p-lugar"></span></div>
+    <div class="palco" id="palco" style="margin-top:14px"></div>
+    <div class="amigo" style="margin-top:16px">
+      <div class="avatar" id="p-avatar"></div>
+      <div class="bolha" id="p-fala"></div>
+    </div>
+    <div class="acoes" id="p-acoes" style="margin-top:14px"></div>
+  </section>
+
+  <!-- PASSAPORTE E ÁLBUM -->
+  <section id="t-livro" class="tela" hidden>
+    <div class="cab"><button class="voltar" data-ir="t-planeta">← Planeta</button>
+      <div class="abas" role="tablist"><button class="aba" role="tab" id="aba-pass" aria-selected="true">Passaporte</button><button class="aba" role="tab" id="aba-album" aria-selected="false">Álbum</button></div>
+    </div>
+    <div class="livro" style="margin-top:14px" id="livro"></div>
+  </section>
+
+  <!-- EDUCADORES -->
+  <section id="t-educ" class="tela" hidden>
+    <div class="cab"><button class="voltar" data-ir="t-planeta">← Planeta</button><h2>Para educadores</h2></div>
+    <div class="livro educ-box" style="margin-top:14px">
+      <p>A volta ao mundo do Pingo é a atividade de água do Amigos da Natureza, para crianças até 12 anos. Cada parada combina um jogo de mexer com curiosidades faladas, para que crianças que ainda não leem também possam jogar.</p>
+      <p><b>Alinhamento com a BNCC.</b> As paradas trabalham habilidades de Ciências e de Geografia dos anos iniciais do Ensino Fundamental (3º ao 5º ano), com extensão para o 6º ano, dentro do tema contemporâneo transversal Educação Ambiental.</p>
+      <div class="tabela"><table>
+        <thead><tr><th>Parada</th><th>O que a criança faz</th><th>Habilidades da BNCC</th><th>Para conversar depois</th></tr></thead>
+        <tbody>
+          <tr><td>Amazônia</td><td>Faz o Sol nascer, ajuda as árvores a soltar vapor, replanta clareiras, junta nuvens num rio voador e leva a chuva às plantações, à usina e à cidade.</td>
+            <td><span class="bncc">EF05CI02</span> ciclo da água e seus efeitos na agricultura, no clima, na energia e na água potável<br><span class="bncc">EF05CI03</span> importância da cobertura vegetal para o ciclo da água<br><span class="bncc">EF03GE10</span> cuidados com a água na agricultura e na geração de energia<br><span class="bncc">EF06GE04</span> ciclo da água, bacias e cobertura vegetal</td>
+            <td>De onde vem a chuva que cai na nossa cidade? O que acontece com ela se a floresta for derrubada?</td></tr>
+          <tr><td>Caatinga</td><td>Monta o caminho dos canos do telhado até a cisterna e guarda a água da chuva para o ano todo.</td>
+            <td><span class="bncc">EF05CI04</span> usos da água no dia a dia e formas sustentáveis de usar<br><span class="bncc">EF03GE09</span> usos da água em atividades cotidianas e problemas ambientais<br><span class="bncc">EF04GE11</span> paisagens naturais e ação humana na conservação<br><span class="bncc">EF06GE05</span> clima, solo, relevo e vegetação</td>
+            <td>Como guardar água da chuva em casa ou na escola?</td></tr>
+          <tr><td>Vilas sobre a água</td><td>Escolhe materiais para uma casa que flutua quando a chuva enche o lago e conhece famílias que vivem sobre a água em vários lugares do mundo.</td>
+            <td><span class="bncc">EF01CI01</span> características e origem dos materiais<br><span class="bncc">EF02GE04</span> modos de viver e de se relacionar com a natureza em diferentes lugares<br><span class="bncc">EF03GE01</span> comparar aspectos culturais de grupos sociais</td>
+            <td>Que outros jeitos de viver perto da água você conhece?</td></tr>
+          <tr><td>Pantanal</td><td>Faz chegar a cheia, leva os peixes para o campo alagado, traz a seca e ajuda o tuiuiú a pescar nas lagoas para os filhotes.</td>
+            <td><span class="bncc">EF05CI02</span> ciclo da água e seu papel no equilíbrio dos ecossistemas<br><span class="bncc">EF04CI04</span> cadeias alimentares simples<br><span class="bncc">EF04GE11</span> paisagens naturais e ação humana na conservação<br><span class="bncc">EF06GE05</span> clima, relevo e formações vegetais</td>
+            <td>Por que alguns lugares ficam alagados parte do ano? Como os bichos se adaptam?</td></tr>
+          <tr><td>Cerrado</td><td>Planta mudas de raízes fundas, leva a chuva para dentro do chão, enche a água subterrânea e abre as nascentes de grandes rios.</td>
+            <td><span class="bncc">EF05CI03</span> cobertura vegetal, ciclo da água e conservação dos solos e rios<br><span class="bncc">EF05CI02</span> ciclo da água e abastecimento<br><span class="bncc">EF06GE04</span> ciclo da água, bacias hidrográficas e cobertura vegetal<br><span class="bncc">EF04GE11</span> paisagens e conservação</td>
+            <td>De onde vem a água do rio mais perto da sua casa?</td></tr>
+          <tr><td>Mata Atlântica</td><td>Leva a neblina do mar até as bromélias, abre a nascente, planta a mata ciliar para limpar o rio e ajuda o mico-leão-dourado a atravessar pelas copas.</td>
+            <td><span class="bncc">EF05CI03</span> cobertura vegetal, ciclo da água e conservação dos solos e rios<br><span class="bncc">EF06GE04</span> ciclo da água, bacias hidrográficas e cobertura vegetal<br><span class="bncc">EF04GE11</span> paisagens naturais e ação humana na conservação<br><span class="bncc">EF02CI04</span> características de plantas e animais e onde vivem</td>
+            <td>Por que o rio fica barrento quando a beira dele não tem árvores?</td></tr>
+          <tr><td>Pampa</td><td>Gira o cata-vento para tirar água do Aquífero Guarani, ajuda o joão-de-barro a construir a casa com barro do banhado e faz chover para ver o banhado guardar a água.</td>
+            <td><span class="bncc">EF05CI03</span> cobertura vegetal e ciclo da água<br><span class="bncc">EF03CI10</span> usos e importância do solo<br><span class="bncc">EF06GE12</span> uso dos recursos hídricos e das bacias hidrográficas<br><span class="bncc">EF04GE11</span> paisagens naturais e ação humana na conservação</td>
+            <td>Será que existe água debaixo do chão da nossa cidade? Como ela chega até lá?</td></tr>
+          <tr><td>Oceano</td><td>Recolhe o lixo do mar para o barco, planta mudas de coral no recife que ficou branco e usa o sol para ver a água salgada virar nuvem e chuva doce sobre a ilha.</td>
+            <td><span class="bncc">EF05CI02</span> mudanças de estado físico da água e ciclo hidrológico<br><span class="bncc">EF05CI05</span> consumo consciente, descarte adequado e reciclagem<br><span class="bncc">EF02CI04</span> características de plantas e animais e onde vivem<br><span class="bncc">EF06GE11</span> interações das sociedades com a natureza e impactos ambientais</td>
+            <td>Se quase toda a água do planeta está no mar, por que falta água para beber em alguns lugares?</td></tr>
+          <tr><td>Antártica</td><td>Monta um caminho de placas de gelo para a pinguim chegar aos filhotes, descobre a parte escondida do iceberg, mergulha atrás de krill e faz nevar para ver a geleira crescer em camadas.</td>
+            <td><span class="bncc">EF04CI02</span> transformações dos materiais com aquecimento e resfriamento<br><span class="bncc">EF05CI02</span> mudanças de estado físico da água e ciclo hidrológico<br><span class="bncc">EF04CI04</span> cadeias alimentares simples<br><span class="bncc">EF06GE05</span> relação entre clima, relevo e formas de vida</td>
+            <td>Por que o gelo flutua? O que aconteceria com o mar se o gelo da Antártica derretesse?</td></tr>
+          <tr><td>Andes e Himalaia</td><td>Faz nevar para a geleira crescer, arrasta o sol do verão para ver o gelo derreter devagar e encher o lago, e abre comportas de pedra para levar a água aos terraços de plantação e à vila.</td>
+            <td><span class="bncc">EF05CI02</span> mudanças de estado físico da água, ciclo hidrológico e água para a agricultura e o consumo<br><span class="bncc">EF04CI02</span> transformações dos materiais com aquecimento e resfriamento<br><span class="bncc">EF06GE04</span> ciclo da água e escoamento superficial nas bacias hidrográficas<br><span class="bncc">EF06GE05</span> relação entre clima, relevo e formas de vida</td>
+            <td>De onde vem a água que chega à nossa casa? O que aconteceria com as vilas da montanha se as geleiras sumissem?</td></tr>
+          <tr><td>Desertos</td><td>Leva o besouro ao alto da duna para beber a neblina do mar no Namibe, faz chover no cacto saguaro para ver ele guardar água e cava a areia do Saara até achar a água escondida que forma o oásis.</td>
+            <td><span class="bncc">EF02CI04</span> características de plantas e animais e onde vivem<br><span class="bncc">EF05CI02</span> mudanças de estado físico da água e ciclo hidrológico<br><span class="bncc">EF06GE05</span> relação entre clima, relevo e formas de vida<br><span class="bncc">EF05CI04</span> usos da água no dia a dia e formas sustentáveis de usar</td>
+            <td>Como os bichos e as plantas do deserto conseguem viver com tão pouca chuva? Que truques nós podemos usar para guardar água?</td></tr>
+          <tr><td>Grandes Lagos</td><td>Ajuda o castor a montar a represa com galhos e vê a lagoa e o brejo se formarem, faz o inverno chegar para o lago congelar por cima com os peixes nadando embaixo e traz a primavera para o gelo e a neve derreterem e encherem o lago.</td>
+            <td><span class="bncc">EF04CI02</span> transformações dos materiais com aquecimento e resfriamento (congelar e derreter)<br><span class="bncc">EF05CI02</span> mudanças de estado físico da água e ciclo hidrológico<br><span class="bncc">EF02CI04</span> características de plantas e animais e onde vivem<br><span class="bncc">EF06GE04</span> ciclo da água, bacias hidrográficas e escoamento superficial</td>
+            <td>Por que o gelo fica por cima da água? Como os peixes passam o inverno em um lago congelado?</td></tr>
+          <tr><td>De volta para casa</td><td>Caça e conserta os vazamentos da casa vendo o hidrômetro parar, liga a calha à cisterna para guardar a chuva e regar a horta, separa o lixo da rua nas lixeiras certas para o bueiro não entupir e planta a mata ciliar até o córrego ficar limpo.</td>
+            <td><span class="bncc">EF05CI04</span> usos da água no cotidiano e formas sustentáveis de utilização<br><span class="bncc">EF05CI05</span> consumo consciente, descarte adequado e reciclagem<br><span class="bncc">EF05CI03</span> cobertura vegetal, conservação dos solos e dos cursos de água<br><span class="bncc">EF05GE11</span> problemas ambientais no entorno da escola e da residência e propostas de solução</td>
+            <td>Onde a água escapa sem a gente ver na nossa casa e na escola? Para onde vai a água da chuva que cai na nossa rua?</td></tr>
+          <tr><td>Terra dos diques</td><td>Tapa os buracos do dique com argila, pedra e grama antes da maré alta, gira o moinho para secar o campo encharcado e ver as tulipas florescerem e faz chover na cidade para ver a água ir para a praça d'água e o telhado verde em vez de alagar as ruas.</td>
+            <td><span class="bncc">EF06GE10</span> formas de uso do solo (aterros, drenagem) e de apropriação dos recursos hídricos<br><span class="bncc">EF04GE11</span> paisagens naturais e antrópicas e a ação humana sobre elas<br><span class="bncc">EF05CI03</span> cobertura vegetal e ciclo da água<br><span class="bncc">EF02GE11</span> importância do solo e da água e seus usos no campo e na cidade</td>
+            <td>Para onde vai a água da chuva quando ela cai na rua da nossa escola? Onde a cidade poderia guardar essa água?</td></tr>
+        </tbody>
+      </table></div>
+      <p class="nota-educ">Competências gerais 2 (pensamento científico), 7 (argumentação com base em fatos) e 10 (agir de forma responsável e sustentável). As paradas também se ligam aos ODS 6, 13 e 15 da Agenda 2030.</p>
+      <p>O progresso fica salvo só neste aparelho. Ilustrações, personagens e jogos foram criados para o Amigos da Natureza. Contornos dos continentes no globo: Natural Earth (domínio público).</p>
+    </div>
+  </section>
+
+  <p class="rodape">ANAP - Associação Amigos da Natureza da Alta Paulista</p>
+</div>
+
+<div class="modal" id="modal" hidden><div class="cartao" id="modal-c" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>

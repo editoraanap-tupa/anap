@@ -1,0 +1,139 @@
+{
+  "_meta": {
+    "fonte_nomes_e_objetivos": "https://brasil.un.org/pt-br/sdgs e https://brasil.un.org/pt-br/sdgs/<n> (ONU Brasil), conferidos em 12/10/2026",
+    "fonte_metas": "https://brasil.un.org/pt-br/sdgs/<n> (ONU Brasil), conferidas em 12/10/2026; texto também idêntico ao do banco de dados público da Anatel (github.com/anatelgovbr/mod-sei-ia), que cita brasil.un.org como fonte",
+    "fonte_cores": "UN, Guidelines for the use of the SDG logo including the colour wheel and 17 icons (set. 2023), tabela de cores das páginas de ícones: https://www.un.org/sustainabledevelopment/wp-content/uploads/2023/09/E_SDG_Guidelines_Sep20238.pdf",
+    "nota_objetivo": "'objetivo' traz a redação das páginas atuais de cada ODS no site da ONU Brasil (https://brasil.un.org/pt-br/sdgs/<n>), conferida caractere a caractere. Versões anteriores da tradução da Agenda 2030 têm pequenas diferenças em alguns objetivos; ver 'nota_variante'.",
+    "nota_metas": "As metas são as metas globais da ONU (em português, como publicadas pela ONU Brasil), sem ponto final, como no original. O Ipea publicou em 2018 metas 'adequadas à realidade brasileira', que têm outra redação e não estão aqui.",
+    "nota_prazos": "Algumas metas têm prazo já vencido (2020, 2025) no texto oficial; o texto é reproduzido sem alteração."
+  },
+  "1": {
+    "nome": "Erradicação da pobreza",
+    "objetivo": "Acabar com a pobreza em todas as suas formas, em todos os lugares",
+    "cor": "#E5243B"
+  },
+  "2": {
+    "nome": "Fome zero e agricultura sustentável",
+    "objetivo": "Acabar com a fome, alcançar a segurança alimentar e melhoria da nutrição e promover a agricultura sustentável",
+    "cor": "#DDA63A",
+    "metas": {
+      "2.4": "Até 2030, garantir sistemas sustentáveis de produção de alimentos e implementar práticas agrícolas resilientes, que aumentem a produtividade e a produção, que ajudem a manter os ecossistemas, que fortaleçam a capacidade de adaptação às mudanças climáticas, às condições meteorológicas extremas, secas, inundações e outros desastres, e que melhorem progressivamente a qualidade da terra e do solo"
+    }
+  },
+  "3": {
+    "nome": "Saúde e Bem-Estar",
+    "objetivo": "Assegurar uma vida saudável e promover o bem-estar para todas e todos, em todas as idades",
+    "cor": "#4C9F38",
+    "nota_variante": "Na página da Agenda 2030 da ONU Brasil (2015) consta 'para todos' em vez de 'para todas e todos'. Diferença relatada por leitura automática da página, não conferida caractere a caractere."
+  },
+  "4": {
+    "nome": "Educação de qualidade",
+    "objetivo": "Assegurar a educação inclusiva e equitativa e de qualidade, e promover oportunidades de aprendizagem ao longo da vida para todas e todos",
+    "cor": "#C5192D",
+    "metas": {
+      "4.7": "Até 2030, garantir que todos os alunos adquiram conhecimentos e habilidades necessárias para promover o desenvolvimento sustentável, inclusive, entre outros, por meio da educação para o desenvolvimento sustentável e estilos de vida sustentáveis, direitos humanos, igualdade de gênero, promoção de uma cultura de paz e não violência, cidadania global e valorização da diversidade cultural e da contribuição da cultura para o desenvolvimento sustentável"
+    },
+    "nota_variante": "Na página da Agenda 2030 da ONU Brasil (2015) termina em 'para todos'. Diferença relatada por leitura automática da página, não conferida caractere a caractere."
+  },
+  "5": {
+    "nome": "Igualdade de gênero",
+    "objetivo": "Alcançar a igualdade de gênero e empoderar todas as mulheres e meninas",
+    "cor": "#FF3A21"
+  },
+  "6": {
+    "nome": "Água potável e saneamento",
+    "objetivo": "Assegurar a disponibilidade e gestão sustentável da água e saneamento para todas e todos",
+    "cor": "#26BDE2",
+    "metas": {
+      "6.1": "Até 2030, alcançar o acesso universal e equitativo a água potável e segura para todos",
+      "6.2": "Até 2030, alcançar o acesso a saneamento e higiene adequados e equitativos para todos, e acabar com a defecação a céu aberto, com especial atenção para as necessidades das mulheres e meninas e daqueles em situação de vulnerabilidade",
+      "6.3": "Até 2030, melhorar a qualidade da água, reduzindo a poluição, eliminando despejo e minimizando a liberação de produtos químicos e materiais perigosos, reduzindo à metade a proporção de águas residuais não tratadas e aumentando substancialmente a reciclagem e reutilização segura globalmente",
+      "6.4": "Até 2030, aumentar substancialmente a eficiência do uso da água em todos os setores e assegurar retiradas sustentáveis e o abastecimento de água doce para enfrentar a escassez de água, e reduzir substancialmente o número de pessoas que sofrem com a escassez de água",
+      "6.5": "Até 2030, implementar a gestão integrada dos recursos hídricos em todos os níveis, inclusive via cooperação transfronteiriça, conforme apropriado",
+      "6.6": "Até 2020, proteger e restaurar ecossistemas relacionados com a água, incluindo montanhas, florestas, zonas úmidas, rios, aquíferos e lagos",
+      "6.a": "Até 2030, ampliar a cooperação internacional e o apoio à capacitação para os países em desenvolvimento em atividades e programas relacionados à água e saneamento, incluindo a coleta de água, a dessalinização, a eficiência no uso da água, o tratamento de efluentes, a reciclagem e as tecnologias de reuso",
+      "6.b": "Apoiar e fortalecer a participação das comunidades locais, para melhorar a gestão da água e do saneamento"
+    },
+    "nota_variante": "Na página da Agenda 2030 da ONU Brasil (2015) termina em 'para todos'; o PDF do PNUD (2016) traz 'da água e o saneamento para todos'. Diferença relatada por leitura automática da página, não conferida caractere a caractere."
+  },
+  "7": {
+    "nome": "Energia limpa e acessível",
+    "objetivo": "Assegurar o acesso confiável, sustentável, moderno e a preço acessível à energia para todas e todos",
+    "cor": "#FCC30B",
+    "nota_variante": "Na página da Agenda 2030 da ONU Brasil (2015) termina em 'para todos'. Diferença relatada por leitura automática da página, não conferida caractere a caractere."
+  },
+  "8": {
+    "nome": "Trabalho decente e crescimento econômico",
+    "objetivo": "Promover o crescimento econômico sustentado, inclusivo e sustentável, emprego pleno e produtivo e trabalho decente para todas e todos",
+    "cor": "#A21942",
+    "nota_variante": "Na página da Agenda 2030 da ONU Brasil (2015) termina em 'para todos'. Diferença relatada por leitura automática da página, não conferida caractere a caractere."
+  },
+  "9": {
+    "nome": "Indústria, inovação e infraestrutura",
+    "objetivo": "Construir infraestruturas resilientes, promover a industrialização inclusiva e sustentável e fomentar a inovação",
+    "cor": "#FD6925"
+  },
+  "10": {
+    "nome": "Redução das desigualdades",
+    "objetivo": "Reduzir a desigualdade dentro dos países e entre eles",
+    "cor": "#DD1367"
+  },
+  "11": {
+    "nome": "Cidades e comunidades sustentáveis",
+    "objetivo": "Tornar as cidades e os assentamentos humanos inclusivos, seguros, resilientes e sustentáveis",
+    "cor": "#FD9D24",
+    "metas": {
+      "11.5": "Até 2030, reduzir significativamente o número de mortes e o número de pessoas afetadas por catástrofes e substancialmente diminuir as perdas econômicas diretas causadas por elas em relação ao produto interno bruto global, incluindo os desastres relacionados à água, com o foco em proteger os pobres e as pessoas em situação de vulnerabilidade",
+      "11.6": "Até 2030, reduzir o impacto ambiental negativo per capita das cidades, inclusive prestando especial atenção à qualidade do ar, gestão de resíduos municipais e outros"
+    }
+  },
+  "12": {
+    "nome": "Consumo e produção responsáveis",
+    "objetivo": "Assegurar padrões de produção e de consumo sustentáveis",
+    "cor": "#BF8B2E",
+    "metas": {
+      "12.5": "Até 2030, reduzir substancialmente a geração de resíduos por meio da prevenção, redução, reciclagem e reuso"
+    }
+  },
+  "13": {
+    "nome": "Ação contra a mudança global do clima",
+    "objetivo": "Tomar medidas urgentes para combater a mudança climática e seus impactos",
+    "cor": "#3F7E44",
+    "metas": {
+      "13.1": "Reforçar a resiliência e a capacidade de adaptação a riscos relacionados ao clima e às catástrofes naturais em todos os países",
+      "13.2": "Integrar medidas da mudança do clima nas políticas, estratégias e planejamentos nacionais",
+      "13.3": "Melhorar a educação, aumentar a conscientização e a capacidade humana e institucional sobre mitigação, adaptação, redução de impacto e alerta precoce da mudança do clima"
+    },
+    "nota_variante": "Na página da Agenda 2030 da ONU Brasil (2015) consta 'mudança do clima' (com nota (*)) em vez de 'mudança climática'. Diferença relatada por leitura automática da página, não conferida caractere a caractere."
+  },
+  "14": {
+    "nome": "Vida na água",
+    "objetivo": "Conservação e uso sustentável dos oceanos, dos mares e dos recursos marinhos para o desenvolvimento sustentável",
+    "cor": "#0A97D9",
+    "metas": {
+      "14.1": "Até 2025, prevenir e reduzir significativamente a poluição marinha de todos os tipos, especialmente a advinda de atividades terrestres, incluindo detritos marinhos e a poluição por nutrientes",
+      "14.2": "Até 2020, gerir de forma sustentável e proteger os ecossistemas marinhos e costeiros para evitar impactos adversos significativos, inclusive por meio do reforço da sua capacidade de resiliência, e tomar medidas para a sua restauração, a fim de assegurar oceanos saudáveis e produtivos"
+    }
+  },
+  "15": {
+    "nome": "Vida terrestre",
+    "objetivo": "Proteger, recuperar e promover o uso sustentável dos ecossistemas terrestres, gerir de forma sustentável as florestas, combater a desertificação, deter e reverter a degradação da terra e deter a perda de biodiversidade",
+    "cor": "#56C02B",
+    "metas": {
+      "15.1": "Até 2020, assegurar a conservação, recuperação e uso sustentável de ecossistemas terrestres e de água doce interiores e seus serviços, em especial florestas, zonas úmidas, montanhas e terras áridas, em conformidade com as obrigações decorrentes dos acordos internacionais",
+      "15.2": "Até 2020, promover a implementação da gestão sustentável de todos os tipos de florestas, deter o desmatamento, restaurar florestas degradadas e aumentar substancialmente o florestamento e o reflorestamento globalmente",
+      "15.3": "Até 2030, combater a desertificação, restaurar a terra e o solo degradado, incluindo terrenos afetados pela desertificação, secas e inundações, e lutar para alcançar um mundo neutro em termos de degradação do solo",
+      "15.5": "Tomar medidas urgentes e significativas para reduzir a degradação de habitat naturais, deter a perda de biodiversidade e, até 2020, proteger e evitar a extinção de espécies ameaçadas"
+    }
+  },
+  "16": {
+    "nome": "Paz, Justiça e Instituições Eficazes",
+    "objetivo": "Promover sociedades pacíficas e inclusivas para o desenvolvimento sustentável, proporcionar o acesso à justiça para todos e construir instituições eficazes, responsáveis e inclusivas em todos os níveis",
+    "cor": "#00689D"
+  },
+  "17": {
+    "nome": "Parcerias e meios de implementação",
+    "objetivo": "Fortalecer os meios de implementação e revitalizar a parceria global para o desenvolvimento sustentável",
+    "cor": "#19486A"
+  }
+}
