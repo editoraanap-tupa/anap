@@ -4702,3 +4702,4299 @@ function jogoDiques(palco, api){
   api.diz('A maré está subindo! Arraste os blocos do barco para tapar os buracos do dique.');
   return () => { vivo = false; timers.forEach(clearTimeout); c.parar(); };
 }
+/* ================= JOGO 15: Rio Nilo, o rio das cheias ================= */
+function jogoNilo(palco, api){
+  semente = 31;
+  let vivo = true, fase = 'cheia', nivel = 0, chegando = 0, regas = 0, carga = 0, ocupado = false;
+  const timers = [], depois = (ms, fn) => { const t = setTimeout(() => vivo && fn(), ms); timers.push(t); return t; };
+  const tw = (ms, fn, fim) => { const t0 = performance.now(); (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / ms); fn(k, k*k*(3-2*k)); if (k < 1) requestAnimationFrame(q); else fim && fim(); })(t0); };
+  const lgd = (id, st, x2, y2) => `<linearGradient id="${id}" x1="0" y1="0" x2="${x2 || 0}" y2="${y2 === undefined ? 1 : y2}">${st.map((c, i) => `<stop offset="${(i / (st.length - 1)).toFixed(2)}" stop-color="${c}"/>`).join('')}</linearGradient>`;
+  const PIV = { x:437, y:296 }, L1 = 118, L2 = 58, CORDA = 44, TH_UP = -28, TH_DN = 22, BACIA = { x:398, y:346 };
+  const NUV = [{ x:66, y:70, s:1 }, { x:168, y:44, s:1.15 }, { x:268, y:78, s:.92 }];
+  const NIVEIS = [392, 366, 338, 306];
+  const DOCA = { x:606, y:452 }, DE = .86;
+  /* canteiros: [x topo esq, x topo dir, x base esq, x base dir] */
+  const CANT = [[306, 462, 286, 478], [166, 294, 144, 274], [26, 154, 4, 132]];
+  const Y0 = 366, Y1 = 490;
+  const ITENS = [{ id:'trigo', x:384, y:420 }, { id:'linho', x:218, y:420 }, { id:'cebola', x:98, y:418 }];
+  const FX = 518, FY = 384, FK = 1.35;
+  const dentro = (c, qx, qy) => { const yy = Y0 + (Y1 - Y0) * qy, xl = c[0] + (c[2] - c[0]) * qy, xr = c[1] + (c[3] - c[1]) * qy; return [xl + (xr - xl) * qx, yy]; };
+  const rachas = c => { let d = ''; for (let k = 0; k < 8; k++) { let [x, y] = dentro(c, R(.08, .92), R(.08, .92)); d += `M${x.toFixed(1)} ${y.toFixed(1)}`; for (let j = 0; j < 4; j++) { x += R(-13, 13); y += R(-7, 7); d += ` L${x.toFixed(1)} ${y.toFixed(1)}`; if (j === 1) d += ` M${x.toFixed(1)} ${y.toFixed(1)} l${R(-8, 8).toFixed(1)} ${R(3, 7).toFixed(1)} M${x.toFixed(1)} ${y.toFixed(1)}`; } d += ' '; } return `<path d="${d}" stroke="#F8E6BC" stroke-width="1.1" fill="none" opacity=".6" transform="translate(.8 1)"/><path d="${d}" stroke="#7E5A30" stroke-width="1.2" fill="none" stroke-linejoin="round" opacity=".85"/>`; };
+  const torroes = (c, cor, borda, luz, n) => Array.from({ length:n || 24 }, () => { const [x, y] = dentro(c, R(.04, .96), R(.04, .96)), r = 1.4 + (y - Y0) / (Y1 - Y0) * 2.2; return `<ellipse cx="${x.toFixed(1)}" cy="${(y + r * .5).toFixed(1)}" rx="${(r * 1.5).toFixed(1)}" ry="${(r * .6).toFixed(1)}" fill="#000" opacity=".15"/><ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(r * 1.4).toFixed(1)}" ry="${r.toFixed(1)}" fill="${cor}" stroke="${borda}" stroke-width=".7"/><path d="M${(x - r).toFixed(1)} ${(y - r * .2).toFixed(1)} q${r.toFixed(1)} ${(-r * .9).toFixed(1)} ${(2 * r).toFixed(1)} 0" stroke="${luz}" stroke-width=".9" fill="none"/>`; }).join('');
+  const papiroMini = (x, y, s) => `<g class="balanca" style="animation-duration:${R(4, 6.5).toFixed(1)}s;animation-delay:${R(-4, 0).toFixed(1)}s"><ellipse cx="${x}" cy="${y}" rx="${(8 * s).toFixed(1)}" ry="${(2 * s).toFixed(1)}" fill="#1E4A1A" opacity=".4"/>${[[-7, -24], [0, -32], [8, -22], [-2, -18]].map(([dx, dy]) => { const ex = x + dx * s, ey = y + dy * s; let r = ''; for (let k = 0; k < 11; k++) { const a = Math.PI * (.95 + 1.1 * k / 10); r += `M${ex.toFixed(1)} ${ey.toFixed(1)} q${(Math.cos(a) * 4 * s).toFixed(1)} ${(Math.sin(a) * 4 * s - 1.4 * s).toFixed(1)} ${(Math.cos(a) * 7 * s).toFixed(1)} ${(Math.sin(a) * 5 * s + 1.6 * s).toFixed(1)} `; } const st = `M${x} ${y} Q${(x + dx * s * .3).toFixed(1)} ${(y + dy * s * .5).toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`; return `<path d="${st}" stroke="#2E6A22" stroke-width="${(2.4 * s).toFixed(1)}" fill="none" stroke-linecap="round"/><path d="${st}" stroke="#8ACB54" stroke-width="${(1.1 * s).toFixed(1)}" fill="none" stroke-linecap="round"/><path d="${r}" stroke="#3E7A22" stroke-width="${(1.5 * s).toFixed(1)}" fill="none" stroke-linecap="round"/><path d="${r}" stroke="#C0EA84" stroke-width="${(.7 * s).toFixed(1)}" fill="none" stroke-linecap="round"/>`; }).join('')}</g>`;
+  const abelharuco = () => `<path d="M-6 1 L-22 5" stroke="#1E5A2A" stroke-width="2.4" stroke-linecap="round"/><path d="M-6 1 L-22 5" stroke="#5AC05A" stroke-width="1" stroke-linecap="round"/><path d="M-1 4 v3 M3 4 v3" stroke="#3A2A1A" stroke-width="1" stroke-linecap="round"/><path d="M-7 0 C-7 -6 4 -9 8 -4 C10 0 6 4 0 4 C-4 4 -7 3 -7 0Z" fill="url(#niAbel)" stroke="#1E5A2A" stroke-width="1"/><path d="M-5 -1 C-2 -4 2 -4 5 -2" stroke="#2E8A3A" stroke-width="1.4" fill="none"/><circle cx="8" cy="-6" r="4.4" fill="#6ACC5A" stroke="#1E5A2A" stroke-width="1"/><path d="M5 -9.6 q3 -1.6 6 .4" stroke="#E8B030" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M4 -6 h9" stroke="#12121A" stroke-width="1.7" stroke-linecap="round"/><path d="M8 -2.4 q3 1 5 -1" stroke="#2EA8E0" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M12 -6.2 L20 -4.6 L12 -4.2Z" fill="#1A1A22"/><circle cx="9" cy="-6.2" r="1.3" fill="#B8241A"/><circle cx="9.4" cy="-6.6" r=".45" fill="#fff"/><path d="M-3 -4 q3 -2 6 -1" stroke="#D8F8B0" stroke-width="1" fill="none"/>`;
+  const POUSO_A = [[290, 226], [306, 214], [322, 232]], POUSO_B = [[414, 293], [452, 293], [463, 293]];
+  /* ---------- desenhos ---------- */
+  const palmeira = (x, y, h, s, cor, esc, dir) => {
+    const d = dir || 1, tx = x + d * h * .18, ty = y - h;
+    let fol = '';
+    [[-150, 1], [-118, .9], [-80, 1.05], [-48, .95], [-20, .9], [-176, .85], [8, .8]].forEach(([a, k], i) => {
+      const r = 34 * s * k, ar = a * Math.PI / 180, ex = tx + Math.cos(ar) * r, ey = ty + Math.sin(ar) * r * .8 + r * .38;
+      const mx = tx + Math.cos(ar) * r * .55, my = ty + Math.sin(ar) * r * .55 - 6 * s;
+      fol += `<path d="M${tx.toFixed(1)} ${ty.toFixed(1)} Q${mx.toFixed(1)} ${(my - 7 * s).toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)} Q${(mx + 2).toFixed(1)} ${(my + 5 * s).toFixed(1)} ${tx.toFixed(1)} ${(ty + 3 * s).toFixed(1)}Z" fill="${i % 2 ? cor : esc}" stroke="#1E4A1A" stroke-width="${(1.1 * s).toFixed(1)}" stroke-linejoin="round"/>`;
+      fol += `<path d="M${tx.toFixed(1)} ${ty.toFixed(1)} Q${mx.toFixed(1)} ${(my - 4 * s).toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}" stroke="#CDEB8A" stroke-width="${(.9 * s).toFixed(1)}" fill="none" opacity=".75"/>`;
+      for (let j = 1; j < 5; j++) { const q = j / 5, px = tx + (ex - tx) * q, py = ty + (ey - ty) * q - Math.sin(q * Math.PI) * 6 * s; fol += `<path d="M${px.toFixed(1)} ${py.toFixed(1)} l${(Math.cos(ar + 1.2) * 5 * s).toFixed(1)} ${(4 * s).toFixed(1)}" stroke="#1E4A1A" stroke-width="${(.8 * s).toFixed(1)}" opacity=".6"/>`; }
+    });
+    let aneis = ''; for (let j = 1; j < 9; j++) { const q = j / 9, px = x + (tx - x) * q * q * .6 + (tx - x) * q * .4, py = y - h * q; aneis += `<path d="M${(px - 3.2 * s).toFixed(1)} ${py.toFixed(1)} q${(3.2 * s).toFixed(1)} ${(2.4 * s).toFixed(1)} ${(6.4 * s).toFixed(1)} 0" stroke="#5A3A1E" stroke-width="${(.9 * s).toFixed(1)}" fill="none"/>`; }
+    return `<g class="ni-palma"><ellipse cx="${x + 4}" cy="${y + 1}" rx="${(16 * s).toFixed(1)}" ry="${(3 * s).toFixed(1)}" fill="#1E3A12" opacity=".22"/><path d="M${x} ${y} C${x + d * 2} ${y - h * .5} ${tx - d * 4} ${ty + h * .3} ${tx} ${ty}" stroke="#4E3018" stroke-width="${(7.4 * s).toFixed(1)}" fill="none" stroke-linecap="round"/><path d="M${x} ${y} C${x + d * 2} ${y - h * .5} ${tx - d * 4} ${ty + h * .3} ${tx} ${ty}" stroke="#A8784A" stroke-width="${(4.6 * s).toFixed(1)}" fill="none" stroke-linecap="round"/>${aneis}<g class="balanca" style="animation-duration:${R(4, 6).toFixed(1)}s;animation-delay:${R(-4, 0).toFixed(1)}s">${fol}<g stroke="#5A2A10" stroke-width=".7">${[[-4, 6], [0, 8], [4, 6], [-2, 11], [2, 11]].map(([dx, dy]) => `<circle cx="${(tx + dx * s).toFixed(1)}" cy="${(ty + dy * s).toFixed(1)}" r="${(2.4 * s).toFixed(1)}" fill="${dy > 8 ? '#C8642A' : '#E08A34'}"/>`).join('')}</g></g></g>`;
+  };
+  const casa = (x, y, w, h, porta, enfeite, extra) => { const px = x + w * .5; let tri = ''; for (let k = 0; k < Math.floor((w - 4) / 6); k++) tri += `<path d="M${x + 3 + k * 6} ${y - h + 5} l3 4 l3 -4Z" fill="${k % 2 ? enfeite : porta}" stroke="#5A3418" stroke-width=".5"/>`;
+    let merl = ''; for (let k = 0; k < Math.floor(w / 9); k++) merl += `<path d="M${x + 1 + k * 9} ${y - h} v-4 q3.5 -3 7 0 v4" fill="#E0B07A" stroke="#7A4A26" stroke-width="1.1"/>`;
+    return `<g>
+      <ellipse cx="${x + w * .6}" cy="${y + 2}" rx="${w * .66}" ry="4.4" fill="#3A2410" opacity=".24"/>
+      ${merl}
+      <rect x="${x}" y="${y - h}" width="${w}" height="${h}" fill="url(#niAdobe)" stroke="#7A4A26" stroke-width="1.6"/>
+      <rect x="${x + w - 8}" y="${y - h + .8}" width="7.2" height="${h - 1.6}" fill="#9A6234" opacity=".3"/>
+      <path d="M${x + 1} ${y - h + 1} h${w - 2} v3 h-${w - 2}Z" fill="#7A4A26" opacity=".25"/>
+      <path d="${copa(x + w * .28, y - h * .42, 6, 3.6, 6, .3)}" fill="#F8DCB0" opacity=".55"/><path d="${copa(x + w * .78, y - h * .7, 4, 2.6, 6, .3)}" fill="#F8DCB0" opacity=".45"/>
+      <g stroke="#9A6A3E" stroke-width=".9" opacity=".55"><path d="M${x + 4} ${y - 9} h7 M${x + w - 16} ${y - 13} h8 M${x + 6} ${y - h + 20} h6 M${x + w - 12} ${y - 6} h6"/><path d="M${x + w - 10} ${y - h + 4} l-3 6 l2 5" fill="none"/></g>
+      <path d="M${x + 3} ${y - h + 4} V${y - 3}" stroke="#FCE6C0" stroke-width="1.6" opacity=".8"/>
+      ${tri}
+      <path d="M${px - 10} ${y} V${y - 22} C${px - 10} ${y - 31} ${px + 10} ${y - 31} ${px + 10} ${y - 22} V${y}Z" fill="${porta}" stroke="#2A3A5A" stroke-width="1.1"/>
+      <path d="M${px - 7} ${y} V${y - 21} C${px - 7} ${y - 27} ${px + 7} ${y - 27} ${px + 7} ${y - 21} V${y}Z" fill="url(#niMadeira)" stroke="#3E2210" stroke-width="1.2"/>
+      <path d="M${px - 3.5} ${y - 25} V${y} M${px} ${y - 26} V${y} M${px + 3.5} ${y - 25} V${y}" stroke="#4E2E14" stroke-width=".8" opacity=".7"/>
+      <path d="M${px - 7} ${y - 16} h14 M${px - 7} ${y - 6} h14" stroke="#3E2210" stroke-width="1.2"/>
+      <circle cx="${px + 4.6}" cy="${y - 11}" r="1.4" fill="none" stroke="#E8C060" stroke-width=".9"/>
+      <path d="M${px - 6} ${y - 22} q2 -3 5 -3" stroke="#D8A070" stroke-width="1" fill="none" opacity=".8"/>
+      ${[x + 7, x + w - 16].map(wx => `<rect x="${wx}" y="${y - h + 13}" width="9" height="8" rx="1" fill="#2A1C14" stroke="#7A4A26" stroke-width="1"/><path d="M${wx + 3} ${y - h + 13} v8 M${wx + 6} ${y - h + 13} v8" stroke="#8A6A4A" stroke-width=".7"/><path d="M${wx - 4} ${y - h + 13} h4 v8 h-4Z M${wx + 9} ${y - h + 13} h4 v8 h-4Z" fill="url(#niMadeira)" stroke="#3E2210" stroke-width=".7"/><path d="M${wx - 1} ${y - h + 22.6} h11" stroke="#F8DCB0" stroke-width="1.3"/>`).join('')}
+      ${extra || ''}</g>`; };
+  const zir = (x, y) => `<g id="ni-zir" class="toque"><ellipse cx="${x}" cy="${y + 1}" rx="12" ry="2.6" fill="#3A2410" opacity=".25"/><path d="M${x - 9} ${y} l3 -12 M${x + 9} ${y} l-3 -12 M${x - 7} ${y - 6} h14" stroke="#6E4220" stroke-width="2" stroke-linecap="round"/>
+      <path d="M${x - 6} ${y - 24} C${x - 12} ${y - 20} ${x - 10} ${y - 8} ${x} ${y - 6} C${x + 10} ${y - 8} ${x + 12} ${y - 20} ${x + 6} ${y - 24}Z" fill="url(#niBarro)" stroke="#6E3414" stroke-width="1.3"/>
+      <ellipse cx="${x}" cy="${y - 24}" rx="6" ry="1.8" fill="#5A2A10" stroke="#6E3414" stroke-width="1"/><path d="M${x - 6} ${y - 19} q-2 6 1 10" stroke="#F4B080" stroke-width="1.4" fill="none" opacity=".8"/>
+      <path d="M${x - 4} ${y - 14} q4 3 8 0" stroke="#8A4420" stroke-width=".8" fill="none"/><circle id="ni-zir-gota" cx="${x}" cy="${y - 4}" r="1.6" fill="#7FCBF0" style="opacity:0"/>
+      <rect x="${x - 14}" y="${y - 30}" width="28" height="32" fill="transparent"/></g>`;
+  const toldo = (x0, x1, y) => { let h = ''; for (let k = x0 + 2; k < x1 - 1; k += 3) h += `M${k} ${y - 4} l${(k - (x0 + x1) / 2) * .04 + 1} 9 `; return `<path d="M${x0 + 3} ${y + 4} V${y + 28} M${x1 - 3} ${y + 4} V${y + 28}" stroke="#6E4220" stroke-width="2.2" stroke-linecap="round"/><path d="M${x0 - 2} ${y - 4} H${x1 + 2} L${x1 + 4} ${y + 5} H${x0 - 4}Z" fill="#B8A054" stroke="#5A4A1E" stroke-width="1.1"/><path d="${h}" stroke="#7A6A2A" stroke-width=".8"/><path d="M${x0 - 4} ${y + 5} H${x1 + 4}" stroke="#E2D08A" stroke-width="1.2"/><path d="M${x0} ${y + 6} H${x1}" stroke="#3A2410" stroke-width="3" opacity=".18"/>`; };
+  const escadaTeto = (x, y, h) => Array.from({ length:5 }, (_, k) => `<path d="M${x + k * 3.4} ${y - k * h / 5} h7 v${-h / 5} h-7Z" fill="#D8A870" stroke="#7A4A26" stroke-width=".9"/><path d="M${x + k * 3.4} ${y - (k + 1) * h / 5} h7" stroke="#FCE6C0" stroke-width="1"/>`).join('');
+  const varal = (x0, x1, y) => `<path d="M${x0} ${y + 8} V${y - 2} M${x1} ${y + 8} V${y - 2}" stroke="#6E4220" stroke-width="1.4"/><path d="M${x0} ${y} Q${(x0 + x1) / 2} ${y + 4} ${x1} ${y}" stroke="#5A4A3A" stroke-width=".8" fill="none"/>${[['#E5392C', 0], ['#2E7BF6', 1], ['#F2C83A', 2], ['#FFFFFF', 3]].map(([c, k]) => { const xx = x0 + 4 + k * (x1 - x0 - 8) / 4; return `<path d="M${xx} ${y + 1.6} h7 l-1 8 h-5Z" fill="${c}" stroke="#4E3A2A" stroke-width=".7"/>`; }).join('')}`;
+  const garca = (x, y, s, i) => `<g class="ni-garca" data-i="${i}" transform="translate(${x} ${y}) scale(${s})"><g class="ni-garca-in">
+      <ellipse cx="0" cy="13" rx="9" ry="2" fill="#1E3A12" opacity=".25"/>
+      <path d="M-2 0 l-1.4 13 M3 0 l1.6 13" stroke="#5A5A3A" stroke-width="1.8" stroke-linecap="round"/><path d="M-6 13 h5 M2 13 h6" stroke="#5A5A3A" stroke-width="1.2" stroke-linecap="round"/>
+      <path d="M-11 -10 C-12 -20 0 -24 8 -18 C12 -12 10 -2 2 1 C-6 3 -12 -2 -11 -10Z" fill="url(#niGarca)" stroke="#7A8AA8" stroke-width="1.3"/>
+      <path d="M-11 -10 C-15 -8 -18 -4 -19 -1 C-15 -3 -12 -4 -9 -5Z" fill="#F4F6FA" stroke="#7A8AA8" stroke-width="1"/>
+      <path d="M-6 -16 C-2 -19 3 -19 6 -17" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M5 -17 C10 -22 4 -28 8 -33" stroke="#7A8AA8" stroke-width="7.4" fill="none" stroke-linecap="round"/><path d="M5 -17 C10 -22 4 -28 8 -33" stroke="#FFFFFF" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M4 -22 C6 -24 6 -27 6 -29" stroke="#F2C88A" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/>
+      <ellipse cx="10" cy="-35" rx="5" ry="4.4" fill="#FFFFFF" stroke="#7A8AA8" stroke-width="1.2"/><path d="M6 -38 C8 -41 12 -41 14 -38" stroke="#F2C070" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M14 -35.6 L23 -33.4 L14 -32.6Z" fill="#F2B82A" stroke="#A8740E" stroke-width=".7" stroke-linejoin="round"/>
+      <circle cx="11.6" cy="-35.4" r="1.3" fill="#12121A"/><circle cx="12" cy="-35.9" r=".45" fill="#fff"/></g></g>`;
+  /* canteiros */
+  const cantPath = (c, enc) => { const [a, b, cc, dd] = c, e = enc || 0; return `M${a + e} ${Y0 + e * .6} L${b - e} ${Y0 + e * .6} L${dd - e} ${Y1 - e * .4} L${cc + e} ${Y1 - e * .4}Z`; };
+  const sulcos = (c, cor, w, op) => { const [a, b, cc, dd] = c; let s = ''; for (let k = 1; k < 8; k++) { const q = k / 8; s += `M${(a + (b - a) * q).toFixed(1)} ${Y0 + 3} L${(cc + (dd - cc) * q).toFixed(1)} ${Y1 - 3} `; } return `<path d="${s}" stroke="${cor}" stroke-width="${w}" fill="none" opacity="${op}"/>`; };
+  const ondulas = (c, cor, w, op) => { const [a, b, cc, dd] = c; let s = ''; for (let r = 0; r < 9; r++) { const yy = Y0 + 8 + r * 14, q = (yy - Y0) / (Y1 - Y0), xl = a + (cc - a) * q + 4, xr = b + (dd - b) * q - 4, n = Math.round((xr - xl) / 16); s += `M${xl.toFixed(1)} ${yy}`; for (let k = 0; k < n; k++) s += ` q${((xr - xl) / n / 2).toFixed(1)} ${k % 2 ? 2 : -2} ${((xr - xl) / n).toFixed(1)} 0`; s += ' '; } return `<path d="${s}" stroke="${cor}" stroke-width="${w}" fill="none" opacity="${op}" stroke-linecap="round"/>`; };
+  const fileira = (c, fn) => { const [a, b, cc, dd] = c; let s = ''; for (let r = 0; r < 5; r++) { const yy = Y0 + 14 + r * 24, q = (yy - Y0) / (Y1 - Y0), xl = a + (cc - a) * q + 8, xr = b + (dd - b) * q - 8, n = 7; for (let k = 0; k < n; k++) s += fn(xl + (xr - xl) * (k + .5) / n, yy, .7 + q * .5, r * n + k); } return s; };
+  const broto = (x, y, s) => `<path d="M${x.toFixed(1)} ${y.toFixed(1)} q${(-1 * s).toFixed(1)} ${(-5 * s).toFixed(1)} ${(-5 * s).toFixed(1)} ${(-7 * s).toFixed(1)} M${x.toFixed(1)} ${y.toFixed(1)} q${(1 * s).toFixed(1)} ${(-6 * s).toFixed(1)} ${(5 * s).toFixed(1)} ${(-8 * s).toFixed(1)}" stroke="#7FD04A" stroke-width="${(2.2 * s).toFixed(1)}" fill="none" stroke-linecap="round"/>`;
+  const trigo = (x, y, s) => `<path d="M${x.toFixed(1)} ${y.toFixed(1)} q-1 ${(-10 * s).toFixed(1)} 1 ${(-20 * s).toFixed(1)}" stroke="#B8862A" stroke-width="${(1.4 * s).toFixed(1)}" fill="none"/><ellipse cx="${(x + 1).toFixed(1)}" cy="${(y - 23 * s).toFixed(1)}" rx="${(2.4 * s).toFixed(1)}" ry="${(5.4 * s).toFixed(1)}" fill="#F2C24A" stroke="#A8741E" stroke-width="${(.8 * s).toFixed(1)}"/><path d="M${(x + 1).toFixed(1)} ${(y - 28 * s).toFixed(1)} l0 ${(-5 * s).toFixed(1)}" stroke="#D8A43A" stroke-width=".8"/><path d="M${(x - 3).toFixed(1)} ${(y - 6 * s).toFixed(1)} q-3 -4 -4 -8 M${(x + 3).toFixed(1)} ${(y - 9 * s).toFixed(1)} q3 -3 4 -7" stroke="#C89A3A" stroke-width="${(1.1 * s).toFixed(1)}" fill="none"/>`;
+  const linho = (x, y, s) => `<path d="M${x.toFixed(1)} ${y.toFixed(1)} q1 ${(-10 * s).toFixed(1)} 0 ${(-20 * s).toFixed(1)} M${x.toFixed(1)} ${(y - 12 * s).toFixed(1)} l${(-4 * s).toFixed(1)} -4 M${x.toFixed(1)} ${(y - 16 * s).toFixed(1)} l${(4 * s).toFixed(1)} -4" stroke="#4E9A3A" stroke-width="${(1.3 * s).toFixed(1)}" fill="none"/><g fill="#7AA8FF" stroke="#2E58B8" stroke-width=".6">${[[0, -22], [-4, -18], [4, -18]].map(([dx, dy]) => `<circle cx="${(x + dx * s).toFixed(1)}" cy="${(y + dy * s).toFixed(1)}" r="${(2.6 * s).toFixed(1)}"/>`).join('')}</g><circle cx="${x.toFixed(1)}" cy="${(y - 22 * s).toFixed(1)}" r="${(.9 * s).toFixed(1)}" fill="#FFE27A"/>`;
+  const cebola = (x, y, s) => `<path d="M${x.toFixed(1)} ${(y - 6 * s).toFixed(1)} q-3 ${(-8 * s).toFixed(1)} -6 ${(-14 * s).toFixed(1)} M${x.toFixed(1)} ${(y - 6 * s).toFixed(1)} q0 ${(-9 * s).toFixed(1)} 1 ${(-16 * s).toFixed(1)} M${x.toFixed(1)} ${(y - 6 * s).toFixed(1)} q3 ${(-7 * s).toFixed(1)} 6 ${(-12 * s).toFixed(1)}" stroke="#4E9A3A" stroke-width="${(1.8 * s).toFixed(1)}" fill="none" stroke-linecap="round"/><ellipse cx="${x.toFixed(1)}" cy="${(y - 3 * s).toFixed(1)}" rx="${(4.6 * s).toFixed(1)}" ry="${(3.8 * s).toFixed(1)}" fill="#B04A8A" stroke="#6A1E4E" stroke-width="${(.8 * s).toFixed(1)}"/><path d="M${(x - 2 * s).toFixed(1)} ${(y - 5 * s).toFixed(1)} q1 -1 2 -1" stroke="#F0B0D8" stroke-width="1" fill="none"/>`;
+  const MADURO = [trigo, linho, cebola];
+  const feixe = {
+    trigo:`<g stroke-linecap="round"><path d="M-14 22 L4 -14 M-8 24 L6 -16 M-2 24 L8 -14 M4 24 L10 -12 M10 22 L12 -10" stroke="#8A5A1A" stroke-width="3.6"/><path d="M-14 22 L4 -14 M-8 24 L6 -16 M-2 24 L8 -14 M4 24 L10 -12 M10 22 L12 -10" stroke="#E2B04A" stroke-width="2"/></g>${[[4, -18], [7, -21], [10, -18], [13, -14], [1, -15]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="3.4" ry="7" transform="rotate(14 ${x} ${y})" fill="#F6CC5A" stroke="#A8741E" stroke-width="1"/><path d="M${x} ${y - 7} l1 -6" stroke="#E0B04A" stroke-width=".9"/>`).join('')}<path d="M-8 6 C-2 10 6 10 12 4" stroke="#C8302A" stroke-width="3.6" fill="none" stroke-linecap="round"/><path d="M-6 6 C-1 8 4 8 9 5" stroke="#FF8A7A" stroke-width="1" fill="none"/>`,
+    linho:`<g stroke-linecap="round"><path d="M-10 24 L0 -14 M-4 24 L3 -16 M2 24 L6 -14 M8 24 L9 -12" stroke="#3E6A22" stroke-width="3.6"/><path d="M-10 24 L0 -14 M-4 24 L3 -16 M2 24 L6 -14 M8 24 L9 -12" stroke="#9ACB5E" stroke-width="2"/></g><g fill="#7AA8FF" stroke="#2E58B8" stroke-width=".9">${[[0, -18], [4, -21], [8, -17], [-3, -14], [11, -13]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3.6"/>`).join('')}</g><g fill="#FFE27A">${[[0, -18], [4, -21], [8, -17]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.2"/>`).join('')}</g><path d="M-6 8 C-1 12 6 11 11 6" stroke="#E8C88A" stroke-width="3.6" fill="none" stroke-linecap="round"/>`,
+    cebola:`<path d="M-20 0 C-22 18 -12 24 0 24 C12 24 22 18 20 0Z" fill="url(#niCesto)" stroke="#6E3E14" stroke-width="1.8"/><path d="M-19 8 C-8 12 8 12 19 8 M-17 16 C-6 20 6 20 17 16" stroke="#8A5A22" stroke-width="1.2" fill="none"/>${[[-11, -2], [0, -5], [11, -2], [-5, -10], [6, -10]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="7" ry="6" fill="#B04A8A" stroke="#6A1E4E" stroke-width="1.2"/><path d="M${x - 3} ${y - 2} q2 -2 4 -2" stroke="#F0B0D8" stroke-width="1.2" fill="none"/><path d="M${x} ${y - 6} l0 -4" stroke="#C8B07A" stroke-width="1.2"/>`).join('')}<path d="M-21 0 C-8 4 8 4 21 0" stroke="#5A3010" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M-19 -1 C-8 2 8 2 19 -1" stroke="#E0A858" stroke-width="1.1" fill="none"/>`
+  };
+  /* rio: margens */
+  const RIO = 'M246 181 C296 190 352 199 400 214 C450 230 490 262 500 300 C508 336 514 400 500 500 L700 500 C676 420 640 340 600 296 C560 254 480 222 422 206 C362 190 302 182 254 179Z';
+  const CHEIA = 'M0 302 C120 296 250 292 350 286 C410 282 452 262 468 240 L540 236 C590 248 640 262 684 272 V412 H800 V500 H0Z';
+  const ESCADA = (() => { let d = 'M690 262', t = ''; for (let i = 0; i < 9; i++) { const x = 708 + i * 6, y = 262 + i * 17; d += ` H${x} V${y + 17}`; t += `<path d="M690 ${y} H${x}" stroke="#FCEAC8" stroke-width="2" stroke-linecap="round"/><path d="M${x - 1} ${y + 2} V${y + 16}" stroke="#7A5434" stroke-width="2" opacity=".45"/><path d="M690 ${y + 4} H${x - 2}" stroke="#8A6440" stroke-width="1" opacity=".35"/>`; } d += ' H762 V420 H690Z'; return `<path d="${d}" fill="url(#niDegrau)" stroke="#6E4A2A" stroke-width="1.3" stroke-linejoin="round"/>${t}`; })();
+  const BLOCOS = (() => { let d = ''; for (let r = 0; r < 15; r++) { const y = 248 + r * 12; d += `M676 ${y} H804 `; for (let x = 676 + (r % 2 ? 10 : 0); x < 804; x += 20) d += `M${x} ${y} v12 `; } return d; })();
+  const BLOCOS2 = (() => { let d = ''; for (let r = 0; r < 14; r++) { const y = 256 + r * 12; d += `M690 ${y} H790 `; for (let x = 690 + (r % 2 ? 9 : 0); x < 790; x += 18) d += `M${x} ${y} v12 `; } return d; })();
+  const svg = `<svg viewBox="0 0 800 500" role="img" aria-label="Rio Nilo no Egito: montanhas distantes com nuvens de chuva, o rio no meio do deserto, campos, um shaduf, um nilômetro e uma vila">
+    <defs>
+      ${lgd('niCeu', ['#4FA2E2', '#9CCDEE', '#F6E2C0'])}
+      ${lgd('niMonteL', ['#93AFC6', '#B9C6D4'])}${lgd('niMonte', ['#4E8E7E', '#7AAA86'])}${lgd('niMonteE', ['#2E6A62', '#4E8A6A'])}
+      ${lgd('niPlato', ['#F0C49A', '#D4966A'])}${lgd('niAreia', ['#F6DCA4', '#E2B474'])}${lgd('niDuna', ['#F8E2B0', '#E8BC7A'])}
+      ${lgd('niVerde', ['#9CCB5A', '#6AA844', '#4E8E36'])}
+      ${lgd('niRio', ['#7FCFE0', '#3E9EC4', '#1E6E9A'])}${lgd('niRioCheia', ['#C08A5A', '#9A643E', '#7A4A2A'])}
+      ${lgd('niCheia', ['#B88C62', '#946A44'])}
+      ${lgd('niSeco', ['#E6C890', '#C9A066'])}${lgd('niLama', ['#4E3C30', '#2A1E16'])}${lgd('niMolhado', ['#3A2E28', '#1A1210'])}
+      ${lgd('niVerdeC', ['#8ED65A', '#4E9E36'])}${lgd('niOuro', ['#F2D27A', '#D2A040'])}
+      ${lgd('niAdobe', ['#ECC48E', '#C8915A'])}${lgd('niPedra', ['#E2C298', '#B48A5E'])}${lgd('niVara', ['#D9A060', '#8A5A2A'], 1, 0)}${lgd('niBalde', ['#C9784A', '#7A3E1E'])}
+      ${lgd('niCesto', ['#E0A858', '#A86A28'])}${lgd('niMadeira', ['#B07A44', '#6E4220'], 1, 0)}${lgd('niBarro', ['#E08A54', '#9A4A22'], 1, 0)}${lgd('niPoco', ['#5A4028', '#3A2818'])}<linearGradient id="niSombraT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140C06" stop-opacity=".55"/><stop offset="1" stop-color="#140C06" stop-opacity="0"/></linearGradient>${lgd('niColuna', ['#F0D8B0', '#B8915E'], 1, 0)}${lgd('niDegrau', ['#E8CCA0', '#BC976A'])}${lgd('niTil', ['#B8D0C8', '#6E8E86'])}${lgd('niAbel', ['#7ADC6A', '#2E9A3E'])}${lgd('niFolha', ['#7FC04A', '#2E6A22'], 1, 0)}<linearGradient id="niBruma" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4E0" stop-opacity=".5"/><stop offset="1" stop-color="#FFF4E0" stop-opacity="0"/></linearGradient><linearGradient id="niReflexo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#CFEFFF" stop-opacity="0"/><stop offset=".5" stop-color="#CFEFFF" stop-opacity=".4"/><stop offset="1" stop-color="#CFEFFF" stop-opacity="0"/></linearGradient>${lgd('niVela', ['#FFFFFF', '#E8DCC2'], 1, 1)}${lgd('niCasco', ['#F4F6FA', '#B8C4D6'])}
+      ${lgd('niBufalo', ['#6A6672', '#2A262E'])}${lgd('niGarca', ['#FFFFFF', '#DCE2EE'])}${lgd('niChifre', ['#E8DCC8', '#7A6A58'], 1, 0)}${lgd('niGalab', ['#9CC8E8', '#5E90BE'])}${lgd('niBlusa', ['#FF8A5A', '#E0502E'])}
+      <radialGradient id="niSolG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF6C8"/><stop offset=".55" stop-color="#FFD24A"/><stop offset="1" stop-color="#F0A81E"/></radialGradient>
+      <radialGradient id="niPele1" cx=".4" cy=".35"><stop offset="0" stop-color="#C98A5A"/><stop offset="1" stop-color="#8A5530"/></radialGradient>
+      <radialGradient id="niPele2" cx=".4" cy=".35"><stop offset="0" stop-color="#B07448"/><stop offset="1" stop-color="#7A4626"/></radialGradient>
+      <radialGradient id="niPeso" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#9A8A78"/><stop offset=".6" stop-color="#6A5A4A"/><stop offset="1" stop-color="#3E3228"/></radialGradient>
+      <radialGradient id="niVinheta" cx=".5" cy=".46" r=".78"><stop offset=".62" stop-color="#3A1E0A" stop-opacity="0"/><stop offset="1" stop-color="#3A1E0A" stop-opacity=".32"/></radialGradient>
+      <linearGradient id="niNevoa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4E0" stop-opacity="0"/><stop offset="1" stop-color="#FFF4E0" stop-opacity=".7"/></linearGradient>
+      <clipPath id="niPocoC"><path d="M690 416 V252 H790 V416Z"/></clipPath><filter id="niDesf" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>${CANT.map((c, i) => `<clipPath id="niCantC${i}"><path d="${cantPath(c)}"/></clipPath>`).join('')}
+      <clipPath id="niRioC"><path d="${RIO}"/></clipPath>
+      <filter id="niGrao"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .05 0"/></filter>
+    </defs>
+    <rect width="800" height="200" fill="url(#niCeu)"/>
+    <g id="ni-sol" class="toque"><circle cx="694" cy="62" r="58" fill="#FFE8A0" opacity=".25"/><circle cx="694" cy="62" r="42" fill="#FFE27A" opacity=".3"/><circle cx="694" cy="62" r="27" fill="url(#niSolG)" stroke="#F0A81E" stroke-width="2.2"/><path d="M680 52 q8 -9 20 -9" stroke="#FFF6C8" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+    <g class="deriva" style="animation-duration:34s"><use href="#nuvem" x="440" y="40" width="70" height="32" style="color:#fff" opacity=".7"/><use href="#nuvem" x="560" y="96" width="52" height="24" style="color:#fff" opacity=".55"/></g>
+    <!-- planalto da Etiópia, longe -->
+    <path d="M0 150 C30 116 66 96 104 104 C134 80 176 74 210 94 C244 100 280 124 330 160 L334 184 H0Z" fill="url(#niMonteL)"/>
+    <path d="M0 184 C20 150 56 128 98 136 C130 118 170 118 204 134 C236 146 268 162 300 184Z" fill="url(#niMonte)" stroke="#3E7A6A" stroke-width="1.4"/>
+    <g fill="#3E7A62" opacity=".55">${Array.from({ length:18 }, () => { const x = R(20, 280), y = R(148, 178); return `<path d="${copa(x, y, R(6, 11), R(3, 5), 6, .3)}"/>`; }).join('')}</g>
+    <path d="M30 160 C60 146 90 144 120 150 M150 140 C180 138 210 146 236 160" stroke="#A8D0B0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/>
+    <path d="M0 184 C26 168 52 160 80 166 C100 158 124 160 140 172 L150 184Z" fill="url(#niMonteE)" opacity=".9"/>
+    <path id="ni-cascata" d="M176 132 C182 148 190 160 200 168 C214 176 232 180 250 182" stroke="#8ED0F0" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".75"/>
+    <!-- deserto e platô -->
+    <path d="M300 184 L312 166 H366 L374 158 H452 L462 168 H540 L552 154 H640 L650 162 H736 L748 150 H800 V190 H300Z" fill="url(#niPlato)" stroke="#B87A4E" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M312 166 V184 M374 158 V184 M462 168 V184 M552 154 V184 M650 162 V184 M748 150 V184" stroke="#C88A5E" stroke-width="1.1" opacity=".8"/>
+    <path d="M312 167 H366 M374 159 H452 M552 155 H640 M748 151 H800" stroke="#FFE2C0" stroke-width="1.6" opacity=".8"/>
+    <rect y="150" width="800" height="40" fill="url(#niNevoa)"/>
+    <path d="M0 182 H800 V300 H0Z" fill="url(#niAreia)"/>
+    <path d="M0 214 C40 200 80 196 120 204 C150 196 176 192 200 194 C170 200 140 206 120 214 C80 206 40 210 0 222Z" fill="url(#niDuna)" opacity=".9"/>
+    <path d="M560 206 C610 196 660 200 700 208 C740 200 780 198 800 202 V214 C760 210 720 214 690 218 C650 212 600 212 560 206Z" fill="url(#niDuna)" opacity=".9"/>
+    <path d="M20 238 C40 230 70 228 96 232 M600 220 C640 214 680 216 720 222" stroke="#FFF0D0" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>
+    <!-- faixa verde do Nilo -->
+    <path id="ni-faixa" d="M0 262 C80 244 160 210 240 186 C320 190 430 205 520 220 C600 232 700 238 800 236 V500 H0Z" fill="url(#niVerde)"/>
+    <path d="M0 262 C80 244 160 210 240 186 C320 190 430 205 520 220 C600 232 700 238 800 236" stroke="#C8E890" stroke-width="2" fill="none" opacity=".8"/>
+    <g fill="#4E8E36" opacity=".55">${Array.from({ length:30 }, () => { const x = R(0, 800), y = R(300, 350); return `<path d="M${x.toFixed(0)} ${y.toFixed(0)} q2 -6 4 0 q2 -5 4 0" />`; }).join('')}</g>
+    <!-- arvoredo distante ao longo do rio -->
+    <g>${[[262, 192, .34], [300, 196, .4], [340, 200, .42], [380, 206, .46], [430, 214, .5], [540, 226, .52], [580, 232, .56], [620, 236, .6]].map(([x, y, s], i) => palmeira(x, y, 40 * s * 1.6, s, i % 2 ? '#5AA642' : '#4A9638', '#3E8030', i % 2 ? 1 : -1)).join('')}</g>
+    <rect y="176" width="800" height="78" fill="url(#niBruma)" pointer-events="none"/>
+    <!-- rio -->
+    <path d="M246 181 C296 190 352 199 400 214 C450 230 490 262 500 300 C508 336 514 400 500 500 M700 500 C676 420 640 340 600 296 C560 254 480 222 422 206 C362 190 302 182 254 179" stroke="#8A6A44" stroke-width="9" fill="none" opacity=".55"/>
+    <path d="M246 181 C296 190 352 199 400 214 C450 230 490 262 500 300 C508 336 514 400 500 500 M700 500 C676 420 640 340 600 296 C560 254 480 222 422 206 C362 190 302 182 254 179" stroke="#D8BC88" stroke-width="5" fill="none"/>
+    <path id="ni-rio" d="${RIO}" fill="url(#niRio)" stroke="#1E5A7A" stroke-width="1.6"/>
+    <g clip-path="url(#niRioC)" pointer-events="none">
+      <path d="M250 182 C300 190 360 198 412 212 C462 228 500 262 536 300 C572 346 590 420 600 500" stroke="#0E4A78" stroke-width="64" fill="none" opacity=".34" filter="url(#niDesf)"/>
+      <path d="${RIO}" fill="none" stroke="#D2F4FA" stroke-width="14" opacity=".55" filter="url(#niDesf)"/>
+      <g fill="#2E6A3A" opacity=".18">${[[470, 252, .5], [520, 300, .7], [610, 430, .9]].map(([x, y, k]) => `<path d="M${x} ${y} l${(-2 * k).toFixed(1)} ${(26 * k).toFixed(1)} M${x} ${y}" stroke="#2E5A2A" stroke-width="${(3 * k).toFixed(1)}"/><path d="${copa(x - 2 * k, y + 32 * k, 18 * k, 7 * k, 7, .45)}"/>`).join('')}</g>
+      <g fill="#FFFFFF" opacity=".22">${[[430, 214, 24], [492, 262, 30], [560, 360, 40], [610, 470, 50]].map(([x, y, w]) => `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${(w * .12).toFixed(1)}"/>`).join('')}</g>
+      <path d="M444 223 q16 -5 32 -1 q-16 4 -32 1Z" fill="#E8CC94" stroke="#B08A58" stroke-width="1"/><path d="M448 222 q12 -3 24 -1" stroke="#FFF0CC" stroke-width="1" fill="none"/>
+      <path d="M624 377 q18 -7 40 -2 q-20 6 -40 2Z" fill="#E8CC94" stroke="#B08A58" stroke-width="1.2"/><path d="M630 375 q14 -4 28 -2" stroke="#FFF0CC" stroke-width="1.2" fill="none"/><g stroke="#4E8A30" stroke-width="1.2" stroke-linecap="round">${[636, 644, 652].map(x => `<path d="M${x} 376 l-1 -6 M${x + 2} 376 l2 -5"/>`).join('')}</g>
+    </g>
+    <path id="ni-rio-cheia" d="${RIO}" fill="url(#niRioCheia)" style="opacity:0;transition:opacity 1.6s"/>
+    <g clip-path="url(#niRioC)" id="ni-reflexos">${[[300, 192, 20], [400, 214, 26], [470, 250, 30], [520, 300, 40], [540, 352, 50], [560, 420, 60], [590, 480, 70]].map(([x, y, w], i) => `<path class="brilha-agua" style="animation-delay:${(i * .4).toFixed(1)}s" d="M${x - w / 2} ${y} q${w / 4} -3 ${w / 2} 0 t${w / 2} 0" stroke="#E6F8FF" stroke-width="${(1 + i * .25).toFixed(1)}" fill="none" stroke-linecap="round"/>`).join('')}</g>
+    <path id="ni-centro" d="M250 182 C300 190 360 198 412 212 C462 228 500 262 536 300 C572 346 590 380 640 404" fill="none" stroke="none"/>
+    <g class="balanca" style="animation-duration:4.6s">${[[476, 262], [508, 340], [512, 372], [640, 340], [612, 300], [672, 410], [432, 222]].map(([x, y], i) => `<path d="M${x} ${y} q-3 -10 -7 -14 M${x + 2} ${y} q0 -12 1 -17 M${x + 4} ${y} q3 -8 8 -11" stroke="#2E6A22" stroke-width="${(2.4 + y / 200).toFixed(1)}" fill="none" stroke-linecap="round"/><path d="M${x} ${y} q-3 -10 -7 -14 M${x + 2} ${y} q0 -12 1 -17 M${x + 4} ${y} q3 -8 8 -11" stroke="#8ACB54" stroke-width="${(1 + y / 400).toFixed(1)}" fill="none" stroke-linecap="round"/>`).join('')}</g>
+    ${[[300, 193, .4], [404, 213, .5], [432, 223, .6], [478, 262, .8], [500, 324, 1], [636, 336, 1], [668, 404, 1.1]].map(([x, y, k]) => papiroMini(x, y, k)).join('')}
+    <!-- faluca (longe) -->
+    <g id="ni-faluca" class="toque" data-fig="faluca"><g id="ni-faluca-pos" transform="translate(490 238) scale(.42)"><g style="animation:flutua 3.4s ease-in-out infinite alternate">
+      <ellipse cx="0" cy="22" rx="74" ry="8" fill="#0E3A5A" opacity=".3"/>
+      <path d="M-12 14 L-10 -60" stroke="#4E2E14" stroke-width="5" stroke-linecap="round"/>
+      <path d="M-64 10 L36 -128" stroke="#4E2E14" stroke-width="4.6" stroke-linecap="round"/><path d="M-64 10 L36 -128" stroke="url(#niVara)" stroke-width="2.4" stroke-linecap="round"/>
+      <g id="ni-vento" opacity="0" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"><path d="M-150 -80 q20 -8 44 0 q14 5 26 0"/><path d="M-170 -40 q24 -8 50 0"/><path d="M-140 -2 q18 -6 40 0 q10 4 20 0"/></g>
+      <g id="ni-vela"><path d="M-60 6 L34 -124 C48 -84 58 -40 54 10 C20 13 -24 12 -60 6Z" fill="url(#niVela)" stroke="#8A7A5A" stroke-width="2.2" stroke-linejoin="round"/>
+      <g stroke="#CDBE9A" stroke-width="1.3" fill="none"><path d="M-36 -22 C-4 -18 26 -14 52 -12"/><path d="M-14 -56 C8 -50 30 -44 50 -40"/><path d="M8 -88 C22 -82 34 -76 44 -72"/><path d="M-12 8 L22 -96"/><path d="M18 10 L38 -60"/></g>
+      <path d="M30 -110 C42 -76 48 -40 48 0" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/></g>
+      <path d="M36 -128 l18 -4 l-5 7 l6 4 l-19 0Z" fill="#E5392C" stroke="#8A1E14" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M-72 10 C-50 14 50 14 78 8 C72 22 56 30 34 30 H-40 C-58 30 -68 22 -72 10Z" fill="url(#niCasco)" stroke="#3A4A6A" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M-68 16 C-36 21 40 21 72 14" stroke="#2E7BF6" stroke-width="3.6" fill="none"/><path d="M-62 23 C-30 27 36 27 64 21" stroke="#FFC83D" stroke-width="2.4" fill="none"/>
+      <path d="M-74 10 C-50 13 50 13 80 7" stroke="#7A4A22" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <g id="ni-carga"></g>
+      <g transform="translate(-48 4)"><path d="M-5 0 v-14 C-5 -20 5 -20 5 -14 V0Z" fill="#2E7BF6" stroke="#12235A" stroke-width="1.2"/><circle cx="0" cy="-22" r="5.6" fill="url(#niPele2)" stroke="#4E2A14" stroke-width="1.1"/><path d="M-5.6 -23 C-5 -30 5 -30 5.6 -23 C2 -26 -2 -26 -5.6 -23Z" fill="#2A1A10"/><circle cx="2" cy="-22" r=".9" fill="#12121A"/></g>
+      <rect x="-80" y="-130" width="150" height="160" fill="transparent"/>
+    </g></g>${'' }<g id="ni-faluca-hint">${brilhoHotspot(516, 196)}</g></g>
+    <!-- búfalo-d'água na margem -->
+    <g id="ni-bufalo" class="toque"><g transform="translate(600 322) scale(.7) translate(-590 -322)"><g id="ni-bufalo-in">
+      <ellipse cx="590" cy="318" rx="62" ry="9" fill="#164E7A" opacity=".35"/>
+      <path d="M566 312 C566 292 584 280 606 280 C630 280 650 292 652 312 C636 318 590 320 566 312Z" fill="url(#niBufalo)" stroke="#16141A" stroke-width="1.8"/>
+      <path d="M580 288 C592 282 610 282 624 286" stroke="#C8C2D4" stroke-width="3" fill="none" stroke-linecap="round" opacity=".75"/>
+      <path d="M600 284 C612 284 624 288 632 294" stroke="#FFFFFF" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".6"/>
+      <path d="M640 300 q6 4 8 10" stroke="#3E3A46" stroke-width="1.2" fill="none"/>
+      <g id="ni-buf-cab">
+        <path d="M546 286 C531 280 518 272 515 258 C514 250 520 246 525 249 C522 258 530 268 548 278Z" fill="url(#niChifre)" stroke="#3A2E24" stroke-width="1.3" stroke-linejoin="round"/>
+        <path d="M570 286 C585 280 598 272 601 258 C602 250 596 246 591 249 C594 258 586 268 568 278Z" fill="url(#niChifre)" stroke="#3A2E24" stroke-width="1.3" stroke-linejoin="round"/>
+        <path d="M519 255 l-3 -5 M597 255 l3 -5" stroke="#2A2018" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M545 293 C534 290 527 294 524 299 C532 302 540 300 547 298Z" fill="url(#niBufalo)" stroke="#16141A" stroke-width="1.2"/><path d="M542 295 C536 295 531 297 529 299" stroke="#B88A8A" stroke-width="1.4" fill="none"/>
+        <path d="M571 293 C582 290 589 294 592 299 C584 302 576 300 569 298Z" fill="url(#niBufalo)" stroke="#16141A" stroke-width="1.2"/><path d="M574 295 C580 295 585 297 587 299" stroke="#B88A8A" stroke-width="1.4" fill="none"/>
+        <path d="M546 280 C552 276 564 276 570 280 C576 288 574 304 570 314 C566 322 550 322 546 314 C542 304 540 288 546 280Z" fill="url(#niBufalo)" stroke="#16141A" stroke-width="1.6"/>
+        <path d="M550 282 C554 280 562 280 566 282" stroke="#9A94A6" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="558" cy="314" rx="10.5" ry="7" fill="#8A8094" stroke="#16141A" stroke-width="1.3"/><ellipse cx="554" cy="314" rx="1.6" ry="1.2" fill="#2A2630"/><ellipse cx="562" cy="314" rx="1.6" ry="1.2" fill="#2A2630"/><path d="M553 309.6 q5 -2 10 0" stroke="#C8C0D0" stroke-width="1.2" fill="none"/>
+        <ellipse cx="551" cy="297" rx="3" ry="3.2" fill="#FFFFFF" stroke="#16141A" stroke-width=".8"/><circle cx="551.4" cy="297.6" r="2.1" fill="#140E10"/><circle cx="552.2" cy="296.6" r=".8" fill="#fff"/>
+        <ellipse cx="565" cy="297" rx="3" ry="3.2" fill="#FFFFFF" stroke="#16141A" stroke-width=".8"/><circle cx="565.4" cy="297.6" r="2.1" fill="#140E10"/><circle cx="566.2" cy="296.6" r=".8" fill="#fff"/>
+        <path d="M547 292 q4 -2 7 0 M561 292 q4 -2 7 0" stroke="#2A2630" stroke-width="1" fill="none"/>
+      </g>
+      <path d="M528 316 Q536 311 550 316 T578 316 T606 316 T634 316 T654 316 C668 318 666 328 648 330 L536 330 C516 328 516 318 528 316Z" fill="#3E9EC4" opacity=".9"/>
+      <path d="M522 316 Q536 311 550 316 T578 316 T606 316 T634 316 T660 316" stroke="#E6F8FF" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g fill="none" stroke="#E6F8FF" stroke-linecap="round" opacity=".7"><ellipse cx="560" cy="321" rx="30" ry="4" stroke-width="1.2"/><ellipse cx="610" cy="322" rx="40" ry="5" stroke-width="1"/></g>
+    </g></g><rect x="540" y="268" width="104" height="58" fill="transparent"/></g>
+    <!-- nilômetro -->
+    <g id="ni-nilometro" class="toque">
+      <ellipse cx="744" cy="424" rx="70" ry="7" fill="#2A1A0A" opacity=".25"/>
+      <path d="M676 422 V236 H804 V422Z" fill="url(#niPedra)" stroke="#6E4A2A" stroke-width="1.8"/>
+      <path d="${BLOCOS}" stroke="#8A6440" stroke-width="1" fill="none" opacity=".55"/>
+      <path d="M676 422 V236" stroke="#F6E2C0" stroke-width="2" opacity=".7"/>
+      <path d="M690 416 V252 H790 V416Z" fill="url(#niPoco)" stroke="#5A3A1E" stroke-width="1.6"/>
+      <g clip-path="url(#niPocoC)">
+        <path d="${BLOCOS2}" stroke="#2A1A0E" stroke-width="1" fill="none" opacity=".45"/>
+        ${ESCADA}
+        <g id="ni-poco-agua" style="transition:transform 2s ease-in-out"><rect id="ni-poco-cor" x="688" y="${NIVEIS[0]}" width="104" height="140" fill="#3E9EC4" opacity=".9" style="transition:fill 1.6s"/><path d="M688 ${NIVEIS[0]} h104" stroke="#FFFFFF" stroke-width="3"/><path d="M688 ${NIVEIS[0] + 3} h104" stroke="#1E4A6A" stroke-width="1" opacity=".4"/><path d="M696 ${NIVEIS[0] + 8} q6 -2 12 0 M726 ${NIVEIS[0] + 11} q6 -2 12 0 M708 ${NIVEIS[0] + 18} h20" stroke="#BFEAFF" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
+        <rect x="688" y="250" width="104" height="30" fill="url(#niSombraT)"/>
+        <rect x="688" y="250" width="12" height="170" fill="#140C06" opacity=".22"/>
+      </g>
+      <rect x="766" y="258" width="16" height="158" fill="url(#niColuna)" stroke="#5A3A1E" stroke-width="1.3"/>
+      <path d="M763 252 h22 v7 h-22Z" fill="#E8CCA0" stroke="#5A3A1E" stroke-width="1.2"/>
+      <path d="M769 262 V412" stroke="#FFF0D6" stroke-width="1.4" opacity=".8"/><path d="M780 262 V412" stroke="#6E4A2A" stroke-width="1.6" opacity=".5"/>
+      ${Array.from({ length:9 }, (_, i) => { const y = 270 + i * 17.4, L = i % 2 ? 7 : 14; return `<path d="M766 ${y.toFixed(1)} h${L}" stroke="#3E2410" stroke-width="1.8"/><path d="M766 ${(y + 1.6).toFixed(1)} h${L}" stroke="#FFF0D6" stroke-width="1" opacity=".8"/>${i % 2 ? '' : `<path d="M776 ${(y - 5).toFixed(1)} l2 3 l-2 3 l-2 -3Z" fill="none" stroke="#3E2410" stroke-width=".9"/>`}`; }).join('')}
+      <g>${[[NIVEIS[1], '#E5A23A'], [NIVEIS[2], '#7AC04A'], [NIVEIS[3], '#2E9E5A']].map(([y, c]) => `<path d="M764 ${y} l-7 -4.4 v8.8Z" fill="${c}" stroke="#4E2E14" stroke-width="1"/>`).join('')}</g>
+      <path d="M672 236 H808 V246 H672Z" fill="#E8CCA0" stroke="#6E4A2A" stroke-width="1.6"/><path d="M674 238 H806" stroke="#FFF4DE" stroke-width="2" stroke-linecap="round"/><path d="M700 236 V246 M736 236 V246 M772 236 V246" stroke="#8A6440" stroke-width="1"/>
+      <path d="M676 422 V400 C676 388 694 388 694 400 V422Z" fill="#2E6A8A" stroke="#5A3A1E" stroke-width="1.6"/><path d="M679 410 h12" stroke="#BFEAFF" stroke-width="1.2"/>
+      <g id="ni-nilo-hint" style="display:none">${brilhoHotspot(790, 262)}</g>
+    </g>
+    <!-- vila de adobe -->
+    <g id="ni-vila">
+      ${palmeira(36, 250, 70, .95, '#5AA642', '#3E8A30', 1)}${palmeira(150, 236, 62, .85, '#6AB448', '#4A9638', -1)}${palmeira(232, 226, 54, .75, '#5AA642', '#3E8A30', 1)}
+      <ellipse cx="300" cy="270" rx="26" ry="4" fill="#1E3A12" opacity=".25"/><path d="M296 270 C296 260 294 252 290 246 M298 262 C302 254 308 250 314 246" stroke="#5A3A1E" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M296 270 C296 260 294 252 290 246" stroke="#9A6A3E" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="${copa(300, 232, 32, 21, 12, .25)}" fill="#2E6A3A" stroke="#173A1E" stroke-width="1.6"/><path d="${copa(304, 226, 24, 15, 10, .25)}" fill="#4A8A4A" stroke="#1E4A26" stroke-width="1.1"/><path d="${copa(310, 220, 13, 8, 8, .3)}" fill="#7AB866"/>
+      <g fill="#C8A04A">${[[286, 236], [312, 238], [298, 244], [320, 228]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.8"/>`).join('')}</g>
+      <path d="M0 286 C60 272 160 268 280 272 C300 274 320 278 330 284 V296 H0Z" fill="#B48E5A" opacity=".55"/>
+      ${casa(10, 284, 46, 36, '#2E7BF6', '#F2C83A', '')}${toldo(4, 60, 254)}
+      ${casa(62, 278, 54, 44, '#1FA8A0', '#F2C83A', `<g transform="translate(104 228)"><path d="M0 6 v-6" stroke="#5A5A6A" stroke-width="1.4"/><ellipse cx="0" cy="-3" rx="7" ry="5" transform="rotate(-24)" fill="#F4F6FA" stroke="#5A6070" stroke-width="1.2"/><circle cx="2" cy="-6" r="1.2" fill="#5A6070"/></g>`)}
+      ${casa(124, 282, 42, 32, '#F2C83A', '#E5392C', `<g stroke="#8A6A2A" stroke-width="1.2" stroke-linecap="round"><path d="M130 249 l18 -4 M131 247 l18 -5 M132 250 l17 -3"/></g><path d="M128 250 q12 -8 24 -4 l-2 4Z" fill="#C8A85A" stroke="#7A5A22" stroke-width=".8"/>`)}
+      ${casa(172, 276, 58, 40, '#E5392C', '#1FA8A0', `${escadaTeto(212, 276, 40)}${varal(178, 210, 226)}`)}${zir(68, 286)}
+      <path d="M232 276 h38 v-14 h-38Z" fill="url(#niAdobe)" stroke="#8A5A32" stroke-width="1.4"/><path d="M234 264 h34" stroke="#F8DCB0" stroke-width="1.2"/>
+      <g id="ni-poupa" class="toque" transform="translate(252 262)"><g id="ni-poupa-in">
+        <g id="ni-crista" style="transform-origin:8px -12px;transition:transform .3s cubic-bezier(.3,1.6,.5,1);transform:scale(.55)"><path d="M6 -12 l-8 -10 l6 2 l-2 -9 l6 6 l2 -9 l3 8 l5 -7 l-1 9 l5 -3 l-6 12Z" fill="#F0A060" stroke="#7A3E14" stroke-width="1"/><path d="M-1 -21 l2 2 M3 -27 l1 3 M9 -28 l0 3 M14 -24 l-1 3" stroke="#1A1A22" stroke-width="2.2" stroke-linecap="round"/></g>
+        <path d="M-12 0 C-12 -8 0 -10 6 -6 C10 -2 8 2 0 2 C-6 2 -10 2 -12 0Z" fill="#E8A070" stroke="#7A3E14" stroke-width="1.2"/>
+        <path d="M-12 -2 C-16 -2 -20 0 -22 2 C-18 4 -14 2 -10 2Z" fill="#1A1A22"/>
+        <path d="M-8 -6 l-3 6 M-4 -7 l-2 7 M0 -7 l-1 7" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/><path d="M-8 -6 l-3 6 M-4 -7 l-2 7 M0 -7 l-1 7" stroke="#1A1A22" stroke-width="1" stroke-linecap="round" transform="translate(1.6 0)"/>
+        <circle cx="8" cy="-10" r="5" fill="#F0A870" stroke="#7A3E14" stroke-width="1.1"/><circle cx="9.6" cy="-11" r="1.4" fill="#12121A"/><circle cx="10" cy="-11.5" r=".5" fill="#fff"/>
+        <path d="M12 -9 q8 2 12 8" stroke="#2A1A10" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      </g><rect x="-24" y="-32" width="50" height="38" fill="transparent"/></g>
+      <g id="ni-arvore" class="toque"><rect x="268" y="206" width="66" height="50" fill="transparent"/></g>
+      <g id="ni-palmeira-alvo" class="toque"><rect x="128" y="160" width="50" height="40" fill="transparent"/></g>
+    </g>
+    <!-- campos -->
+    <g id="ni-campos">
+      ${CANT.map((c, i) => `<g class="ni-cant" data-i="${i}">
+        <path d="${cantPath(c)}" fill="#8A6A3E" opacity=".6" transform="translate(0 3)"/>
+        <path class="ni-seco" d="${cantPath(c)}" fill="url(#niSeco)" stroke="#9A7444" stroke-width="1.6"/>
+        <g class="ni-seco" clip-path="url(#niCantC${i})">${sulcos(c, '#9A7040', 2.2, .5)}<g transform="translate(1.6 0)">${sulcos(c, '#FAE6B8', 1, .6)}</g>${rachas(c)}${torroes(c, '#D8B47A', '#8A6438', '#FAE8C0', 26)}</g>
+        <g class="ni-lama" style="opacity:0;transition:opacity 2s"><path d="${cantPath(c)}" fill="url(#niLama)" stroke="#1E1410" stroke-width="1.6"/>${ondulas(c, '#5E4A3C', 1.3, .85)}<path d="${cantPath(c, 10)}" fill="none" stroke="#8A7A6E" stroke-width="1" opacity=".35"/><g clip-path="url(#niCantC${i})">${torroes(c, '#3A2C22', '#1A1210', '#9A8A7A', 18)}<path d="${cantPath(c)}" fill="url(#niReflexo)" opacity=".6"/></g><g fill="#C8B8A8" opacity=".22">${[[.3, .25], [.62, .5], [.22, .72], [.74, .86], [.5, .14], [.4, .55], [.82, .3]].map(([qx, qy]) => { const yy = Y0 + (Y1 - Y0) * qy, xl = c[0] + (c[2] - c[0]) * qy, xr = c[1] + (c[3] - c[1]) * qy, xx = xl + (xr - xl) * qx; return `<ellipse cx="${xx.toFixed(1)}" cy="${yy.toFixed(1)}" rx="${(5 + qy * 6).toFixed(1)}" ry="${(1.6 + qy).toFixed(1)}"/>`; }).join('')}</g></g>
+        <g class="ni-molha" style="opacity:0;transition:opacity 1.4s"><path d="${cantPath(c)}" fill="url(#niMolhado)" stroke="#120C0A" stroke-width="1.6"/><path d="${cantPath(c, 6)}" fill="#5EA8D0" opacity=".28"/>${sulcos(c, '#8ED0F0', 1.6, .55)}<path d="${cantPath(c)}" fill="url(#niReflexo)"/><g fill="none" stroke="#E6F8FF" stroke-width="1.2" opacity=".55">${[[.3, .3], [.7, .55], [.45, .8]].map(([qx, qy]) => { const [x, y] = dentro(c, qx, qy); return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(8 + qy * 8).toFixed(1)}" ry="${(2 + qy * 2).toFixed(1)}"/>`; }).join('')}</g></g>
+        <g class="ni-brotos" style="opacity:0;transition:opacity 1s">${fileira(c, (x, y, s) => broto(x, y, s))}</g>
+        <g class="ni-maduro" style="opacity:0;transition:opacity 2s"><path d="${cantPath(c)}" fill="${i === 0 ? 'url(#niOuro)' : 'url(#niVerdeC)'}" stroke="${i === 0 ? '#8A6A1E' : '#2E6A22'}" stroke-width="1.6" opacity=".9"/>${fileira(c, (x, y, s) => MADURO[i](x, y, s))}</g>
+      </g>`).join('')}
+      ${CANT.map(c => `<path d="${cantPath(c)}" fill="none" stroke="#9A7444" stroke-width="7" stroke-linejoin="round"/><path d="${cantPath(c)}" fill="none" stroke="#D8B47E" stroke-width="3.6" stroke-linejoin="round"/><path d="M${c[2] + 4} ${Y1 + 1} H${c[3] - 4}" stroke="#F2D8A8" stroke-width="1.4" stroke-linecap="round"/>`).join('')}
+      <g stroke="#4E8A30" stroke-width="1.3" fill="none" stroke-linecap="round">${CANT.map(c => Array.from({ length:7 }, (_, k) => { const x = c[0] + 8 + k * (c[1] - c[0] - 16) / 6; return `<path d="M${x.toFixed(0)} ${Y0 - 1} q-1 -5 -4 -7 M${(x + 2).toFixed(0)} ${Y0 - 1} q1 -6 3 -8"/>`; }).join('')).join('')}</g>
+      <g>${[[140, 430], [282, 440], [470, 470], [12, 400]].map(([x, y]) => `<path d="M${x} ${y} q-2 -8 -6 -12 M${x + 2} ${y} q0 -10 2 -14 M${x + 4} ${y} q3 -6 7 -9" stroke="#5E9E3A" stroke-width="1.6" fill="none" stroke-linecap="round"/>`).join('')}</g>
+      <path d="M0 492 C120 488 300 490 470 494 L470 500 H0Z" fill="#7AA84A"/><g stroke="#4E8A30" stroke-width="1.4" fill="none" stroke-linecap="round">${Array.from({ length:26 }, (_, k) => { const x = 6 + k * 18 + R(-4, 4); return `<path d="M${x.toFixed(0)} 500 q-1 -6 -4 -9 M${(x + 3).toFixed(0)} 500 q1 -7 3 -10"/>`; }).join('')}</g>
+      <!-- canal -->
+      <path d="M418 352 C340 356 250 356 160 358 C110 358 60 360 0 362" stroke="#8A6A3E" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M418 352 C340 356 250 356 160 358 C110 358 60 360 0 362" stroke="#5A3E26" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path class="ni-canal-agua" d="M412 352 C340 356 250 356 160 358 C110 358 60 360 0 362" stroke="#3E9EE0" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+      <path class="ni-canal-brilho" d="M412 351 C340 355 250 355 160 357 C110 357 60 359 0 361" stroke="#BFEAFF" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-dasharray="6 10"/>
+      ${[[384, 362], [228, 364], [90, 366]].map(([x, y], i) => `<path class="ni-bica" data-i="${i}" d="M${x} ${y - 4} l-2 12" stroke="#3E9EE0" stroke-width="4" stroke-linecap="round" style="opacity:0;transition:opacity .6s"/>`).join('')}
+    </g>
+    <!-- cheia: a água cobre a planície -->
+    <g id="ni-cheia" style="opacity:0;transition:opacity 1.8s" pointer-events="none">
+      <path d="${CHEIA}" fill="url(#niCheia)" opacity=".8"/><path d="${CHEIA}" fill="#7FB8D0" opacity=".12"/>
+      <path d="M0 302 C120 296 250 292 350 286 C410 282 452 262 468 240" stroke="#E8C8A0" stroke-width="2.4" fill="none" opacity=".8"/>
+      <g stroke="#F4DCB8" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".75" class="brilha-agua">${Array.from({ length:22 }, () => { const x = R(10, 640), y = R(310, 490); return `<path d="M${x.toFixed(0)} ${y.toFixed(0)} q8 -3 16 0 t16 0"/>`; }).join('')}</g>
+    </g>
+    <!-- garças-vaqueiras -->
+    <g id="ni-garcas" class="toque">${[[214, 326, .9], [244, 318, .8], [272, 330, 1]].map(([x, y, s], i) => garca(x, y, s, i)).join('')}<rect x="190" y="290" width="100" height="48" fill="transparent"/></g>
+    <g id="ni-menina" class="toque" transform="translate(186 326) scale(1.55)">
+        <ellipse cx="0" cy="0.6" rx="11" ry="2.4" fill="#1E3A12" opacity=".3"/>
+        <path d="M-3.4 -1 v-11 M3.4 -1 v-11" stroke="#1E3A6E" stroke-width="4.6" stroke-linecap="round"/><path d="M-3.4 -1 v-11 M3.4 -1 v-11" stroke="#3E68B0" stroke-width="3" stroke-linecap="round"/>
+        <path d="M-6.6 0 h5.4 v-2.4 h-5.4Z M1.2 0 h5.4 v-2.4 h-5.4Z" fill="#FFFFFF" stroke="#4E5A6E" stroke-width=".7"/><path d="M-6.6 0 h5.4 M1.2 0 h5.4" stroke="#E5392C" stroke-width="1"/>
+        <path d="M-9 -22 h-2.6 v10 h2.6" fill="#8E4AC8" stroke="#3E1E6A" stroke-width=".9"/>
+        <path d="M-7.6 -11 C-8.6 -18 -8 -23 -5 -25 H5 C8 -23 8.6 -18 7.6 -11Z" fill="url(#niBlusa)" stroke="#8A2A10" stroke-width="1.1" stroke-linejoin="round"/>
+        <path d="M-5.6 -24 C-5 -20 -5 -16 -6 -12" stroke="#5E2E9E" stroke-width="1.6" fill="none"/>
+        <path d="M-1.6 -18 c1.4 -2 4 -2 5 0 c-1 2 -3.6 2 -5 0Z M-1.6 -18 l-2 -1.4 v2.8Z" fill="#7FD0F0" stroke="#1E5A7A" stroke-width=".6"/>
+        <path d="M-6.6 -23 C-9 -19 -9.6 -15 -9 -12" stroke="url(#niBlusa)" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="-9" cy="-11.4" r="1.7" fill="url(#niPele2)" stroke="#4E2A14" stroke-width=".6"/>
+        <g id="ni-menina-braco" style="transform-origin:6px -23px"><path d="M6 -23 C9 -26 11 -29 12.6 -33" stroke="#E0502E" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M10.4 -29.4 L12.6 -33" stroke="#8A5530" stroke-width="2.6" stroke-linecap="round"/><ellipse cx="13.2" cy="-34.4" rx="1.9" ry="2.2" fill="url(#niPele2)" stroke="#4E2A14" stroke-width=".6"/><path d="M12 -36 v-1.6 M13.4 -36.4 v-1.6 M14.6 -35.6 l.8 -1.4" stroke="#7A4626" stroke-width=".8" stroke-linecap="round"/></g>
+        <path d="M-1.6 -25.6 v-2 h3.2 v2Z" fill="#7A4626"/>
+        <circle cx="-8" cy="-37" r="3.6" fill="#1E120C"/><circle cx="8" cy="-37" r="3.6" fill="#1E120C"/><circle cx="-6" cy="-35.4" r="1.1" fill="#FFC83D"/><circle cx="6" cy="-35.4" r="1.1" fill="#FFC83D"/>
+        <ellipse cx="0" cy="-32.4" rx="6.8" ry="7" fill="url(#niPele2)" stroke="#4E2A14" stroke-width="1"/>
+        <path d="M-6.9 -33 C-7.6 -41 7.6 -41 6.9 -33 C5 -36.6 1 -37.4 -1 -36 C-3 -37 -5.6 -36 -6.9 -33Z" fill="#1E120C"/>
+        <ellipse cx="-2.4" cy="-31.8" rx="1.2" ry="1.5" fill="#1A0E08"/><ellipse cx="2.6" cy="-31.8" rx="1.2" ry="1.5" fill="#1A0E08"/><circle cx="-2" cy="-32.4" r=".45" fill="#fff"/><circle cx="3" cy="-32.4" r=".45" fill="#fff"/>
+        <path d="M-3.4 -34.4 q1 -.8 2 0 M1.6 -34.4 q1 -.8 2 0" stroke="#1E120C" stroke-width=".6" fill="none"/>
+        <path d="M-2 -28.6 q2 1.8 4 0" stroke="#6E1E0C" stroke-width=".8" fill="#FFFFFF" stroke-linecap="round"/>
+        <ellipse cx="-4.2" cy="-29.4" rx="1.4" ry=".8" fill="#E06A5A" opacity=".4"/><ellipse cx="4.4" cy="-29.4" rx="1.4" ry=".8" fill="#E06A5A" opacity=".4"/>
+        <rect x="-14" y="-44" width="30" height="46" fill="transparent"/>
+      </g>
+    <!-- papiro na beira do rio -->
+    <g id="ni-papiro" class="toque" data-fig="papiro"><svg x="458" y="398" width="82" height="106" viewBox="0 0 100 130"><use href="#f-papiro"/></svg>${brilhoHotspot(526, 410)}</g>
+    <!-- shaduf -->
+    <g id="ni-shaduf">
+      <ellipse cx="${BACIA.x}" cy="${BACIA.y + 2}" rx="20" ry="7" fill="#8A6A3E" stroke="#5A3E1E" stroke-width="1.4"/><ellipse id="ni-bacia-agua" cx="${BACIA.x}" cy="${BACIA.y + 1}" rx="15" ry="4.4" fill="#5A3E26"/>
+      <g id="ni-postes" class="toque" data-fig="shaduf">
+        <ellipse cx="438" cy="353" rx="34" ry="5" fill="#2A1A0A" opacity=".22"/>
+        <path d="M414 352 V306 C414 301 428 301 428 306 V352Z" fill="url(#niAdobe)" stroke="#6E3E1E" stroke-width="1.6"/>
+        <path d="M446 352 V306 C446 301 460 301 460 306 V352Z" fill="url(#niAdobe)" stroke="#6E3E1E" stroke-width="1.6"/>
+        <g stroke="#9A6A3E" stroke-width=".9" opacity=".6">${[312, 322, 332, 342].map(y => `<path d="M415 ${y} h12 M447 ${y} h12"/>`).join('')}</g>
+        <path d="M417 308 V348 M449 308 V348" stroke="#F8DCB0" stroke-width="1.4" opacity=".7"/>
+        <path d="M408 300 H466" stroke="#5A3418" stroke-width="6" stroke-linecap="round"/><path d="M408 299 H466" stroke="url(#niVara)" stroke-width="3" stroke-linecap="round"/>
+        <g id="ni-shaduf-hint">${brilhoHotspot(470, 316)}</g>
+      </g>
+      <g id="ni-vara" class="toque" style="cursor:grab" transform="rotate(${TH_UP} ${PIV.x} ${PIV.y})">
+        <path d="M${PIV.x - L2} ${PIV.y} H${PIV.x + L1}" stroke="#5A3418" stroke-width="7" stroke-linecap="round"/>
+        <path d="M${PIV.x - L2} ${PIV.y - .5} H${PIV.x + L1}" stroke="url(#niVara)" stroke-width="4" stroke-linecap="round"/>
+        <path d="M${PIV.x - 30} ${PIV.y - 1.4} H${PIV.x + L1 - 10}" stroke="#F4D4A0" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>
+        <path d="M${PIV.x - L2 - 13} ${PIV.y} C${PIV.x - L2 - 14} ${PIV.y - 12} ${PIV.x - L2 + 2} ${PIV.y - 16} ${PIV.x - L2 + 10} ${PIV.y - 6} C${PIV.x - L2 + 16} ${PIV.y + 4} ${PIV.x - L2 + 6} ${PIV.y + 16} ${PIV.x - L2 - 4} ${PIV.y + 13} C${PIV.x - L2 - 10} ${PIV.y + 11} ${PIV.x - L2 - 13} ${PIV.y + 6} ${PIV.x - L2 - 13} ${PIV.y}Z" fill="url(#niPeso)" stroke="#2A2018" stroke-width="1.6"/>
+        <path d="M${PIV.x - L2 - 8} ${PIV.y - 5} q4 -5 10 -5" stroke="#C8B8A8" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        <circle cx="${PIV.x}" cy="${PIV.y}" r="3.4" fill="#7A4A22" stroke="#3E2210" stroke-width="1"/>
+        <rect x="${PIV.x + 10}" y="${PIV.y - 14}" width="${L1 - 4}" height="28" fill="transparent"/>
+      </g>
+      <g id="ni-agricultor" class="toque" style="opacity:0;transition:opacity 1s" transform="translate(${FX} ${FY}) scale(${FK})">
+        <ellipse cx="0" cy="0" rx="20" ry="4" fill="#164E7A" opacity=".35"/>
+        <path d="M-5 -2 v-10 M5 -2 v-10" stroke="#8A5530" stroke-width="4.4" stroke-linecap="round"/>
+        <path d="M-12 -44 C-15 -34 -17 -22 -16 -10 C-6 -7 6 -7 16 -10 C17 -22 15 -34 12 -44 C6 -48 -6 -48 -12 -44Z" fill="url(#niGalab)" stroke="#2E4A6E" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M-6 -40 C-8 -30 -9 -20 -9 -10 M4 -38 C5 -28 6 -20 7 -10 M-1 -30 C-1 -22 0 -16 0 -9" stroke="#4E78A8" stroke-width="1.1" fill="none" opacity=".7"/>
+        <path d="M-10 -40 C-12 -30 -13 -20 -12 -12" stroke="#DCEEFA" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".8"/>
+        <path d="M-4 -46 L0 -38 L4 -46" fill="#7AA8D4" stroke="#2E4A6E" stroke-width="1"/>
+        <path d="M-11 -42 C-17 -34 -18 -26 -15 -20" stroke="#2E4A6E" stroke-width="7.4" fill="none" stroke-linecap="round"/><path d="M-11 -42 C-17 -34 -18 -26 -15 -20" stroke="#8CB8E0" stroke-width="5.2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="-14.6" cy="-18.4" rx="2.8" ry="3.2" fill="url(#niPele1)" stroke="#4E2A14" stroke-width=".9"/>
+        <path d="M-18 -4 Q-9 -8 0 -5 T18 -4 L20 2 L-20 2Z" fill="#3E9EC4" opacity=".92"/><path d="M-18 -4 Q-9 -8 0 -5 T18 -4" stroke="#E6F8FF" stroke-width="1.4" fill="none"/>
+        <path id="ni-agr-braco" d="M9 -42 L18 -60" stroke="#2E4A6E" stroke-width="7.4" fill="none" stroke-linecap="round"/><path id="ni-agr-braco2" d="M9 -42 L18 -60" stroke="#8CB8E0" stroke-width="5.2" fill="none" stroke-linecap="round"/>
+        <ellipse id="ni-agr-mao" cx="18" cy="-60" rx="3" ry="3.3" fill="url(#niPele1)" stroke="#4E2A14" stroke-width=".9"/>
+        <path d="M-3.6 -48 v-4 h7.2 v4Z" fill="#8A5530"/>
+        <ellipse cx="-8.4" cy="-56" rx="1.8" ry="2.6" fill="#B07448" stroke="#4E2A14" stroke-width=".8"/><ellipse cx="8.4" cy="-56" rx="1.8" ry="2.6" fill="#B07448" stroke="#4E2A14" stroke-width=".8"/>
+        <ellipse cx="0" cy="-56" rx="8.4" ry="9.2" fill="url(#niPele1)" stroke="#4E2A14" stroke-width="1.2"/>
+        <path d="M-9 -60 C-10 -70 10 -70 9 -60 C6 -63 -6 -63 -9 -60Z" fill="#F6F2E8" stroke="#8A8270" stroke-width="1.1"/>
+        <path d="M-8.6 -62 C-4 -66 4 -66 8.6 -62 M-7 -66 C-2 -68 3 -68 7 -66" stroke="#C8C0A8" stroke-width="1" fill="none"/>
+        <path d="M8 -63 C12 -62 13 -58 12 -54" stroke="#F6F2E8" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M8 -63 C12 -62 13 -58 12 -54" stroke="#8A8270" stroke-width="3.6" fill="none" stroke-linecap="round" opacity=".3"/>
+        <path d="M-5.6 -58.4 q2 -1.4 3.6 0 M2 -58.4 q2 -1.4 3.6 0" stroke="#2A1A10" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <ellipse cx="-3.6" cy="-55.6" rx="1.5" ry="1.7" fill="#fff"/><ellipse cx="3.8" cy="-55.6" rx="1.5" ry="1.7" fill="#fff"/><circle cx="-3.4" cy="-55.4" r="1.1" fill="#1A1008"/><circle cx="4" cy="-55.4" r="1.1" fill="#1A1008"/><circle cx="-3" cy="-55.9" r=".4" fill="#fff"/><circle cx="4.4" cy="-55.9" r=".4" fill="#fff"/>
+        <path d="M0 -55 q1.4 2.4 0 3" stroke="#6E3A1A" stroke-width=".9" fill="none"/>
+        <path d="M-4.4 -51 C-2 -52.4 2 -52.4 4.4 -51 C2 -50 -2 -50 -4.4 -51Z" fill="#2A1A10"/>
+        <path d="M-3 -49 q3 2.2 6 0" stroke="#6E2A10" stroke-width="1" fill="none" stroke-linecap="round"/>
+        <ellipse cx="-5.4" cy="-51.6" rx="1.8" ry="1" fill="#E07A5A" opacity=".35"/><ellipse cx="5.4" cy="-51.6" rx="1.8" ry="1" fill="#E07A5A" opacity=".35"/>
+        <rect x="-22" y="-74" width="48" height="78" fill="transparent"/>
+      </g>
+      <g id="ni-balde" class="toque" style="cursor:grab"><g id="ni-balde-in">
+        <path d="M0 0 V${CORDA}" stroke="#8A6A3E" stroke-width="1.6"/>
+        <path d="M-10 ${CORDA} H10 L7 ${CORDA + 15} C4 ${CORDA + 18} -4 ${CORDA + 18} -7 ${CORDA + 15}Z" fill="url(#niBalde)" stroke="#5A2A10" stroke-width="1.5" stroke-linejoin="round"/>
+        <path id="ni-balde-agua" d="M-10 ${CORDA} C-6 ${CORDA - 3} 6 ${CORDA - 3} 10 ${CORDA}" fill="#3E9AD0" stroke="#5A2A10" stroke-width="1.1" style="opacity:0"/>
+        <path d="M-6 ${CORDA + 4} V${CORDA + 12}" stroke="#F0A878" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
+        <rect x="-18" y="${CORDA - 10}" width="36" height="34" fill="transparent"/>
+      </g></g>
+    </g>
+    <g id="ni-abelharucos" pointer-events="none">${POUSO_A.map(([x, y], i) => `<g transform="translate(${x} ${y})"><g class="ni-ab"><g style="animation:flutua ${(2 + i * .4).toFixed(1)}s ease-in-out infinite alternate">${abelharuco()}</g></g></g>`).join('')}</g>
+    <!-- itens da colheita -->
+    <g id="ni-itens">${ITENS.map((it, i) => `<g class="ni-item toque" data-i="${i}" transform="translate(${it.x} ${it.y})" style="display:none;cursor:grab"><g class="cresce"><ellipse cx="0" cy="24" rx="20" ry="4" fill="#1E1410" opacity=".3"/>${feixe[it.id]}</g><g class="ni-item-hint">${brilhoHotspot(18, -20)}</g><circle r="32" fill="transparent"/></g>`).join('')}</g>
+    <!-- tilápia -->
+    <g id="ni-tilapias" pointer-events="none">${[0, 1, 2].map(i => `<g class="ni-til" style="opacity:0"><g class="ni-til-pos"><path d="M-13 0 C-7 -9 8 -9 13 0 C8 8 -7 8 -13 0Z" fill="url(#niTil)" stroke="#2E4A44" stroke-width="1.3"/><path d="M-13 0 L-21 -7 L-18 0 L-21 7Z" fill="#7A9A90" stroke="#2E4A44" stroke-width="1.2" stroke-linejoin="round"/><path d="M-4 -7 C-1 -11 5 -10 8 -6" fill="#8AA8A0" stroke="#2E4A44" stroke-width="1"/><path d="M-6 -3 v6 M-1 -4 v8 M4 -4 v7" stroke="#4E6E66" stroke-width="1" opacity=".6"/><path d="M-6 -4 C-2 -6 4 -6 8 -3" stroke="#E0F0EA" stroke-width="1.4" fill="none"/><circle cx="7.4" cy="-1.4" r="2" fill="#fff" stroke="#2E4A44" stroke-width=".6"/><circle cx="7.8" cy="-1.4" r="1.2" fill="#12121A"/><circle cx="8.2" cy="-1.9" r=".4" fill="#fff"/></g></g>`).join('')}</g>
+    <rect id="ni-agua-toque" x="552" y="336" width="96" height="48" fill="transparent" class="toque"/>
+    <!-- Nuri, o martim-pescador -->
+    <g id="ni-nuri" class="toque" data-fig="martim">
+      <path d="M740 500 V452" stroke="#4E3018" stroke-width="10" stroke-linecap="round"/><path d="M740 500 V452" stroke="#A8784A" stroke-width="6" stroke-linecap="round"/><path d="M737 456 V496" stroke="#D8A878" stroke-width="1.4"/>
+      <ellipse cx="740" cy="452" rx="5" ry="2" fill="#7A5434" stroke="#4E3018" stroke-width="1"/>
+      <g id="ni-nuri-pos"><g id="ni-nuri-in"><g style="animation:flutua 2.8s ease-in-out infinite alternate"><svg x="700" y="388" width="86" height="72" viewBox="0 0 120 100"><use href="#f-martim"/></svg></g></g></g>
+      ${brilhoHotspot(782, 398)}
+      <rect x="700" y="384" width="90" height="116" fill="transparent"/>
+    </g>
+    <!-- nuvens de chuva sobre as montanhas -->
+    ${NUV.map((n, i) => `<g class="ni-nuvem toque" data-i="${i}"><g transform="translate(${n.x} ${n.y}) scale(${n.s})"><g class="ni-nuv-in" style="animation:flutua ${(3 + i * .5).toFixed(1)}s ease-in-out infinite alternate">
+      <use href="#nuvem" x="-56" y="-30" width="112" height="56" style="color:#8E9AB0"/><use href="#nuvem" x="-52" y="-32" width="104" height="50" class="ni-nuv-cor" style="color:#EEF2F8;transition:color 1s"/>
+      <path d="M-34 -14 q10 -8 22 -5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/>
+      <g class="ni-nuv-hint">${brilhoHotspot(40, -26)}</g></g>
+      <rect x="-60" y="-36" width="120" height="66" fill="transparent"/></g></g>`).join('')}
+    <!-- primeiro plano -->
+    <g class="balanca" style="animation-duration:5s">${[0, 10, 22].map((x, i) => `<path d="M${x} 500 q${4 + i * 2} -30 ${-6 + i * 6} -${46 + i * 10}" stroke="#2E6A22" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M${x} 500 q${4 + i * 2} -30 ${-6 + i * 6} -${46 + i * 10}" stroke="#7FC04A" stroke-width="2.6" fill="none" stroke-linecap="round"/>`).join('')}</g>
+    <g>${[[786, 500], [796, 500], [776, 500]].map(([x, y], i) => `<path d="M${x} ${y} q${-6 - i * 2} -24 ${-2 - i * 8} -${36 + i * 8}" stroke="#2E6A22" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M${x} ${y} q${-6 - i * 2} -24 ${-2 - i * 8} -${36 + i * 8}" stroke="#8ACB54" stroke-width="2.2" fill="none" stroke-linecap="round"/>`).join('')}</g>
+    <!-- primeiro plano: moldura de plantas -->
+    <g class="balanca" style="animation-duration:6.4s">${[[-8, 18, 150, 16], [6, 34, 124, 14], [18, 52, 96, 12], [-4, -2, 104, 12]].map(([x, dx, h, w]) => `<path d="M${x} 502 C${x + dx * .3} ${502 - h * .5} ${x + dx * .7} ${502 - h * .85} ${x + dx} ${502 - h} C${x + dx * .6 + w * .4} ${502 - h * .75} ${x + w} ${502 - h * .4} ${x + w} 502Z" fill="url(#niFolha)" stroke="#1E4A16" stroke-width="1.6" stroke-linejoin="round"/><path d="M${x + w * .5} 500 C${x + dx * .4 + w * .3} ${502 - h * .5} ${x + dx * .8} ${502 - h * .85} ${x + dx} ${502 - h + 4}" stroke="#B8E67A" stroke-width="1.2" fill="none" opacity=".8"/>`).join('')}</g>
+    ${papiroMini(26, 504, 1.9)}
+    <g class="balanca" style="animation-duration:5.2s">${[[804, -10, 74, 12], [798, -22, 58, 10]].map(([x, dx, h, w]) => `<path d="M${x} 502 C${x + dx * .3} ${502 - h * .5} ${x + dx * .7} ${502 - h * .85} ${x + dx} ${502 - h} C${x + dx * .6 - w * .4} ${502 - h * .75} ${x - w} ${502 - h * .4} ${x - w} 502Z" fill="url(#niFolha)" stroke="#1E4A16" stroke-width="1.6" stroke-linejoin="round"/>`).join('')}</g>
+    <g id="ni-mao" pointer-events="none"><g class="mao-dica"><circle cx="168" cy="96" r="14" fill="#fff" opacity=".35"/><path d="M160 104 C160 92 164 86 168 86 C172 86 172 92 172 96 L178 96 C184 96 186 102 184 110 L180 120 H164 Z" fill="#FFF4E6" stroke="#5A3A2A" stroke-width="2" stroke-linejoin="round"/></g></g>
+    <rect width="800" height="500" fill="url(#niVinheta)" pointer-events="none"/><rect width="800" height="500" filter="url(#niGrao)" pointer-events="none"/>
+  </svg>`;
+  const c = criarCena(palco, svg), s = c.svg;
+  const mao = el(s, '#ni-mao');
+  const centro = el(s, '#ni-centro'), centroL = centro.getTotalLength();
+  /* canal: começa seco */
+  const canal = el(s, '.ni-canal-agua'), canalL = canal.getTotalLength(), canalB = el(s, '.ni-canal-brilho');
+  canal.style.strokeDasharray = `${canalL} ${canalL}`; canal.style.strokeDashoffset = canalL; canal.style.transition = 'stroke-dashoffset 1.6s ease-out';
+  canalB.style.opacity = 0; canalB.animate([{ strokeDashoffset:0 }, { strokeDashoffset:32 }], { duration:900, iterations:Infinity });
+  const CANAL_ATE = [canalL * .12, canalL * .5, canalL * .86];
+  const cants = [...s.querySelectorAll('.ni-cant')];
+  const mostra = (g, sel, v) => g.querySelectorAll(sel).forEach(e => e.style.opacity = v);
+  /* ---------- pulsos de água descendo o rio (canvas) ---------- */
+  const pulsos = [];
+  c.desenho(ctx => {
+    const agora = performance.now();
+    for (let i = pulsos.length - 1; i >= 0; i--) {
+      const p = pulsos[i], k = Math.min(1, (agora - p.t0) / 3200);
+      for (let j = 0; j < 9; j++) {
+        const kk = Math.max(0, k - j * .018), pt = centro.getPointAtLength(kk * centroL), w = 3 + (pt.y - 180) * .09;
+        ctx.globalAlpha = (.75 - j * .07) * (k < .9 ? 1 : (1 - k) * 10);
+        ctx.fillStyle = j % 2 ? '#B07A4E' : '#8E5A34'; ctx.strokeStyle = '#E8C8A0'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.ellipse(pt.x, pt.y, w, w * .42, .5, 0, 7); ctx.fill(); if (j === 0) ctx.stroke();
+      }
+      if (k >= 1) { pulsos.splice(i, 1); p.chega && p.chega(); }
+    }
+    ctx.globalAlpha = 1;
+  });
+  /* ---------- 1. cheia: tocar ou varrer as nuvens ---------- */
+  const nuvens = [...s.querySelectorAll('.ni-nuvem')], usadas = [false, false, false];
+  function chuvaNuvem(i){
+    if (fase !== 'cheia' || usadas[i]) { if (fase !== 'cheia') { toca('clique'); api.diz('Lá longe, nas montanhas da Etiópia, chove muito no verão.'); } return; }
+    usadas[i] = true; mao.style.display = 'none'; chegando++;
+    const n = NUV[i], g = nuvens[i];
+    el(g, '.ni-nuv-cor').style.color = '#9AA6BC'; el(g, '.ni-nuv-hint').style.display = 'none';
+    g.animate([{ transform:'translate(0,0)' }, { transform:'translate(0,6px)' }, { transform:'translate(0,0)' }], { duration:500 });
+    toca('chuva'); c.chover(n.x - 44, n.x + 40, n.y + 18, 170, 46, '#4A86E0');
+    const cas = el(s, '#ni-cascata'); cas.animate([{ strokeWidth:2.4, opacity:.75 }, { strokeWidth:6, opacity:1 }, { strokeWidth:2.4, opacity:.75 }], { duration:3400 });
+    if (chegando === 1) api.diz('Chuva nas montanhas, bem longe daqui! A água desce pelo rio até o Egito.');
+    depois(1400, () => pulsos.push({ t0:performance.now(), chega:() => sobe() }));
+  }
+  function sobe(){
+    nivel++; toca('splash');
+    el(s, '#ni-poco-agua').style.transform = `translateY(${NIVEIS[nivel] - NIVEIS[0]}px)`;
+    el(s, '#ni-poco-cor').style.fill = '#B0784A';
+    el(s, '#ni-rio-cheia').style.opacity = (.3 + nivel * .22).toFixed(2);
+    el(s, '#ni-cheia').style.opacity = [0, .35, .66, 1][nivel];
+    for (let k = 0; k < 4; k++) c.add({ tipo:'respingo', x:700 + k * 22, y:NIVEIS[nivel], t:k * 2, cor:'#E8C8A0' });
+    c.brilhos(718, NIVEIS[nivel] - 8, 5, '#FFE27A');
+    api.hud(`<span class="chip">Cheia: ${nivel}/3</span>`);
+    if (nivel === 2) api.diz('O rio está subindo! A escada com marcas é o nilômetro: ela mede a cheia.');
+    if (nivel === 3) { toca('vitoria'); api.diz('Cheia boa! A água cobre os campos e traz lama do alto das montanhas.'); depois(5200, baixa); }
+  }
+  nuvens.forEach((g, i) => g.addEventListener('click', e => { e.stopPropagation(); chuvaNuvem(i); }));
+  let varrendo = false;
+  s.addEventListener('pointerdown', () => varrendo = true); s.addEventListener('pointerup', () => varrendo = false); s.addEventListener('pointerleave', () => varrendo = false);
+  s.addEventListener('pointermove', e => {
+    if (!varrendo || fase !== 'cheia') return; const p = c.ponto(e);
+    NUV.forEach((n, i) => { if (!usadas[i] && Math.abs(p.x - n.x) < 54 * n.s && Math.abs(p.y - n.y) < 30 * n.s) chuvaNuvem(i); });
+  });
+  function baixa(){
+    fase = 'baixa'; api.hud('<span class="chip">Lama preta</span>');
+    el(s, '#ni-cheia').style.transition = 'opacity 4s'; el(s, '#ni-cheia').style.opacity = 0;
+    el(s, '#ni-rio-cheia').style.transition = 'opacity 4s'; el(s, '#ni-rio-cheia').style.opacity = 0;
+    el(s, '#ni-poco-agua').style.transform = ''; el(s, '#ni-poco-cor').style.fill = '#3E9EC4';
+    cants.forEach(g => { mostra(g, '.ni-lama', 1); });
+    depois(2200, () => { cants.forEach(g => mostra(g, '.ni-seco', 0)); toca('ok'); api.diz('A água baixou e deixou uma lama preta e fértil. Os egípcios chamavam sua terra de Kemet, a terra preta!'); });
+    depois(8200, comecaShaduf);
+  }
+  /* ---------- 2. shaduf: abaixar e levantar a vara ---------- */
+  let th = TH_UP, yaw = 1, inc = 0, cheio = false, arr = null;
+  const vara = el(s, '#ni-vara'), balde = el(s, '#ni-balde'), baldeIn = el(s, '#ni-balde-in'), braco = el(s, '#ni-agr-braco'), braco2 = el(s, '#ni-agr-braco2'), maoA = el(s, '#ni-agr-mao');
+  function poeVara(){
+    const r = th * Math.PI / 180;
+    vara.setAttribute('transform', `translate(${PIV.x} ${PIV.y}) scale(${yaw.toFixed(3)} 1) rotate(${th.toFixed(2)}) translate(${-PIV.x} ${-PIV.y})`);
+    const tx = PIV.x + yaw * Math.cos(r) * L1, ty = PIV.y + Math.sin(r) * L1;
+    balde.setAttribute('transform', `translate(${tx.toFixed(1)} ${ty.toFixed(1)})`);
+    baldeIn.setAttribute('transform', inc ? `rotate(${inc.toFixed(1)} 0 ${CORDA})` : '');
+    let hx, hy; if (yaw > .9) { hx = tx - 4; hy = ty + 24; } else { hx = FX + 18 * FK; hy = FY - 28 * FK; }
+    let lx = (hx - FX) / FK - 9, ly = (hy - FY) / FK + 42; const LL = Math.hypot(lx, ly), MX = 30; if (LL > MX) { lx *= MX / LL; ly *= MX / LL; }
+    const dB = `M9 -42 L${(9 + lx).toFixed(1)} ${(-42 + ly).toFixed(1)}`; braco.setAttribute('d', dB); braco2.setAttribute('d', dB); maoA.setAttribute('cx', (9 + lx).toFixed(1)); maoA.setAttribute('cy', (-42 + ly).toFixed(1));
+  }
+  poeVara();
+  function comecaShaduf(){
+    fase = 'shaduf'; el(s, '#ni-agricultor').style.opacity = 1;
+    api.hud('<span class="chip">Campos regados: 0/3</span>');
+    api.diz('Agora os campos precisam de água. Arraste a vara do shaduf para baixo e depois para cima!');
+    mostraMao(546, 300);
+  }
+  function mostraMao(x, y){ const m = el(mao, '.mao-dica'); m.parentNode.setAttribute('transform', `translate(${x - 168} ${y - 96})`); mao.style.display = ''; }
+  const pegaVara = e => {
+    if (fase !== 'shaduf' || ocupado) return; e.stopPropagation();
+    const p = c.ponto(e); arr = { y0:p.y, x0:p.x, th0:th, moveu:false }; s.setPointerCapture(e.pointerId); vara.style.cursor = balde.style.cursor = 'grabbing'; mao.style.display = 'none'; toca('clique');
+  };
+  vara.addEventListener('pointerdown', pegaVara); balde.addEventListener('pointerdown', pegaVara);
+  s.addEventListener('pointermove', e => {
+    if (!arr) return; const p = c.ponto(e);
+    if (Math.hypot(p.x - arr.x0, p.y - arr.y0) > 6) arr.moveu = true;
+    th = Math.max(TH_UP, Math.min(TH_DN, arr.th0 + (p.y - arr.y0) * .55)); poeVara();
+    if (!cheio && th >= TH_DN - 3) enche();
+    if (cheio && th <= TH_UP + 3) { arr = null; despeja(); }
+  });
+  s.addEventListener('pointerup', () => {
+    if (!arr) return; const moveu = arr.moveu; arr = null; vara.style.cursor = balde.style.cursor = 'grab';
+    if (!moveu) { cicloAuto(); return; }
+    if (cheio) { const t0 = th; ocupado = true; tw(700, (k, e) => { th = t0 + (TH_UP - t0) * e; poeVara(); }, () => { ocupado = false; despeja(); }); }
+    else { const t0 = th; tw(500, (k, e) => { th = t0 + (TH_UP - t0) * e; poeVara(); }); api.diz('Puxe a vara até o balde entrar no rio!'); mostraMao(546, 300); }
+  });
+  function enche(){
+    cheio = true; toca('splash'); el(s, '#ni-balde-agua').style.opacity = 1;
+    const r = th * Math.PI / 180, bx = PIV.x + Math.cos(r) * L1, by = PIV.y + Math.sin(r) * L1 + CORDA + 6;
+    for (let k = 0; k < 5; k++) c.add({ tipo:'respingo', x:bx + sorte(-8, 8), y:by, t:k, cor:'#E6F6FF' });
+    if (regas === 0) api.diz('Balde cheio! Agora levante a vara.');
+  }
+  let pendente = false;
+  function cicloAuto(){
+    if (fase !== 'shaduf') return; if (ocupado) { pendente = true; return; } ocupado = true; mao.style.display = 'none';
+    const t0 = th;
+    tw(800, (k, e) => { th = t0 + (TH_DN - t0) * e; poeVara(); }, () => { enche(); depois(300, () => tw(900, (k, e) => { th = TH_DN + (TH_UP - TH_DN) * e; poeVara(); }, () => { ocupado = false; despeja(); })); });
+  }
+  function despeja(){
+    if (!cheio) return; ocupado = true; th = TH_UP;
+    tw(900, (k, e) => { yaw = 1 - 1.45 * e; poeVara(); }, () => {
+      tw(500, (k, e) => { inc = -50 * e; poeVara(); }, () => {
+        toca('splash');
+        const r = th * Math.PI / 180, bx = PIV.x + yaw * Math.cos(r) * L1, by = PIV.y + Math.sin(r) * L1 + CORDA;
+        for (let k = 0; k < 16; k++) c.add({ tipo:'infiltra', x0:bx - 8 + sorte(-3, 3), y0:by + sorte(0, 4), x1:BACIA.x + sorte(-8, 8), y1:BACIA.y, dur:sorte(16, 34), f:sorte(0, 6) });
+        el(s, '#ni-balde-agua').style.opacity = 0; cheio = false;
+        el(s, '#ni-bacia-agua').setAttribute('fill', '#3E9EE0');
+        depois(700, () => rega());
+        tw(500, (k, e) => { inc = -50 * (1 - e); poeVara(); }, () => tw(900, (k, e) => { yaw = -.45 + 1.45 * e; poeVara(); }, () => { ocupado = false; if (regas < 3 && fase === 'shaduf') { if (pendente) { pendente = false; cicloAuto(); } else mostraMao(546, 300); } else pendente = false; }));
+      });
+    });
+  }
+  function rega(){
+    const i = regas; regas++;
+    canalB.style.opacity = 1; canal.style.strokeDashoffset = canalL - CANAL_ATE[i];
+    depois(1500, () => {
+      s.querySelectorAll('.ni-bica')[i].style.opacity = 1; toca('glub');
+      mostra(cants[i], '.ni-molha', 1);
+      depois(1500, () => { mostra(cants[i], '.ni-brotos', 1); toca('planta'); c.brilhos([384, 218, 78][i], 410, 6, '#C8F07A'); });
+    });
+    api.hud(`<span class="chip">Campos regados: ${regas}/3</span>`);
+    if (regas === 1) api.diz('O peso de barro na outra ponta ajuda a levantar o balde. Quase sem força!');
+    if (regas === 2) api.diz('A água corre pelo canal até a plantação.');
+    if (regas === 3) { depois(3200, () => { toca('vitoria'); api.diz('Todos os campos regados! As plantinhas já estão nascendo.'); }); depois(8400, comecaColheita); }
+  }
+  el(s, '#ni-postes').addEventListener('click', e => {
+    if (fase === 'shaduf') { cicloAuto(); return; }
+    toca('clique'); api.diz('Isto é um shaduf: uma vara com um balde numa ponta e um peso de barro na outra.');
+  });
+  /* ---------- 3. colheita: levar até a faluca ---------- */
+  const fpos = el(s, '#ni-faluca-pos');
+  let fx = 490, fy = 238, fe = .42;
+  const poeFaluca = () => fpos.setAttribute('transform', `translate(${fx.toFixed(1)} ${fy.toFixed(1)}) scale(${fe.toFixed(3)})`);
+  function comecaColheita(){
+    fase = 'colheita'; api.hud('<span class="chip">Colheita: 0/3</span>');
+    cants.forEach(g => { mostra(g, '.ni-maduro', 1); });
+    depois(1200, () => cants.forEach(g => mostra(g, '.ni-brotos', 0)));
+    api.diz('O tempo passou e o trigo ficou dourado! A faluca vem buscar a colheita.');
+    el(s, '#ni-faluca-hint').style.display = 'none';
+    const x0 = fx, y0 = fy, e0 = fe;
+    tw(4200, (k, e) => { fx = x0 + (DOCA.x - x0) * e; fy = y0 + (DOCA.y - y0) * e; fe = e0 + (DE - e0) * e; poeFaluca(); }, () => {
+      itens.forEach(g => g.style.display = '');
+      toca('pop'); api.diz('Arraste o trigo, o linho e as cebolas até a faluca.');
+    });
+  }
+  const itens = [...s.querySelectorAll('.ni-item')], ipos = ITENS.map(it => ({ x:it.x, y:it.y, foi:false }));
+  const poeItem = (i, esc) => itens[i].setAttribute('transform', `translate(${ipos[i].x.toFixed(1)} ${ipos[i].y.toFixed(1)})${esc ? ` scale(${esc.toFixed(2)})` : ''}`);
+  let arrI = null;
+  itens.forEach((g, i) => g.addEventListener('pointerdown', e => {
+    if (fase !== 'colheita' || ipos[i].foi || ocupado) return; e.stopPropagation();
+    const p = c.ponto(e); arrI = { i, dx:p.x - ipos[i].x, dy:p.y - ipos[i].y, x0:p.x, y0:p.y, moveu:false };
+    s.setPointerCapture(e.pointerId); g.style.cursor = 'grabbing'; toca('clique');
+  }));
+  s.addEventListener('pointermove', e => {
+    if (!arrI) return; const p = c.ponto(e);
+    if (Math.hypot(p.x - arrI.x0, p.y - arrI.y0) > 8) arrI.moveu = true;
+    ipos[arrI.i].x = Math.max(20, Math.min(780, p.x - arrI.dx)); ipos[arrI.i].y = Math.max(200, Math.min(480, p.y - arrI.dy)); poeItem(arrI.i);
+  });
+  s.addEventListener('pointerup', () => {
+    if (!arrI) return; const { i, moveu } = arrI; arrI = null; itens[i].style.cursor = 'grab';
+    if (!moveu || Math.hypot(ipos[i].x - DOCA.x, ipos[i].y - (DOCA.y - 20)) < 110) embarca(i);
+    else { const it = ITENS[i], x0 = ipos[i].x, y0 = ipos[i].y; tw(600, (k, e) => { ipos[i].x = x0 + (it.x - x0) * e; ipos[i].y = y0 + (it.y - y0) * e; poeItem(i); }); toca('glub'); api.diz('Leve até a faluca, no rio!'); }
+  });
+  const CARGA = [[-30, -2], [0, -4], [26, -2]];
+  function embarca(i){
+    ipos[i].foi = true; ocupado = true; el(itens[i], '.ni-item-hint').style.display = 'none';
+    const x0 = ipos[i].x, y0 = ipos[i].y, x1 = DOCA.x + CARGA[carga][0] * DE, y1 = DOCA.y + (CARGA[carga][1] - 6) * DE;
+    tw(800, (k, e) => { ipos[i].x = x0 + (x1 - x0) * e; ipos[i].y = y0 + (y1 - y0) * e - Math.sin(k * Math.PI) * 50; poeItem(i, 1 - .3 * e); }, () => {
+      ocupado = false; itens[i].style.display = 'none';
+      el(s, '#ni-carga').insertAdjacentHTML('beforeend', `<g transform="translate(${CARGA[carga][0]} ${CARGA[carga][1] - 10}) scale(.8)">${feixe[ITENS[i].id]}</g>`);
+      carga++; toca('pop'); c.brilhos(x1, y1 - 20, 6, '#FFE27A');
+      api.hud(`<span class="chip">Colheita: ${carga}/3</span>`);
+      const falas = { trigo:'O trigo vira farinha, e a farinha vira pão.', linho:'Do linho se faz um tecido fresquinho.', cebola:'Cebolas para a feira!' };
+      if (carga < 3) api.diz(falas[ITENS[i].id]);
+      else navega();
+    });
+  }
+  function navega(){
+    fase = 'fim'; toca('vitoria');
+    api.diz('A faluca vai para a feira. No Nilo, a correnteza desce o rio e o vento sopra rio acima: dá para ir e voltar!');
+    depois(2600, () => { const x0 = fx, y0 = fy, e0 = fe; tw(6000, (k, e) => { fx = x0 + (470 - x0) * e; fy = y0 + (226 - y0) * e; fe = e0 + (.3 - e0) * e; poeFaluca(); }); });
+    depois(7600, () => { api.diz('O povo do Egito aprendeu a ler o rio: mediu a cheia, guardou a lama boa e levou água aos campos. Hoje o Nilo ainda dá água a quase todo o Egito!'); depois(6200, api.fim); });
+  }
+  /* ---------- toques extras ---------- */
+  el(s, '#ni-faluca').addEventListener('click', () => { if (fase === 'colheita' || fase === 'fim') return; api.diz('Uma faluca! É um barco a vela que navega no Nilo há muito tempo.'); });
+  el(s, '#ni-nilometro').addEventListener('click', e => { e.stopPropagation(); toca('clique'); api.diz(nivel >= 3 || fase !== 'cheia' ? 'Pelas marcas do nilômetro, os egípcios sabiam se a colheita ia ser boa.' : 'Este é o nilômetro, uma escada de pedra com marcas para medir o rio.'); });
+  /* Nuri paira e mergulha */
+  let nuriOcupado = false;
+  el(s, '#ni-nuri').addEventListener('click', () => {
+    if (nuriOcupado) return; nuriOcupado = true; const np = el(s, '#ni-nuri-pos');
+    [2400, 2800, 2400, 3000].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .08, 'square', .03, f * 1.1), i * 120));
+    const a = np.animate([{ transform:'translate(0,0)' }, { transform:'translate(-90px,-60px)' }, { transform:'translate(-96px,-64px)' }, { transform:'translate(-90px,-60px)' }, { transform:'translate(-100px,10px)' }, { transform:'translate(-100px,10px)' }, { transform:'translate(0,0)' }], { duration:3200, easing:'ease-in-out' });
+    depois(1900, () => { toca('splash'); for (let k = 0; k < 6; k++) c.add({ tipo:'respingo', x:650 + sorte(-10, 10), y:462, t:k, cor:'#E6F6FF' }); });
+    a.onfinish = () => { nuriOcupado = false; };
+    api.diz(fase === 'cheia' && nivel === 0 ? 'Eu sou o Nuri! Toque nas nuvens das montanhas lá longe.' : 'Eu bato as asas parado no ar e mergulho de bico para pegar peixinhos!');
+  });
+  /* tilápias saltam em sequência */
+  let tilOcupada = false;
+  const tils = [...s.querySelectorAll('.ni-til')];
+  el(s, '#ni-agua-toque').addEventListener('click', e => {
+    e.stopPropagation(); if (tilOcupada) return; tilOcupada = true; toca('glub');
+    [[560, 376, 44, 50], [584, 362, 40, 56], [606, 380, 36, 46]].forEach(([x0, y0, dx, h], k) => depois(k * 380, () => {
+      const g = tils[k], p = el(g, '.ni-til-pos'); g.style.opacity = 1; toca('splash');
+      for (let q = 0; q < 3; q++) c.add({ tipo:'respingo', x:x0, y:y0, t:q * 2, cor:'#E6F6FF' });
+      tw(1000, kk => { const x = x0 + kk * dx, y = y0 - Math.sin(kk * Math.PI) * h; p.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(-55 + kk * 110).toFixed(0)})`); }, () => {
+        g.style.opacity = 0; for (let q = 0; q < 4; q++) c.add({ tipo:'respingo', x:x0 + dx, y:y0, t:q * 2, cor:'#E6F6FF' }); if (k === 2) tilOcupada = false; });
+    }));
+    api.diz('Tilápias! Esse peixe vive no Nilo há muito, muito tempo.');
+  });
+  /* vela enche de vento */
+  let velaOcupada = false;
+  el(s, '#ni-faluca').addEventListener('click', () => {
+    if (velaOcupada) return; velaOcupada = true; const v = el(s, '#ni-vela'), ve = el(s, '#ni-vento');
+    somOn && tom(300, 0, .6, 'sine', .04, 520);
+    tw(1600, k => { const b = Math.sin(k * Math.PI); v.setAttribute('transform', `translate(-60 8) scale(${(1 + b * .16).toFixed(3)} ${(1 - b * .03).toFixed(3)}) translate(60 -8)`); ve.setAttribute('opacity', (b * .9).toFixed(2)); ve.setAttribute('transform', `translate(${(k * 50).toFixed(1)} 0)`); }, () => { velaOcupada = false; });
+  });
+  /* abelharucos pousam no shaduf */
+  let abOcupado = false;
+  el(s, '#ni-arvore').addEventListener('click', e => { e.stopPropagation(); if (abOcupado) return; abOcupado = true;
+    const abs = [...s.querySelectorAll('.ni-ab')];
+    [2200, 2600, 2400].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .09, 'triangle', .04, f * 1.15), i * 160));
+    abs.forEach((g, i) => { const dx = POUSO_B[i][0] - POUSO_A[i][0], dy = POUSO_B[i][1] - POUSO_A[i][1];
+      g.animate([{ transform:'translate(0,0)' }, { transform:`translate(${dx * .5}px,${dy * .5 - 50}px)` }, { transform:`translate(${dx}px,${dy}px)` }], { duration:1500 + i * 200, easing:'ease-in-out', fill:'forwards' });
+      depois(6200 + i * 200, () => g.animate([{ transform:`translate(${dx}px,${dy}px)` }, { transform:`translate(${dx * .5}px,${dy * .5 - 60}px)` }, { transform:'translate(0,0)' }], { duration:1600, easing:'ease-in-out', fill:'forwards' })); });
+    depois(2000, () => [2400, 2800].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .08, 'triangle', .04, f * 1.2), i * 200)));
+    depois(8200, () => abOcupado = false);
+    api.diz('Abelharucos! Esses passarinhos verdes pousam no shaduf e caçam abelhas e libélulas no ar.'); });
+  /* o zir, pote de barro que refresca a água */
+  el(s, '#ni-zir').addEventListener('click', e => { e.stopPropagation(); toca('glub'); const g = el(s, '#ni-zir-gota');
+    g.animate([{ opacity:1, transform:'translateY(0)' }, { opacity:1, transform:'translateY(8px)' }, { opacity:0, transform:'translateY(10px)' }], { duration:900, iterations:2 });
+    api.diz('Este pote de barro é o zir. A água passa devagar pelo barro e evapora por fora, e isso deixa a água de dentro fresquinha!'); });
+  /* búfalo bufa */
+  let bufOcupado = false;
+  el(s, '#ni-bufalo').addEventListener('click', e => { e.stopPropagation(); if (bufOcupado) return; bufOcupado = true;
+    somOn && tom(110, 0, .5, 'sawtooth', .05, 70); const cab = el(s, '#ni-buf-cab');
+    cab.animate([{ transform:'translate(0,0)' }, { transform:'translate(-2px,-6px)' }, { transform:'translate(0,0)' }], { duration:900 }).onfinish = () => bufOcupado = false;
+    for (let k = 0; k < 6; k++) c.add({ tipo:'bolha', x:570 + sorte(-5, 5), y:322, vy:sorte(.4, 1), r:sorte(1.5, 3), topo:302, f:sorte(0, 6) });
+    api.diz('O búfalo-d\'água adora se refrescar no rio. Ele ajuda no trabalho do campo.'); });
+  /* garças-vaqueiras voam */
+  let garOcupadas = false;
+  el(s, '#ni-garcas').addEventListener('click', e => { e.stopPropagation(); if (garOcupadas) return; garOcupadas = true;
+    [1600, 1900, 1500].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .1, 'triangle', .04, f * .8), i * 140));
+    s.querySelectorAll('.ni-garca-in').forEach((g, i) => g.animate([{ transform:'translate(0,0)' }, { transform:`translate(${-20 + i * 14}px,-46px)` }, { transform:`translate(${-10 + i * 8}px,-30px)` }, { transform:'translate(0,0)' }], { duration:2200 + i * 200, easing:'ease-in-out' }));
+    depois(2700, () => garOcupadas = false);
+    api.diz('As garças-vaqueiras seguem os bois e os agricultores para comer insetos.'); });
+  /* poupa abre a crista */
+  el(s, '#ni-poupa').addEventListener('click', e => { e.stopPropagation(); const cr = el(s, '#ni-crista'); cr.style.transform = 'scale(1)';
+    [0, 1, 2].forEach(i => setTimeout(() => somOn && tom(520, 0, .12, 'sine', .07, 480), i * 260));
+    depois(1600, () => cr.style.transform = 'scale(.55)'); api.diz('A poupa abre a crista como um leque e canta: up, up, up!'); });
+  /* menina acena */
+  el(s, '#ni-menina').addEventListener('click', e => { e.stopPropagation(); toca('pop');
+    el(s, '#ni-menina-braco').animate([{ transform:'rotate(0)' }, { transform:'rotate(-30deg)' }, { transform:'rotate(10deg)' }, { transform:'rotate(0)' }], { duration:700, iterations:2 });
+    api.diz('Oi! Meu avô lembra das cheias. Hoje uma grande represa controla o rio, e a água vai pelos canais.'); });
+  /* tâmaras caem */
+  el(s, '#ni-palmeira-alvo').addEventListener('click', e => { e.stopPropagation(); toca('pop');
+    for (let k = 0; k < 4; k++) c.add({ tipo:'semente', x:152 + sorte(-8, 8), y:180 + sorte(-4, 4), vy:sorte(-1, 0), alvoY:232 + sorte(-2, 2) });
+    api.diz('Tâmaras! As tamareiras crescem bem no calor, perto da água do rio.'); });
+  el(s, '#ni-agricultor').addEventListener('click', e => { e.stopPropagation(); if (fase === 'shaduf') return; toca('pop'); api.diz('O agricultor conhece o rio e sabe a hora certa de plantar e colher.'); });
+  el(s, '#ni-sol').addEventListener('click', e => { e.stopPropagation(); toca('ok'); c.brilhos(694, 62, 6, '#FFE27A'); api.diz('No Egito quase nunca chove. O sol é forte e o deserto é seco.'); });
+  api.hud('<span class="chip">Cheia: 0/3</span>');
+  api.diz('Oi, eu sou o Nuri, um martim-pescador do Rio Nilo! Aqui quase não chove. Toque nas nuvens das montanhas, lá longe!');
+  return () => { vivo = false; timers.forEach(clearTimeout); c.parar(); };
+}
+/* ================= JOGO: Qanats do Irã, rios debaixo da terra ================= */
+function jogoQanat(palco, api){
+  semente = 131;
+  let vivo = true, fase = 'mae', cavadas = 0, pocos = 0, ocupado = false, cava = 200, trecho = 0, avisoT = 0, vila = 0, aguaVila = false;
+  const timers = [], depois = (ms, fn) => { const t = setTimeout(() => vivo && fn(), ms); timers.push(t); return t; };
+  const tween = (dur, fn, fim) => { const t0 = performance.now(); (function q(t){ if (!vivo) return; const k = Math.max(0, Math.min(1, (t - t0) / dur)); fn(k); if (k < 1) requestAnimationFrame(q); else fim && fim(); })(t0); };
+  const f1 = n => n.toFixed(1);
+  /* perfil do chão (o corte da terra) e do lençol de água: curvas suaves por pontos */
+  const curva = PTS => x => { let i = 0; while (i < PTS.length - 2 && x > PTS[i + 1][0]) i++;
+    const p0 = PTS[Math.max(0, i - 1)], p1 = PTS[i], p2 = PTS[i + 1], p3 = PTS[Math.min(PTS.length - 1, i + 2)], t = Math.max(0, Math.min(1, (x - p1[0]) / (p2[0] - p1[0])));
+    return .5 * ((2 * p1[1]) + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t * t + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t * t * t); };
+  const P = curva([[-40, 146], [0, 150], [100, 160], [200, 180], [300, 216], [400, 258], [470, 295], [540, 330], [600, 338], [700, 339], [800, 338], [840, 338]]);
+  const W = curva([[-40, 248], [0, 252], [100, 268], [200, 286], [300, 338], [420, 392], [560, 430], [800, 468], [840, 470]]);
+  const MAE = 200, XO = 540, POCOS = [268, 336, 404, 472], CHK = [268, 336, 404, 472, 540], FUNDO_MAE = 338;
+  const T = x => 312 + (x - 200) * 28 / 340;
+  const linha = (x0, x1, fn, dy, passo) => { const a = []; for (let x = x0; x <= x1; x += (passo || 8)) a.push(`${x} ${f1(fn(x) + (dy || 0))}`); if ((x1 - x0) % (passo || 8)) a.push(`${x1} ${f1(fn(x1) + (dy || 0))}`); return a.join(' L'); };
+  const camada = (f, k) => x => P(x) + (505 - P(x)) * f + 3.4 * Math.sin(x / 41 + k);
+  /* desenhos pequenos */
+  const tufo = (x, y, s, c1, c2) => `<path d="M${f1(x - 3 * s)} ${y} q-1 ${f1(-4 * s)} -3 ${f1(-6 * s)} M${x} ${y} q0 ${f1(-5 * s)} 1 ${f1(-8 * s)} M${f1(x + 3 * s)} ${y} q1 ${f1(-3 * s)} 4 ${f1(-5 * s)}" stroke="${c2}" stroke-width="${f1(1.9 * s)}" fill="none" stroke-linecap="round"/><path d="M${x} ${y} q0 ${f1(-5 * s)} 1 ${f1(-8 * s)}" stroke="${c1}" stroke-width="${f1(.8 * s)}" fill="none" stroke-linecap="round"/>`;
+  /* espinheiro-de-camelo: arbusto baixo cinza-esverdeado do deserto */
+  const arbusto = (x, y, r) => `<g><ellipse cx="${x}" cy="${y + 1}" rx="${f1(r * 1.1)}" ry="${f1(r * .25)}" fill="#5A3A1A" opacity=".25"/><path d="M${x} ${y} l${f1(-r * .5)} ${f1(-r * .7)} M${x} ${y} l${f1(r * .1)} ${f1(-r * .9)} M${x} ${y} l${f1(r * .6)} ${f1(-r * .6)}" stroke="#6E5A3A" stroke-width="1.2" stroke-linecap="round"/><path d="${copa(x, y - r * .55, r, r * .5, 9, .32)}" fill="url(#qaArbusto)" stroke="#4A5A34" stroke-width="1.1"/><g fill="#E8D8F0">${Array.from({ length:4 }, () => `<circle cx="${f1(x + R(-r * .7, r * .7))}" cy="${f1(y - r * .6 + R(-r * .25, r * .2))}" r="1"/>`).join('')}</g><path d="M${f1(x - r * .6)} ${f1(y - r * .8)} q${f1(r * .4)} ${f1(-r * .25)} ${f1(r * .8)} ${f1(-r * .15)}" stroke="#DDE8C0" stroke-width="1.1" fill="none" opacity=".7" stroke-linecap="round"/></g>`;
+  const pedra = (x, y, rx, ry) => `<path d="M${x - rx} ${y} C${x - rx} ${f1(y - ry * .9)} ${f1(x - rx * .4)} ${f1(y - ry * 1.15)} ${f1(x + rx * .1)} ${y - ry} C${f1(x + rx * .7)} ${f1(y - ry * 1.05)} ${x + rx} ${f1(y - ry * .5)} ${x + rx} ${y}Z" fill="url(#qaPedra)" stroke="#5E4434" stroke-width="1.4"/><path d="M${f1(x - rx * .6)} ${f1(y - ry * .6)} q${f1(rx * .3)} ${f1(-ry * .4)} ${f1(rx * .7)} ${f1(-ry * .38)}" stroke="#F6E2CC" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>`;
+  /* montinho de terra em volta da boca do poço (de lado parece uma cratera) */
+  const monte = (x, k) => { const yl = P(x - 22 * k), yr = P(x + 22 * k), y0 = P(x - 6), y1 = P(x + 6);
+    return `<path d="M${f1(x - 22 * k)} ${f1(yl + 1)} Q${f1(x - 15 * k)} ${f1(y0 - 11 * k)} ${x - 7} ${f1(y0 - 5)} L${x - 5} ${f1(y0 + 1)} H${x + 5} L${x + 7} ${f1(y1 - 5)} Q${f1(x + 15 * k)} ${f1(y1 - 11 * k)} ${f1(x + 22 * k)} ${f1(yr + 1)}Z" fill="url(#qaMonte)" stroke="#7A4A26" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M${f1(x - 18 * k)} ${f1(yl - 3)} Q${f1(x - 14 * k)} ${f1(y0 - 9 * k)} ${x - 8} ${f1(y0 - 5)}" stroke="#FFE6BC" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".85"/>
+      <g fill="#9A6A3E">${[-15, -10, 11, 16].map(d => `<circle cx="${f1(x + d * k)}" cy="${f1(P(x + d * k) - 4 * k)}" r="1.2"/>`).join('')}</g>`; };
+  const marca = (x, i) => { const y = P(x); return `<g class="qa-marca toque" data-i="${i}"><path d="M${x} ${f1(y + 2)} V${f1(y - 20)}" stroke="#5E3A1E" stroke-width="3.4" stroke-linecap="round"/><path d="M${x} ${f1(y + 2)} V${f1(y - 20)}" stroke="#C88A50" stroke-width="1.6" stroke-linecap="round"/><path d="M${x + 1} ${f1(y - 20)} l12 3 l-12 4Z" fill="#E5392C" stroke="#7A1410" stroke-width="1"/><path d="M${x + 1} ${f1(y - 18.6)} l6 1.5" stroke="#fff" stroke-width="1.4"/><ellipse cx="${x}" cy="${f1(y + 1)}" rx="8" ry="2" fill="#5A3A1A" opacity=".3"/>${brilhoHotspot(x + 12, y - 30)}<rect x="${x - 22}" y="${f1(y - 40)}" width="44" height="48" fill="transparent"/></g>`; };
+  const flor = (x, y, r, cor, esc) => `<g>${[0, 1, 2, 3, 4].map(k => { const a = k * 1.2566 - 1.57; return `<ellipse cx="${f1(x + Math.cos(a) * r)}" cy="${f1(y + Math.sin(a) * r)}" rx="${f1(r * .8)}" ry="${f1(r * .56)}" transform="rotate(${(a * 57.3 + 90).toFixed(0)} ${f1(x + Math.cos(a) * r)} ${f1(y + Math.sin(a) * r)})" fill="${cor}" stroke="${esc}" stroke-width=".7"/>`; }).join('')}<circle cx="${x}" cy="${y}" r="${f1(r * .5)}" fill="#FFD447" stroke="#B07A08" stroke-width=".5"/></g>`;
+  const rosa = (x, y, s) => `<g><path d="${copa(x, y - 7 * s, 10 * s, 7 * s, 8, .3)}" fill="url(#qaRoseira)" stroke="#2E5A2A" stroke-width="1"/>${[[-5, -10, '#FF5A8A', '#A02A50'], [4, -12, '#E5392C', '#7A1410'], [0, -6, '#FF8AB8', '#9A2E5E'], [7, -6, '#FFD0E0', '#B05A80']].map(([dx, dy, c, e]) => `<circle cx="${f1(x + dx * s)}" cy="${f1(y + dy * s)}" r="${f1(2.6 * s)}" fill="${c}" stroke="${e}" stroke-width=".7"/><path d="M${f1(x + dx * s - 1.2)} ${f1(y + dy * s)} q1.2 -1.4 2.4 0" stroke="${e}" stroke-width=".6" fill="none"/>`).join('')}</g>`;
+  const cipreste = (x, y, h) => `<g><ellipse cx="${x}" cy="${y + 1}" rx="${f1(h * .16)}" ry="2.4" fill="#2A1A0A" opacity=".25"/><path d="M${x} ${y} V${y - 6}" stroke="#5E3A1E" stroke-width="3"/><path d="M${x} ${f1(y - h)} C${f1(x - h * .16)} ${f1(y - h * .7)} ${f1(x - h * .17)} ${f1(y - h * .2)} ${f1(x - h * .08)} ${y - 4} C${f1(x - 2)} ${y - 2} ${x + 2} ${y - 2} ${f1(x + h * .08)} ${y - 4} C${f1(x + h * .17)} ${f1(y - h * .2)} ${f1(x + h * .16)} ${f1(y - h * .7)} ${x} ${f1(y - h)}Z" fill="url(#qaCipreste)" stroke="#123A2A" stroke-width="1.3"/><path d="M${f1(x - 2)} ${f1(y - h * .85)} C${f1(x - h * .1)} ${f1(y - h * .6)} ${f1(x - h * .1)} ${f1(y - h * .3)} ${f1(x - h * .05)} ${f1(y - h * .1)}" stroke="#8ED0A8" stroke-width="1.4" fill="none" opacity=".55" stroke-linecap="round"/><path d="M${x} ${f1(y - h * .8)} l-3 4 M${x} ${f1(y - h * .6)} l3 4 M${x} ${f1(y - h * .4)} l-3 4 M${x} ${f1(y - h * .25)} l3 4" stroke="#1E4A34" stroke-width="1" opacity=".6"/></g>`;
+  /* casa de adobe (tijolo de barro) com teto plano e abóbada pequena, para o fundo da vila */
+  const casinha = (x, y, w, h, abobada) => `<g><path d="M${x} ${y} V${y - h} H${x + w} V${y}Z" fill="url(#qaAdobeLonge)" stroke="#9A6A3E" stroke-width="1.1"/>${abobada ? `<path d="M${f1(x + w * .2)} ${y - h} C${f1(x + w * .2)} ${f1(y - h - w * .32)} ${f1(x + w * .8)} ${f1(y - h - w * .32)} ${f1(x + w * .8)} ${y - h}Z" fill="url(#qaAdobeLonge)" stroke="#9A6A3E" stroke-width="1.1"/><path d="M${f1(x + w * .3)} ${f1(y - h - w * .12)} q${f1(w * .12)} ${f1(-w * .14)} ${f1(w * .26)} ${f1(-w * .16)}" stroke="#FFF0D2" stroke-width="1" fill="none" opacity=".7"/>` : ''}<path d="M${x - 1} ${y - h} H${x + w + 1}" stroke="#B8875A" stroke-width="2"/><rect x="${f1(x + w * .4)}" y="${f1(y - h * .55)}" width="${f1(w * .2)}" height="${f1(h * .55)}" rx="${f1(w * .1)}" fill="#5E3A20" opacity=".8"/><rect x="${f1(x + w * .12)}" y="${f1(y - h * .75)}" width="${f1(w * .14)}" height="${f1(h * .2)}" fill="#6E4A2E" opacity=".7"/></g>`;
+  const badgirLonge = (x, y, h) => `<g><path d="M${x} ${y} V${y - h} H${x + 10} V${y}Z" fill="url(#qaAdobeLonge)" stroke="#9A6A3E" stroke-width="1"/><path d="M${x + 2.4} ${y - h + 3} v10 M${x + 5} ${y - h + 3} v10 M${x + 7.6} ${y - h + 3} v10" stroke="#6E4A2E" stroke-width="1.2"/><path d="M${x - 1} ${y - h} h12" stroke="#B8875A" stroke-width="2"/></g>`;
+  /* gente: desenhada com cuidado, roupas de hoje */
+  const menina = (x, y) => `<g><path d="M${x - 2.4} ${y - 12} V${y - 1} M${x + 2.4} ${y - 12} V${y - 1}" stroke="#2E4A86" stroke-width="3.6" stroke-linecap="round"/><path d="M${x - 5} ${y} h4.6 M${x + .6} ${y} h4.6" stroke="#F2F2F2" stroke-width="2.6" stroke-linecap="round"/><path d="M${x - 5} ${y + .8} h4.6 M${x + .6} ${y + .8} h4.6" stroke="#E5392C" stroke-width="1" stroke-linecap="round"/>
+      <path d="M${x - 6} ${y - 11} C${x - 6.6} ${y - 18} ${x - 5} ${y - 23} ${x} ${y - 23} C${x + 5} ${y - 23} ${x + 6.6} ${y - 18} ${x + 6} ${y - 11}Z" fill="#FFB020" stroke="#9A5A08" stroke-width="1.1"/><path d="M${x - 4} ${y - 17} h8" stroke="#fff" stroke-width="1.2" opacity=".7"/>
+      <g class="qa-bracos" style="transform-box:fill-box;transform-origin:50% 0%"><path d="M${x - 5} ${y - 20} l-4 7 M${x + 5} ${y - 20} l4 7" stroke="#C88A5E" stroke-width="2.6" stroke-linecap="round"/></g>
+      <path d="M${x - 6} ${y - 29} C${x - 9} ${y - 25} ${x - 9} ${y - 19} ${x - 6} ${y - 18}" stroke="#3A2214" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="${x}" cy="${y - 29}" r="6.2" fill="#D49A6A" stroke="#7A4A2A" stroke-width="1.1"/><path d="M${x - 6.4} ${y - 29.6} C${x - 6.4} ${y - 37} ${x + 6.4} ${y - 37} ${x + 6.4} ${y - 30} C${x + 3} ${y - 32} ${x - 2} ${y - 33} ${x - 6.4} ${y - 29.6}Z" fill="#3A2214"/><circle cx="${x + 5.4}" cy="${y - 34}" r="2.4" fill="#3A2214"/><circle cx="${x + 5.8}" cy="${y - 34}" r="1" fill="#E5392C"/>
+      <circle cx="${x - 2.2}" cy="${y - 28.6}" r="1" fill="#2A1A10"/><circle cx="${x + 2.4}" cy="${y - 28.6}" r="1" fill="#2A1A10"/><path d="M${x - 1.6} ${y - 25.8} q1.6 1.4 3.2 0" stroke="#7A3A2A" stroke-width=".9" fill="none" stroke-linecap="round"/><circle cx="${x - 3.8}" cy="${y - 26.6}" r="1.2" fill="#FF8A7A" opacity=".5"/><circle cx="${x + 3.8}" cy="${y - 26.6}" r="1.2" fill="#FF8A7A" opacity=".5"/></g>`;
+  const avo = (x, y) => `<g><ellipse cx="${x}" cy="${y - 1}" rx="13" ry="3.4" fill="#8E2A3A" stroke="#5A1424" stroke-width="1"/><path d="M${x - 11} ${y - 1} h22" stroke="#FFC83D" stroke-width="1" stroke-dasharray="2 2"/>
+      <path d="M${x - 9} ${y - 2} C${x - 10} ${y - 12} ${x - 7} ${y - 20} ${x} ${y - 20} C${x + 7} ${y - 20} ${x + 9} ${y - 12} ${x + 10} ${y - 2}Z" fill="#3E7A6A" stroke="#1E4A3E" stroke-width="1.1"/><path d="M${x - 6} ${y - 12} q6 3 12 0" stroke="#8ED0B8" stroke-width="1" fill="none" opacity=".7"/>
+      <path d="M${x - 5} ${y - 14} q4 4 9 1" stroke="#B88058" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="${x + 5}" cy="${y - 13}" r="2.6" fill="#E5392C" stroke="#7A1410" stroke-width=".6"/>
+      <g class="qa-lenco" style="transform-box:fill-box;transform-origin:50% 80%"><path d="M${x - 7.4} ${y - 23} C${x - 9} ${y - 33} ${x - 4} ${y - 37} ${x} ${y - 37} C${x + 4} ${y - 37} ${x + 9} ${y - 33} ${x + 7.4} ${y - 23} L${x + 4} ${y - 19} H${x - 4}Z" fill="#7A4AA8" stroke="#3E1E66" stroke-width="1.1"/><g fill="#F2E2FF">${[[-4, -32], [3, -34], [5, -27], [-6, -26], [0, -36]].map(([a, b]) => `<circle cx="${x + a}" cy="${y + b}" r=".8"/>`).join('')}</g></g>
+      <ellipse cx="${x}" cy="${y - 27.4}" rx="5" ry="5.6" fill="#C8906A" stroke="#7A4A2A" stroke-width="1"/>
+      <path d="M${x - 3.6} ${y - 28.4} h2.6 M${x + 1} ${y - 28.4} h2.6 M${x - 1} ${y - 28.4} h2" stroke="#6E4A2E" stroke-width=".7"/><circle cx="${x - 2.3}" cy="${y - 28.2}" r=".8" fill="#2A1A10"/><circle cx="${x + 2.3}" cy="${y - 28.2}" r=".8" fill="#2A1A10"/>
+      <path d="M${x - 1.6} ${y - 25} q1.6 1.2 3.2 0" stroke="#7A3A2A" stroke-width=".8" fill="none" stroke-linecap="round"/><circle cx="${x - 3.4}" cy="${y - 25.6}" r="1.1" fill="#FF8A7A" opacity=".45"/><circle cx="${x + 3.4}" cy="${y - 25.6}" r="1.1" fill="#FF8A7A" opacity=".45"/></g>`;
+  /* o muqanni (cavador de qanat) girando o sarilho */
+  const cavador = (x, y) => `<g><path d="M${x - 3} ${y - 14} L${x - 4} ${y - 1} M${x + 3} ${y - 14} L${x + 5} ${y - 1}" stroke="#5E4A3A" stroke-width="4" stroke-linecap="round"/><path d="M${x - 7} ${y} h5 M${x + 3} ${y} h5" stroke="#2A1E16" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M${x - 6.6} ${y - 13} C${x - 7} ${y - 22} ${x - 5} ${y - 27} ${x} ${y - 27} C${x + 5} ${y - 27} ${x + 7} ${y - 22} ${x + 6.6} ${y - 13}Z" fill="#3E7AB8" stroke="#1E3A6A" stroke-width="1.1"/><path d="M${x - 6} ${y - 24} L${x - 2} ${y - 13} M${x + 6} ${y - 24} L${x + 2} ${y - 13}" stroke="#6E5236" stroke-width="3" stroke-linecap="round"/><path d="M${x} ${y - 26} v12" stroke="#1E3A6A" stroke-width=".7"/><path d="M${x - 4} ${y - 22} q2 -2 4 -2" stroke="#9AC8F0" stroke-width="1.2" fill="none" opacity=".7"/>
+      <g id="qa-braco" style="transform-origin:${x + 4}px ${y - 22}px"><path d="M${x + 4} ${y - 22} L${x + 12} ${y - 17}" stroke="#3E7AB8" stroke-width="3.4" stroke-linecap="round"/><circle cx="${x + 13}" cy="${y - 16.6}" r="1.8" fill="#A87050"/></g>
+      <circle cx="${x}" cy="${y - 32}" r="6" fill="#A87050" stroke="#5E3414" stroke-width="1.1"/><path d="M${x - 6.4} ${y - 33} C${x - 6} ${y - 40} ${x + 6} ${y - 40} ${x + 6.4} ${y - 33}Z" fill="#E8E2D2" stroke="#8A7A5E" stroke-width="1"/><path d="M${x - 2} ${y - 33.4} h10" stroke="#C8BEA4" stroke-width="1.6" stroke-linecap="round"/>
+      <circle cx="${x + 2.4}" cy="${y - 31.6}" r=".9" fill="#1A1210"/><path d="M${x + .6} ${y - 28.6} q2.4 1 4.4 -.2" stroke="#3A2414" stroke-width="1.3" fill="none" stroke-linecap="round"/><circle cx="${x + 4.4}" cy="${y - 30}" r="1.1" fill="#FF8A7A" opacity=".4"/></g>`;
+  /* jerboa na toca */
+  const jerboa = (x, y) => `<g><path d="M${x - 8} ${y} C${x - 22} ${y + 2} ${x - 30} ${y - 4} ${x - 34} ${y - 10}" stroke="#A8784A" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M${x - 34} ${y - 10} c-4 -2 -6 -6 -3 -8 c2 2 4 4 3 8Z" fill="#2A1A10"/><path d="M${x - 35} ${y - 13} c-1 -2 0 -4 1 -4" stroke="#fff" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <path d="M${x - 4} ${y + 1} c-6 0 -8 -2 -9 -4" stroke="#C89A68" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="${x}" cy="${y - 5}" rx="8" ry="6.4" fill="url(#qaJerboa)" stroke="#7A4E26" stroke-width="1.2"/><path d="M${x - 5} ${y - 2} q5 3 10 0" fill="#FFF6E2" stroke="none"/>
+      <path d="M${x + 3} ${y - 14} C${x + 1} ${y - 22} ${x + 4} ${y - 26} ${x + 6} ${y - 25} C${x + 8} ${y - 22} ${x + 7} ${y - 16} ${x + 6} ${y - 12}Z M${x + 7} ${y - 13} C${x + 8} ${y - 21} ${x + 12} ${y - 24} ${x + 13} ${y - 22} C${x + 14} ${y - 18} ${x + 11} ${y - 14} ${x + 9} ${y - 11}Z" fill="url(#qaJerboa)" stroke="#7A4E26" stroke-width="1"/><path d="M${x + 4.6} ${y - 16} c-.6 -3 0 -6 1.4 -7 M${x + 9.4} ${y - 14} c.6 -3 2 -5 3 -6" stroke="#F2A898" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <circle cx="${x + 7}" cy="${y - 8}" r="5.6" fill="url(#qaJerboa)" stroke="#7A4E26" stroke-width="1.1"/><circle cx="${x + 8.6}" cy="${y - 9}" r="2" fill="#1A1008"/><circle cx="${x + 9.3}" cy="${y - 9.8}" r=".7" fill="#fff"/><circle cx="${x + 12.4}" cy="${y - 6.6}" r=".8" fill="#E88A8A"/><path d="M${x + 12} ${y - 6} l5 -1 M${x + 12} ${y - 5.4} l5 1" stroke="#7A4E26" stroke-width=".4"/></g>`;
+  /* poupa no telhado */
+  const poupa = (x, y) => `<g><path d="M${x - 4} ${y - 6} l-10 2 l9 3Z" fill="#2A1A1A"/><path d="M${x - 9} ${y - 5} l4 0 M${x - 12} ${y - 4.4} l3 0" stroke="#fff" stroke-width="1.2"/><path d="M${x - 1} ${y} v3 M${x + 2} ${y} v3" stroke="#6E4A3A" stroke-width="1"/>
+      <ellipse cx="${x}" cy="${y - 5}" rx="7" ry="4.6" fill="#E8A07A" stroke="#7A4A2E" stroke-width="1"/><path d="M${x - 5} ${y - 6} q4 -2 8 1 l-2 4 q-4 0 -7 -2Z" fill="#2A1A1A"/><path d="M${x - 4} ${y - 5.4} l2 2 M${x - 1} ${y - 5} l2 2 M${x + 2} ${y - 4} l1.6 2" stroke="#fff" stroke-width="1"/>
+      <g class="qa-crista" style="transform-origin:${x + 5}px ${y - 11}px;transition:transform .35s"><path d="M${x + 4} ${y - 11} l-6 -6 M${x + 5} ${y - 11} l-3 -8 M${x + 6} ${y - 11} l0 -8 M${x + 7} ${y - 11} l3 -7" stroke="#E89A6A" stroke-width="2.4" stroke-linecap="round"/><path d="M${x - 2.6} ${y - 17.4} l-.8 -.8 M${x + 1.6} ${y - 19.2} l-.4 -1 M${x + 6} ${y - 19.2} l0 -1 M${x + 10} ${y - 18} l.6 -.8" stroke="#1A1010" stroke-width="2.6" stroke-linecap="round"/></g>
+      <circle cx="${x + 6}" cy="${y - 9.6}" r="3.6" fill="#E8A07A" stroke="#7A4A2E" stroke-width="1"/><circle cx="${x + 7}" cy="${y - 10}" r="1" fill="#1A1008"/><circle cx="${x + 7.3}" cy="${y - 10.3}" r=".35" fill="#fff"/><path d="M${x + 9} ${y - 9} q5 1 8 4" stroke="#2A1A10" stroke-width="1.2" fill="none" stroke-linecap="round"/></g>`;
+  /* gato-persa sentado na porta */
+  const gato = (x, y) => `<g><ellipse cx="${x}" cy="${y + 1}" rx="12" ry="2.4" fill="#3A2410" opacity=".3"/>
+      <g class="qa-gato-cauda" style="transform-box:fill-box;transform-origin:0% 100%"><path d="M${x + 7} ${y - 2} C${x + 16} ${y - 2} ${x + 18} ${y - 10} ${x + 14} ${y - 16}" stroke="#9A7A62" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M${x + 7} ${y - 2} C${x + 16} ${y - 2} ${x + 18} ${y - 10} ${x + 14} ${y - 16}" stroke="#F6E6D2" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+      <path d="${copa(x, y - 9, 10, 10, 11, .22)}" fill="url(#qaGato)" stroke="#8A6A52" stroke-width="1.2"/>
+      <path d="M${x - 5} ${y} v-5 M${x + 1} ${y} v-5" stroke="#E8D4BC" stroke-width="4" stroke-linecap="round"/><path d="M${x - 7} ${y} h4 M${x - 1} ${y} h4" stroke="#B89A80" stroke-width="1" stroke-linecap="round"/>
+      <path d="M${x - 9} ${y - 25} l1 -9 l6 5Z M${x + 9} ${y - 25} l-1 -9 l-6 5Z" fill="#F6E6D2" stroke="#8A6A52" stroke-width="1.1" stroke-linejoin="round"/><path d="M${x - 7.6} ${y - 27} l.6 -4 l2.6 2.4Z M${x + 7.6} ${y - 27} l-.6 -4 l-2.6 2.4Z" fill="#F4A8A8"/>
+      <path d="${copa(x, y - 23, 10, 8.4, 10, .2)}" fill="url(#qaGato)" stroke="#8A6A52" stroke-width="1.2"/>
+      <ellipse cx="${x - 3.6}" cy="${y - 24}" rx="2.2" ry="2.6" fill="#4E9A6A"/><ellipse cx="${x + 3.6}" cy="${y - 24}" rx="2.2" ry="2.6" fill="#4E9A6A"/><ellipse cx="${x - 3.6}" cy="${y - 23.8}" rx=".9" ry="1.9" fill="#1A1008"/><ellipse cx="${x + 3.6}" cy="${y - 23.8}" rx=".9" ry="1.9" fill="#1A1008"/><circle cx="${x - 2.9}" cy="${y - 25}" r=".7" fill="#fff"/><circle cx="${x + 4.3}" cy="${y - 25}" r=".7" fill="#fff"/>
+      <path d="M${x - 1.2} ${y - 20.6} h2.4 l-1.2 1.4Z" fill="#E88A8A"/><path d="M${x} ${y - 19.2} q-1.6 1.6 -3 .4 M${x} ${y - 19.2} q1.6 1.6 3 .4" stroke="#8A6A52" stroke-width=".8" fill="none"/>
+      <path d="M${x - 4} ${y - 19.6} l-7 -1 M${x - 4} ${y - 18.6} l-7 1 M${x + 4} ${y - 19.6} l7 -1 M${x + 4} ${y - 18.6} l7 1" stroke="#B89A80" stroke-width=".5"/><ellipse cx="${x - 6}" cy="${y - 20}" rx="1.6" ry="1" fill="#FF9A9A" opacity=".5"/><ellipse cx="${x + 6}" cy="${y - 20}" rx="1.6" ry="1" fill="#FF9A9A" opacity=".5"/></g>`;
+  /* pastor e cabras */
+  const cabra = (x, y, c1, c2, vira) => `<g transform="translate(${x} ${y}) scale(${vira ? -1 : 1} 1)"><ellipse cx="0" cy="1" rx="10" ry="1.8" fill="#4A2A10" opacity=".25"/>
+      <path d="M-6 -6 v6 M-3 -6 v6 M4 -6 v6 M7 -6 v6" stroke="${c2}" stroke-width="2" stroke-linecap="round"/>
+      <path d="M-9 -10 C-12 -12 -12 -15 -10 -15" stroke="${c2}" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <ellipse cx="0" cy="-9" rx="9.6" ry="5" fill="${c1}" stroke="${c2}" stroke-width="1.1"/><path d="M-6 -12 q6 -2 12 0" stroke="#fff" stroke-width="1" fill="none" opacity=".45"/>
+      <path d="M7 -11 L10 -17" stroke="${c1}" stroke-width="4" stroke-linecap="round"/>
+      <path d="M9 -19 c-2 -4 -6 -4 -7 -2 M10 -19 c0 -4 -3 -6 -5 -5" stroke="#8A7A62" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="12" cy="-17" rx="4.2" ry="3.2" fill="${c1}" stroke="${c2}" stroke-width="1"/><path d="M9 -18 l-4 2" stroke="${c2}" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M14 -14 q0 3 -1 4" stroke="${c2}" stroke-width="1.2" fill="none"/><circle cx="12.6" cy="-18" r=".8" fill="#1A1008"/><circle cx="12.9" cy="-18.3" r=".3" fill="#fff"/></g>`;
+  const pastor = (x, y) => `<g><path d="M${x + 9} ${y} L${x + 7} ${y - 34}" stroke="#6E4428" stroke-width="2" stroke-linecap="round"/><path d="M${x + 7} ${y - 34} q-1 -4 3 -5 q3 0 3 3" stroke="#6E4428" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M${x - 2.6} ${y - 12} V${y - 1} M${x + 2.6} ${y - 12} V${y - 1}" stroke="#3A4E7A" stroke-width="3.6" stroke-linecap="round"/><path d="M${x - 5.6} ${y} h4.6 M${x + 1} ${y} h4.6" stroke="#3A2A1E" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M${x - 6.4} ${y - 11} C${x - 7} ${y - 19} ${x - 5} ${y - 24} ${x} ${y - 24} C${x + 5} ${y - 24} ${x + 7} ${y - 19} ${x + 6.4} ${y - 11}Z" fill="#4E8A5A" stroke="#24502E" stroke-width="1.1"/><path d="M${x} ${y - 23} v11" stroke="#24502E" stroke-width=".7"/>
+      <path d="M${x + 5} ${y - 21} l3 8" stroke="#4E8A5A" stroke-width="3" stroke-linecap="round"/><circle cx="${x + 8}" cy="${y - 12.6}" r="1.5" fill="#B07A52"/><path d="M${x - 5} ${y - 21} l-2 8" stroke="#4E8A5A" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="${x}" cy="${y - 29.6}" r="5.6" fill="#B07A52" stroke="#5E3414" stroke-width="1"/><path d="M${x - 6} ${y - 30} C${x - 6} ${y - 37} ${x + 6} ${y - 37} ${x + 6} ${y - 30}Z" fill="#5E4A3A"/><path d="M${x - 1} ${y - 31} h9" stroke="#5E4A3A" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="${x + 2}" cy="${y - 29.4}" r=".8" fill="#1A1008"/><path d="M${x + .6} ${y - 26.6} q1.8 1 3.4 -.2" stroke="#5E3414" stroke-width=".9" fill="none" stroke-linecap="round"/><circle cx="${x + 3.6}" cy="${y - 27.6}" r="1" fill="#FF8A7A" opacity=".45"/></g>`;
+  /* concha fóssil (amonite) na terra */
+  const fossil = (x, y, r) => `<g opacity=".7"><circle cx="${x}" cy="${y}" r="${r}" fill="#E6C8A0" stroke="#8A5A36" stroke-width=".9"/><path d="M${x} ${y} m${f1(r * .1)} 0 a${f1(r * .2)} ${f1(r * .2)} 0 1 1 ${f1(-r * .4)} 0 a${f1(r * .45)} ${f1(r * .45)} 0 1 1 ${f1(r * .85)} 0 a${f1(r * .7)} ${f1(r * .7)} 0 1 1 ${f1(-r * 1.35)} 0" stroke="#8A5A36" stroke-width=".8" fill="none"/></g>`;
+  /* superfície da vila */
+  const VY = 338;
+  const svg = `<svg viewBox="0 0 800 500" role="img" aria-label="Corte da terra no Irã: montanha com neve, água escondida debaixo do chão, poços em fila, túnel do qanat até a vila com jardim, casa do gelo e torre de vento; o guepardo Yuzi">
+    <defs>
+      <linearGradient id="qaCeu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B86DA"/><stop offset=".4" stop-color="#7DB8EE"/><stop offset=".72" stop-color="#CFE2F0"/><stop offset="1" stop-color="#FCE2BE"/></linearGradient>
+      <radialGradient id="qaSolG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFFBE0"/><stop offset=".55" stop-color="#FFD24A"/><stop offset="1" stop-color="#F6A21E"/></radialGradient>
+      <linearGradient id="qaLonge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9B2CC"/><stop offset="1" stop-color="#E8D4D2"/></linearGradient>
+      <linearGradient id="qaLonge2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B496B2"/><stop offset="1" stop-color="#D8BEB8"/></linearGradient>
+      <linearGradient id="qaMonteLuz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6B08A"/><stop offset=".5" stop-color="#CC8E6A"/><stop offset="1" stop-color="#B07A5E"/></linearGradient>
+      <linearGradient id="qaMonteBase" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8826A"/><stop offset=".6" stop-color="#9A6658"/><stop offset="1" stop-color="#8E6458"/></linearGradient>
+      <linearGradient id="qaMonteSombra" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8A5A5E"/><stop offset="1" stop-color="#5E3A4E"/></linearGradient>
+      <linearGradient id="qaNeve" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#D8E6F6"/></linearGradient>
+      <linearGradient id="qaPlanicie" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EED0A0"/><stop offset=".5" stop-color="#F2D29C"/><stop offset="1" stop-color="#E6BC80"/></linearGradient>
+      <linearGradient id="qaSaia" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C89A78" stop-opacity="0"/><stop offset="1" stop-color="#E2B888"/></linearGradient>
+      <linearGradient id="qaSolo0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EDC38C"/><stop offset="1" stop-color="#DCAA70"/></linearGradient>
+      <linearGradient id="qaSolo1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D49A62"/><stop offset="1" stop-color="#C48654"/></linearGradient>
+      <linearGradient id="qaSolo2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9784A"/><stop offset="1" stop-color="#A86A40"/></linearGradient>
+      <linearGradient id="qaSolo3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A5E3A"/><stop offset="1" stop-color="#7E4A30"/></linearGradient>
+      <linearGradient id="qaAquifero" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ACCF6" stop-opacity=".5"/><stop offset=".35" stop-color="#4EA8EA" stop-opacity=".48"/><stop offset="1" stop-color="#2A72C8" stop-opacity=".6"/></linearGradient>
+      <linearGradient id="qaPedra" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D2B49A"/><stop offset="1" stop-color="#8A6A56"/></linearGradient>
+      <linearGradient id="qaMonte" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8B680"/><stop offset="1" stop-color="#B07A48"/></linearGradient>
+      <linearGradient id="qaTunel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E1008"/><stop offset=".7" stop-color="#3A2212"/><stop offset="1" stop-color="#5A3A22"/></linearGradient>
+      <linearGradient id="qaPoco" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4A2C18"/><stop offset=".35" stop-color="#2A170C"/><stop offset="1" stop-color="#1A0E06"/></linearGradient>
+      <linearGradient id="qaLuz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF2B0" stop-opacity=".95"/><stop offset="1" stop-color="#FFD86A" stop-opacity=".25"/></linearGradient>
+      <radialGradient id="qaLampLuz" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE48A" stop-opacity=".95"/><stop offset=".45" stop-color="#FFB83A" stop-opacity=".45"/><stop offset="1" stop-color="#FF9A1E" stop-opacity="0"/></radialGradient>
+      <linearGradient id="qaAgua" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8EDCFF"/><stop offset="1" stop-color="#2E8AE0"/></linearGradient>
+      <linearGradient id="qaTanque" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5ED4E6"/><stop offset=".6" stop-color="#1FA0C8"/><stop offset="1" stop-color="#1A6AA0"/></linearGradient>
+      <linearGradient id="qaAzulejo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3EC4D2"/><stop offset="1" stop-color="#1A7A9A"/></linearGradient>
+      <linearGradient id="qaAdobe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F0CC96"/><stop offset=".6" stop-color="#E2B47C"/><stop offset="1" stop-color="#CC9862"/></linearGradient>
+      <linearGradient id="qaAdobeLado" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9955E"/><stop offset="1" stop-color="#A87444"/></linearGradient>
+      <linearGradient id="qaAdobeLonge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EACCA0"/><stop offset="1" stop-color="#D8B07C"/></linearGradient>
+      <linearGradient id="qaIwan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E4228"/><stop offset="1" stop-color="#9A6A44"/></linearGradient>
+      <linearGradient id="qaCupula" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F6D4A0"/><stop offset=".55" stop-color="#DDAA70"/><stop offset="1" stop-color="#B07A48"/></linearGradient>
+      <linearGradient id="qaGelo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#9AD8F4"/></linearGradient>
+      <linearGradient id="qaCipreste" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3E8A6A"/><stop offset=".6" stop-color="#21604A"/><stop offset="1" stop-color="#16473A"/></linearGradient>
+      <radialGradient id="qaRomaCopa" cx=".4" cy=".3" r=".75"><stop offset="0" stop-color="#A8E06A"/><stop offset=".6" stop-color="#5EAA3A"/><stop offset="1" stop-color="#357A2A"/></radialGradient>
+      <radialGradient id="qaRoseira" cx=".4" cy=".3" r=".75"><stop offset="0" stop-color="#7AC86A"/><stop offset="1" stop-color="#2E7A3A"/></radialGradient>
+      <radialGradient id="qaArbusto" cx=".4" cy=".3" r=".75"><stop offset="0" stop-color="#C2C890"/><stop offset=".6" stop-color="#94A06A"/><stop offset="1" stop-color="#6A7A4A"/></radialGradient>
+      <radialGradient id="qaJerboa" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#F6D8A8"/><stop offset="1" stop-color="#D49E62"/></radialGradient>
+      <radialGradient id="qaRomaFruto" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#FF8A7A"/><stop offset=".6" stop-color="#D8283A"/><stop offset="1" stop-color="#8A0E22"/></radialGradient>
+      <linearGradient id="qaVerde" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9AD860"/><stop offset="1" stop-color="#5EA83E"/></linearGradient>
+      <linearGradient id="qaVento" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#E6F8FF"/><stop offset="1" stop-color="#8ED8FF"/></linearGradient>
+      <radialGradient id="qaGato" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#FFFAF2"/><stop offset=".7" stop-color="#F2E2CC"/><stop offset="1" stop-color="#D8C0A4"/></radialGradient>
+      <linearGradient id="qaMadeira" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A4E26"/><stop offset=".5" stop-color="#B0703C"/><stop offset="1" stop-color="#7A4220"/></linearGradient>
+      <linearGradient id="qaCascalho" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C8A27E"/><stop offset="1" stop-color="#9A7A62"/></linearGradient>
+      <linearGradient id="qaSolo4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A5236"/><stop offset="1" stop-color="#6A3E2A"/></linearGradient>
+      <linearGradient id="qaCrosta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C08450"/><stop offset="1" stop-color="#E2B47E"/></linearGradient>
+      <linearGradient id="qaAguaBrilho" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6F8FF" stop-opacity=".8"/><stop offset="1" stop-color="#E6F8FF" stop-opacity="0"/></linearGradient>
+      <pattern id="qaAzPadrao" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#1E9CB4"/><path d="M5 .8 L9.2 5 L5 9.2 L.8 5Z" fill="#E8F6F2"/><path d="M5 2.6 L7.4 5 L5 7.4 L2.6 5Z" fill="#1E4E9A"/><circle cx="5" cy="5" r=".9" fill="#F2C24A"/><path d="M0 0 h10 v10" stroke="#156A86" stroke-width=".6" fill="none"/></pattern>
+      <radialGradient id="qaVinheta" cx=".5" cy=".45" r=".78"><stop offset=".6" stop-color="#2A1408" stop-opacity="0"/><stop offset="1" stop-color="#2A1408" stop-opacity=".38"/></radialGradient>
+      <clipPath id="qaCavaClip"><rect id="qa-cava" x="190" y="280" width="0" height="80"/></clipPath>
+      <clipPath id="qaAguaClip"><rect id="qa-aguarect" x="190" y="280" width="0" height="80"/></clipPath>
+      <clipPath id="qaTanqueClip"><path d="M600 ${VY} L604 362 H670 L674 ${VY}Z"/></clipPath>
+      <clipPath id="qaIwanClip"><path d="M708 ${VY} V294 C708 278 738 270 738 270 C738 270 768 278 768 294 V${VY}Z"/></clipPath>
+      <clipPath id="qaVistaClip"><circle cx="712" cy="96" r="54"/></clipPath>
+      <filter id="qaGrao"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .05 0"/></filter>
+    </defs>
+    <rect width="800" height="500" fill="url(#qaCeu)"/>
+    <path d="M330 52 q110 -12 210 -2 M600 120 q80 -8 170 0" stroke="#fff" stroke-width="3" fill="none" opacity=".35" stroke-linecap="round"/>
+    <g class="deriva"><use href="#nuvem" x="360" y="26" width="84" height="40" style="color:#fff" opacity=".85"/><use href="#nuvem" x="250" y="66" width="56" height="26" style="color:#fff" opacity=".7"/></g>
+    <g id="qa-sol" style="transition:opacity 1.2s"><circle cx="590" cy="58" r="44" fill="#FFE27A" opacity=".2"/><circle cx="590" cy="58" r="32" fill="#FFE27A" opacity=".28"/><circle cx="590" cy="58" r="22" fill="url(#qaSolG)" stroke="#E8901A" stroke-width="2"/><path d="M578 50 q7 -8 17 -8" stroke="#FFF8D2" stroke-width="3.4" fill="none" stroke-linecap="round"/></g>
+    <!-- serras distantes -->
+    <path d="M280 236 L330 202 L362 214 L410 178 L452 200 L500 172 L548 196 L600 168 L650 190 L700 166 L750 188 L800 176 V260 H280Z" fill="url(#qaLonge)"/>
+    <path d="M398 186 L410 178 L422 188 L410 190Z M490 180 L500 172 L512 182 L500 184Z M590 176 L600 168 L612 178 L600 180Z M690 174 L700 166 L712 176 L700 178Z" fill="#fff" opacity=".85"/>
+    <path d="M410 178 L452 200 L430 236Z M500 172 L548 196 L520 236Z M600 168 L650 190 L622 236Z M700 166 L750 188 L722 236Z" fill="#9A7A9E" opacity=".25"/>
+    <path d="M440 222 L480 206 L520 218 L570 200 L620 216 L670 204 L720 218 L770 208 L800 214 V260 H440Z" fill="url(#qaLonge2)" opacity=".8"/>
+    <!-- planície -->
+    <rect y="226" width="800" height="280" fill="url(#qaPlanicie)"/>
+    <path d="M300 236 C420 232 600 238 800 236" stroke="#FFF2D6" stroke-width="2" fill="none" opacity=".6"/>
+    <g fill="none" stroke="#B88A56" stroke-width="1.1" opacity=".75">${[[560, 246], [584, 248], [608, 250], [632, 252], [656, 254], [680, 256], [704, 258], [728, 260], [752, 262]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="4.4" ry="1.4"/><ellipse cx="${x}" cy="${y + .3}" rx="1.6" ry=".5" fill="#7A4A2A" stroke="none"/>`).join('')}</g>
+    <g fill="none" stroke="#C49A66" stroke-width=".9" opacity=".6">${[[600, 238], [618, 239], [636, 240], [654, 241], [672, 242], [690, 243]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="3" ry="1"/>`).join('')}</g>
+    <path d="M520 268 C580 262 660 266 760 262 M560 290 C640 284 720 290 800 286" stroke="#D8AE74" stroke-width="5" fill="none" opacity=".35" stroke-linecap="round"/>
+    <!-- montanha grande -->
+    <g id="qa-pico" class="toque">
+      <path d="M-20 270 L-20 150 L12 116 L44 86 L76 60 L100 44 L116 38 L134 50 L156 70 L178 62 L198 52 L214 46 L232 60 L260 90 L292 120 L326 150 L362 182 L400 210 L430 232 L440 270Z" fill="url(#qaMonteBase)" stroke="#5E3A3E" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M-20 160 L12 116 L44 86 L76 60 L100 44 L116 38 L96 90 L70 140 L50 200 L40 270 H-20Z" fill="url(#qaMonteLuz)"/>
+      <path d="M116 38 L134 50 L156 70 L150 120 L138 180 L130 270 L60 270 L80 190 L100 110Z" fill="url(#qaMonteSombra)" opacity=".85"/>
+      <path d="M214 46 L232 60 L260 90 L292 120 L326 150 L362 182 L400 210 L430 232 L440 270 L300 270 L280 200 L250 130Z" fill="url(#qaMonteSombra)" opacity=".55"/>
+      <path d="M198 52 L214 46 L250 130 L280 200 L300 270 L250 270 L232 180 L212 110Z" fill="#D29A78" opacity=".55"/>
+      <path d="M116 38 L100 110 L80 190 M214 46 L212 110 L232 180 M156 70 L170 120 L176 170" stroke="#F6DCC6" stroke-width="2" fill="none" opacity=".5" stroke-linecap="round"/>
+      <path d="M40 120 C46 140 44 160 40 180 M70 100 C76 120 74 150 68 170 M250 120 C262 150 270 180 276 210 M300 140 C312 170 320 200 324 230" stroke="#7A4A50" stroke-width="1.8" fill="none" opacity=".4" stroke-linecap="round"/>
+      <path d="M60 78 L76 60 L100 44 L116 38 L134 50 L156 70 L148 74 C142 70 138 80 132 76 C126 84 120 76 114 82 C108 78 104 88 98 84 C92 92 86 86 80 92 C74 86 68 92 62 88Z" fill="url(#qaNeve)" stroke="#A8C2DC" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M116 38 L134 50 L156 70 L148 74 C142 70 138 80 132 76 C126 84 120 76 114 82Z" fill="#A8BEE0" opacity=".6"/>
+      <path d="M178 62 L198 52 L214 46 L232 60 L244 72 C238 76 232 70 228 78 C222 72 218 82 212 78 C206 84 200 76 194 80 C188 74 184 76 178 72Z" fill="url(#qaNeve)" stroke="#A8C2DC" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M214 46 L232 60 L244 72 C238 76 232 70 228 78 C222 72 218 82 212 78Z" fill="#A8BEE0" opacity=".6"/>
+      <path d="M100 48 L92 70 L96 80 M198 58 L192 72" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".9"/>
+      <path d="M20 150 C30 170 26 190 22 210 M94 110 C104 130 100 160 94 190 M180 110 C190 140 196 170 198 200 M226 100 C240 130 250 160 256 190 M350 180 C360 196 366 210 368 226" stroke="#6E3E46" stroke-width="2.4" fill="none" opacity=".3" stroke-linecap="round"/>
+      <path d="M8 140 L30 118 M58 104 L76 90 M160 96 L176 86 M272 112 L292 128 M330 160 L350 176" stroke="#F8E0C8" stroke-width="2" fill="none" opacity=".5" stroke-linecap="round"/>
+      <g fill="#7A4A50" opacity=".25">${Array.from({ length:30 }, () => { const y = R(110, 240), x = R(0, 200 + (y - 46) - 30); return `<path d="M${f1(x)} ${f1(y)} l${f1(R(5, 12))} ${f1(R(-2, 3))} l${f1(R(3, 8))} ${f1(R(1, 5))}" stroke="#6E3E46" stroke-width="1.2" fill="none"/>`; }).join('')}</g>
+      <g fill="#4E2E44" opacity=".22"><path d="M44 86 L60 130 L42 172 L30 120Z"/><path d="M156 70 L178 112 L168 156 L150 120Z"/><path d="M260 90 L272 140 L304 172 L292 120Z"/><path d="M326 150 L332 192 L362 182Z"/><path d="M100 110 L112 150 L96 186Z"/></g>
+      <g fill="#FFE2C4" opacity=".3"><path d="M76 60 L70 100 L54 124 L60 92Z"/><path d="M178 62 L172 102 L186 132 L192 90Z"/><path d="M198 52 L206 96 L222 120 L214 72Z"/><path d="M12 116 L24 140 L4 170Z"/></g>
+      <path d="M76 60 L70 100 L54 124 M178 62 L172 102 L186 132 M12 116 L24 140" stroke="#FFF0DC" stroke-width="1.6" fill="none" opacity=".55" stroke-linecap="round"/>
+      <path d="M86 86 l8 10 l-3 6 M126 82 l6 8 M206 76 l5 9 M224 76 l7 8" stroke="#8EA8D0" stroke-width="1.6" fill="none" opacity=".75" stroke-linecap="round"/>
+      <g fill="#fff" opacity=".9">${[[70, 74], [104, 52], [140, 64], [188, 66], [222, 58]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.3"/>`).join('')}</g>
+      <path d="M-20 200 C40 210 120 214 200 230 C260 240 320 246 440 250 V280 H-20Z" fill="url(#qaSaia)"/>
+      <path d="M72 186 L42 246 Q72 252 102 246Z" fill="#C49C80" opacity=".55"/><path d="M72 186 L42 246 M72 186 L102 246" stroke="#8A6A5E" stroke-width="1" opacity=".4"/><path d="M168 176 L138 246 Q168 252 198 246Z" fill="#C49C80" opacity=".55"/><path d="M168 176 L138 246 M168 176 L198 246" stroke="#8A6A5E" stroke-width="1" opacity=".4"/><path d="M250 196 L220 246 Q250 252 280 246Z" fill="#C49C80" opacity=".55"/><path d="M250 196 L220 246 M250 196 L280 246" stroke="#8A6A5E" stroke-width="1" opacity=".4"/><path d="M330 214 L300 246 Q330 252 360 246Z" fill="#C49C80" opacity=".55"/><path d="M330 214 L300 246 M330 214 L360 246" stroke="#8A6A5E" stroke-width="1" opacity=".4"/>
+      <g>${Array.from({ length:46 }, () => { const x = R(30, 360), y = R(222, 248); return `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${f1(R(1.4, 3))}" ry="${f1(R(1, 2))}" fill="${['#A88270', '#D2B49E', '#8A6A5E'][Math.floor(R(0, 2.99))]}" stroke="#6E4E44" stroke-width=".5"/>`; }).join('')}</g>
+      <rect x="40" y="30" width="220" height="70" fill="transparent"/>
+    </g>
+    <!-- onagro na planície, ao pé da montanha -->
+    <g id="qa-onagro" class="toque" data-fig="onagro"><ellipse cx="318" cy="206" rx="26" ry="3.6" fill="#5A3A1A" opacity=".25"/><g id="qa-onagro-in" style="transform-origin:318px 206px"><svg x="284" y="150" width="64" height="59" viewBox="0 0 130 120"><use href="#f-onagro"/></svg></g>${brilhoHotspot(344, 152)}</g>
+    ${arbusto(258, 196, 7)}
+    <!-- casa do gelo (yakhchal), muro de sombra e poça de fazer gelo -->
+    <g id="qa-yakh" class="toque" data-fig="yakhchal">
+      <path d="M496 256 V218 H570 V258Z" fill="url(#qaAdobeLado)" stroke="#8A5A32" stroke-width="1.4"/><path d="M496 218 l4 -4 h66 l4 4" fill="#F2D4A2" stroke="#8A5A32" stroke-width="1.1"/>
+      <path d="M498 226 h70 M498 236 h70 M498 246 h70" stroke="#8E6038" stroke-width=".8" opacity=".5"/>
+      <path id="qa-poca" d="M500 262 C504 256 566 256 572 262 C566 268 506 268 500 262Z" fill="#C8A070" stroke="#8A6A40" stroke-width="1.2"/>
+      <path id="qa-poca-agua" d="M504 262 C508 258 562 258 568 262 C562 266 508 266 504 262Z" fill="url(#qaAgua)" style="opacity:0;transition:opacity 1s"/>
+      <path id="qa-poca-gelo" d="M504 262 C508 258 562 258 568 262 C562 266 508 266 504 262Z" fill="url(#qaGelo)" stroke="#8ACAEA" stroke-width=".8" style="opacity:0;transition:opacity 1.6s"/>
+      <ellipse cx="462" cy="256" rx="42" ry="5" fill="#5A3A1A" opacity=".25"/>
+      <path d="M424 256 C424 222 446 178 462 168 C478 178 500 222 500 256Z" fill="url(#qaCupula)" stroke="#8A5A32" stroke-width="1.8" stroke-linejoin="round"/>
+      ${[1, 2, 3, 4, 5, 6, 7].map(k => `<path d="M${f1(426 + k * 3.6)} ${256 - k * 11} Q462 ${252 - k * 11 - 3} ${f1(498 - k * 3.6)} ${256 - k * 11}" stroke="#A8784A" stroke-width="1" fill="none" opacity=".6"/>`).join('')}
+      <path d="M458 172 C450 186 438 216 434 250" stroke="#FFEACC" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".75"/>
+      <path d="M462 168 C466 170 469 173 470 176 C467 179 459 179 456 176 C457 172 459 170 462 168Z" fill="#9A6A3E" stroke="#8A5A32" stroke-width="1"/>
+      <path d="M452 256 V244 C452 238 472 238 472 244 V256Z" fill="#4E2E1A" stroke="#6E4428" stroke-width="1"/>
+      <g id="qa-yakh-corte" style="opacity:0;transition:opacity 1.2s"><path d="M438 256 V234 C438 222 486 222 486 234 V256Z" fill="#3A2414" stroke="#6E4428" stroke-width="1.2"/><path d="M441 256 V236 C441 228 483 228 483 236 V256Z" fill="#5E3A20"/>
+        <g stroke="#4E8AB8" stroke-width=".9">${[[443, 248], [456, 248], [469, 248], [449, 240], [462, 240], [472, 240]].map(([x, y]) => `<rect x="${x}" y="${y}" width="12" height="7.6" rx="1.4" fill="url(#qaGelo)"/>`).join('')}</g>
+        <path d="M445 249.4 h4 M458 249.4 h4 M471 249.4 h4 M451 241.4 h4" stroke="#fff" stroke-width="1.1" stroke-linecap="round"/></g>
+      <g class="qa-dica3" style="display:none">${brilhoHotspot(484, 186)}</g>
+      ${brilhoHotspot(446, 178)}
+      <rect x="448" y="164" width="126" height="106" fill="transparent"/><rect x="424" y="164" width="24" height="70" fill="transparent"/>
+    </g>
+    <!-- pastor com as cabras -->
+    <g id="qa-rebanho" class="toque">
+      <g class="qa-cabra">${cabra(366, 240, '#3A2E2A', '#14100C')}</g><g class="qa-cabra">${cabra(386, 242, '#F4EEE4', '#8A7A6A')}</g><g class="qa-cabra">${cabra(436, 246, '#C8925A', '#6E4428', true)}</g>
+      ${pastor(410, 244)}
+      <rect x="352" y="204" width="96" height="44" fill="transparent"/>
+    </g>
+    <!-- fundo da vila -->
+    <g id="qa-vila-fundo">
+      ${casinha(604, 324, 34, 24, true)}${casinha(640, 322, 28, 30)}${badgirLonge(656, 292, 22)}${casinha(668, 324, 40, 22, true)}
+      <path d="M598 326 C650 320 720 322 800 320 V340 H598Z" fill="#E6BE84"/>
+    </g>
+    <g class="qa-jardim-cresce" style="transform-box:fill-box;transform-origin:50% 100%;transform:scale(0);transition:transform 1.1s cubic-bezier(.3,1.4,.5,1) .3s">${cipreste(610, 334, 52)}</g>
+    <g class="qa-jardim-cresce" style="transform-box:fill-box;transform-origin:50% 100%;transform:scale(0);transition:transform 1.1s cubic-bezier(.3,1.4,.5,1) .55s">${cipreste(666, 334, 58)}</g>
+    <g class="qa-jardim-cresce" style="transform-box:fill-box;transform-origin:50% 100%;transform:scale(0);transition:transform 1.1s cubic-bezier(.3,1.4,.5,1) .8s">${cipreste(638, 330, 38)}</g>
+    <!-- o corte da terra -->
+    <g id="qa-corte">
+      <path d="M-10 ${f1(P(-10))} L${linha(0, 800, P, 0, 8)} L810 ${f1(P(810))} V505 H-10Z" fill="url(#qaSolo0)"/>
+      ${[[.2, 1, 'qaSolo1'], [.38, 2.2, 'qaCrosta'], [.5, 3.1, 'qaSolo2'], [.7, 4.3, 'qaSolo3'], [.86, 5.2, 'qaSolo4']].map(([f, k, g]) => `<path d="M-10 505 V${f1(camada(f, k)(-10))} L${linha(0, 800, camada(f, k), 0, 10)} L810 505Z" fill="url(#${g})"/><path d="M0 ${f1(camada(f, k)(0))} L${linha(0, 800, camada(f, k), -1.2, 10)}" stroke="#FFE6C0" stroke-width="1.1" fill="none" opacity=".4"/><path d="M0 ${f1(camada(f, k)(0) + 1.4)} L${linha(0, 800, camada(f, k), 1.4, 10)}" stroke="#5E3420" stroke-width="1" fill="none" opacity=".25"/>`).join('')}
+      <g fill="#7A4A2A" opacity=".22">${Array.from({ length:340 }, () => { const x = R(0, 800), y = R(P(x) + 6, 500); return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R(.5, 1.1))}"/>`; }).join('')}</g>
+      <g fill="#FFF0D0" opacity=".25">${Array.from({ length:160 }, () => { const x = R(0, 800), y = R(P(x) + 6, 500); return `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(R(.4, .9))}"/>`; }).join('')}</g>
+      <g>${Array.from({ length:22 }, () => { const x = R(10, 790), y = R(P(x) + 18, 490), n = Math.floor(R(3, 6)); return Array.from({ length:n }, () => { const dx = R(-7, 7), dy = R(-4, 4); return `<ellipse cx="${f1(x + dx)}" cy="${f1(y + dy)}" rx="${f1(R(1.8, 3.8))}" ry="${f1(R(1.3, 2.6))}" fill="${['#B88458', '#E2B888', '#9A7060', '#CDA078', '#A89488'][Math.floor(R(0, 4.99))]}" stroke="#6E4428" stroke-width=".6"/><path d="M${f1(x + dx - 1.2)} ${f1(y + dy - .8)} h1.6" stroke="#FFF4DC" stroke-width=".7" opacity=".8"/>`; }).join(''); }).join('')}</g>
+      ${fossil(92, 236, 5)}${fossil(474, 372, 4.4)}${fossil(700, 404, 5)}${fossil(150, 330, 3.6)}
+      <g stroke="#9A6A3E" stroke-width=".9" fill="none" opacity=".3">${Array.from({ length:22 }, () => { const x = R(0, 790), y = R(P(x) + 14, 490); return `<path d="M${f1(x)} ${f1(y)} q5 -2 10 0 q5 2 10 0"/>`; }).join('')}</g>
+      <path d="M-10 ${f1(P(-10))} L${linha(0, 800, P, 0, 8)} L810 ${f1(P(810))} L${linha(0, 800, P, 7, 8).split(' L').reverse().join(' L')}Z" fill="#B87A48" opacity=".35"/>
+      <!-- água guardada entre as pedrinhas: o lençol debaixo da montanha -->
+      <g id="qa-aquifero">
+        <path d="M-10 ${f1(W(-10))} L${linha(0, 800, W, 0, 10)} L810 ${f1(W(810))} V505 H-10Z" fill="url(#qaCascalho)"/>
+        ${[22, 52, 92, 140].map((d, k) => `<path d="M0 ${f1(W(0) + d)} L${linha(0, 800, W, d + 3 * Math.sin(k), 10)}" stroke="#5E4A40" stroke-width="1.2" fill="none" opacity=".35"/>`).join('')}
+        <g>${Array.from({ length:190 }, () => { const x = R(-4, 804), y = R(W(x) + 8, 502); return `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${f1(R(2.4, 5.6))}" ry="${f1(R(1.8, 3.4))}" fill="${['#C8AE94', '#B09A86', '#D8C4AA', '#A89C92'][Math.floor(R(0, 3.99))]}" stroke="#5E4A40" stroke-width=".8"/><path d="M${f1(x - 1.4)} ${f1(y - 1)} q1.2 -.8 2.4 0" stroke="#F6E8D6" stroke-width=".7" fill="none"/>`; }).join('')}</g>
+        <path d="M-10 ${f1(W(-10))} L${linha(0, 800, W, 0, 10)} L810 ${f1(W(810))} V505 H-10Z" fill="url(#qaAquifero)"/>
+        <path d="M-10 ${f1(W(-10))} L${linha(0, 800, W, 0, 10)} L810 ${f1(W(810))} L${linha(0, 800, W, 16, 10).split(' L').reverse().join(' L')}Z" fill="url(#qaAguaBrilho)" opacity=".7"/>
+        <path d="M0 ${f1(W(0))} L${linha(0, 800, W, 0, 10)}" stroke="#E6F8FF" stroke-width="2.4" fill="none" opacity=".85" stroke-linecap="round"/>
+        <path id="qa-aquifero-onda" d="M0 ${f1(W(0) + 6)} L${linha(0, 800, W, 6, 10)}" stroke="#F2FBFF" stroke-width="1.2" fill="none" stroke-dasharray="24 30" opacity=".6"/>
+        <g stroke="#DDF4FF" stroke-width="1.1" fill="none" opacity=".4" stroke-linecap="round">${Array.from({ length:12 }, (_, k) => { const x = 30 + k * 64 + R(-10, 10), y = W(x) + R(26, 80); return `<path d="M${f1(x)} ${f1(y)} q6 -2 12 0 q6 2 12 0"/>`; }).join('')}</g>
+        <g fill="#CFEFFF" stroke="#3E86C8" stroke-width=".7">${[[60, 30], [130, 22], [252, 40], [330, 28], [470, 34], [610, 26], [720, 40], [520, 70], [170, 70], [40, 90]].map(([x, d]) => { const y = W(x) + d; return `<path d="M${x} ${f1(y - 4)} q3 4 0 5.6 q-3 -1.6 0 -5.6Z"/>`; }).join('')}</g>
+      </g>
+      <!-- toca do jerboa -->
+      <g id="qa-toca" class="toque"><path d="M368 ${f1(P(368) + 2)} C370 256 382 262 380 270" stroke="#6E4428" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M368 ${f1(P(368) + 2)} C370 256 382 262 380 270" stroke="#4A2C18" stroke-width="7" fill="none" stroke-linecap="round"/>
+        <ellipse cx="378" cy="276" rx="16" ry="10" fill="#4A2C18" stroke="#6E4428" stroke-width="1.6"/><path d="M364 282 q14 4 28 0" stroke="#C8A070" stroke-width="2" fill="none" opacity=".6"/>
+        <g id="qa-jerboa"><g id="qa-jerboa-in" style="transition:transform .5s cubic-bezier(.3,1.6,.5,1)"><g transform="translate(380 284) scale(.68) translate(-380 -284)">${jerboa(380, 284)}</g></g></g>
+        <rect x="356" y="240" width="40" height="50" fill="transparent"/></g>
+      <!-- raízes -->
+      <g stroke="#8A5A32" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".7"><path d="M270 ${f1(P(270))} q-2 8 2 14 q3 5 0 10 M270 ${f1(P(270) + 6)} l6 6"/><path d="M420 ${f1(P(420))} q2 8 -2 14 M420 ${f1(P(420) + 6)} l-5 5"/><path d="M574 ${f1(P(574) + 2)} q-4 12 -12 18 M574 ${f1(P(574) + 2)} q2 14 8 22 q2 6 -2 10 M574 ${f1(P(574) + 6)} q10 6 14 14"/></g>
+      <!-- poços (escavados durante o jogo) -->
+      <g id="qa-pocos">
+        <rect class="qa-poco" data-i="0" x="${MAE - 6}" y="${f1(P(MAE))}" width="12" height="0" fill="url(#qaPoco)" stroke="#6E4428" stroke-width="1.2"/>
+        ${POCOS.map((x, i) => `<rect class="qa-poco" data-i="${i + 1}" x="${x - 5}" y="${f1(P(x))}" width="10" height="0" fill="url(#qaPoco)" stroke="#6E4428" stroke-width="1.2"/>`).join('')}
+        <rect id="qa-mae-agua" x="${MAE - 6}" y="${FUNDO_MAE}" width="12" height="0" fill="url(#qaAgua)"/>
+        ${[MAE, ...POCOS].map((x, i) => `<path class="qa-feixe" data-i="${i}" d="M${x - 4} ${f1(P(x))} L${x + 4} ${f1(P(x))} L${x + 7} ${f1(T(x) - 6)} L${x - 7} ${f1(T(x) - 6)}Z" fill="url(#qaLuz)" style="opacity:0;transition:opacity 1s"/>`).join('')}
+      </g>
+      <!-- túnel do qanat (cavado arrastando o lampião) -->
+      <g id="qa-trilha" style="display:none"><path d="M${MAE} ${f1(T(MAE) - 8)} L${XO + 6} ${f1(T(XO + 6) - 8)}" stroke="#FFF2C8" stroke-width="3" fill="none" stroke-dasharray="2 9" stroke-linecap="round" opacity=".95"/><path d="M${XO - 6} ${f1(T(XO) - 15)} l12 7 l-12 6Z" fill="#FFF2C8" opacity=".9"/></g>
+      <g clip-path="url(#qaCavaClip)">
+        <path d="M${MAE - 4} ${f1(T(MAE) - 8)} L${XO + 10} ${f1(T(XO + 10) - 8)}" stroke="#7A4A26" stroke-width="20" fill="none"/>
+        <path d="M${MAE - 4} ${f1(T(MAE) - 8)} L${XO + 10} ${f1(T(XO + 10) - 8)}" stroke="url(#qaTunel)" stroke-width="16" fill="none"/>
+        <path d="M${MAE - 4} ${f1(T(MAE) - .6)} L${XO + 10} ${f1(T(XO + 10) - .6)}" stroke="#7A5232" stroke-width="2" fill="none"/>
+        <g fill="none" stroke="#C8844A" stroke-width="1.4" opacity=".55">${Array.from({ length:13 }, (_, k) => { const x = 230 + k * 24; return `<ellipse cx="${x}" cy="${f1(T(x) - 8)}" rx="2.6" ry="8.4"/>`; }).join('')}</g>
+      </g>
+      <g clip-path="url(#qaAguaClip)">
+        <path d="M${MAE - 4} ${f1(T(MAE) - 3)} L${XO + 10} ${f1(T(XO + 10) - 3)}" stroke="url(#qaAgua)" stroke-width="5.4" fill="none"/>
+        <path class="qa-fluxo" d="M${MAE - 4} ${f1(T(MAE) - 4)} L${XO + 10} ${f1(T(XO + 10) - 4)}" stroke="#E6F8FF" stroke-width="1.3" fill="none" stroke-dasharray="5 11" stroke-linecap="round"/>
+      </g>
+      <g id="qa-gotas" style="opacity:0;transition:opacity 1s"><g fill="#BFEAFF" stroke="#2E7AC8" stroke-width=".6">${[[206, 300], [214, 304], [222, 306], [230, 309], [240, 311]].map(([x, y]) => `<path d="M${x} ${y - 3} q2 3 0 4.4 q-2 -1.4 0 -4.4Z"/>`).join('')}</g></g>
+      <!-- boca do qanat na vila e canal aberto até o jardim -->
+      <path d="M548 ${f1(P(548))} L548 ${f1(T(548) + 2)} L598 ${f1(T(548) + 3)} L600 ${VY}" fill="#5A3A22" stroke="#4A2C18" stroke-width="1.4"/>
+      <path id="qa-canal-agua" d="M546 ${f1(T(548) - 2.4)} L600 ${f1(T(548) - 1.4)}" stroke="url(#qaAgua)" stroke-width="5" fill="none" style="opacity:0;transition:opacity .8s"/>
+      <path class="qa-fluxo2" d="M546 ${f1(T(548) - 3)} L600 ${f1(T(548) - 2)}" stroke="#E6F8FF" stroke-width="1.2" fill="none" stroke-dasharray="5 9" style="opacity:0"/>
+      <g id="qa-boca"><path d="M${XO - 12} ${f1(T(XO) + 2)} V${f1(T(XO) - 14)} C${XO - 12} ${f1(T(XO) - 27)} ${XO + 12} ${f1(T(XO) - 27)} ${XO + 12} ${f1(T(XO) - 14)} V${f1(T(XO) + 2)}Z" fill="#8A6A56" stroke="#4E3A2E" stroke-width="1.6"/><path d="M${XO - 7} ${f1(T(XO) + 2)} V${f1(T(XO) - 13)} C${XO - 7} ${f1(T(XO) - 20)} ${XO + 7} ${f1(T(XO) - 20)} ${XO + 7} ${f1(T(XO) - 13)} V${f1(T(XO) + 2)}Z" fill="#2A170C"/><path d="M${XO - 12} ${f1(T(XO) - 6)} h5 M${XO + 7} ${f1(T(XO) - 6)} h5 M${XO - 10} ${f1(T(XO) - 19)} l4 3 M${XO + 10} ${f1(T(XO) - 19)} l-4 3 M${XO} ${f1(T(XO) - 24)} v4" stroke="#4E3A2E" stroke-width="1"/><path d="M${XO - 10} ${f1(T(XO) - 16)} C${XO - 9} ${f1(T(XO) - 23)} ${XO - 3} ${f1(T(XO) - 25)} ${XO + 2} ${f1(T(XO) - 25)}" stroke="#E2CCB6" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
+      <!-- tanque do jardim (espelho-d'água) com azulejos -->
+      <g id="qa-tanque" class="toque">
+        <path d="M598 ${VY} L602 365 H672 L676 ${VY}Z" fill="#3A2E2A" stroke="#14506A" stroke-width="4.4" stroke-linejoin="round"/>
+        <path d="M600 ${VY} L604 362 H670 L674 ${VY}Z" fill="url(#qaAzPadrao)"/>
+        <path d="M600 ${VY} L604 362 H670 L674 ${VY}Z" fill="#0A2A3A" opacity=".18"/>
+        <g clip-path="url(#qaTanqueClip)"><rect id="qa-tanque-agua" x="594" y="364" width="90" height="30" fill="url(#qaTanque)" opacity=".86"/>
+          <g id="qa-reflexo" style="opacity:0;transition:opacity 1.4s"><path d="M610 342 C607 348 607 356 610 362 C613 356 613 348 610 342Z M666 342 C662 349 662 357 666 363 C670 357 670 349 666 342Z" fill="#21604A" opacity=".35"/><path d="M606 344 h18 M640 346 h22 M616 352 h12 M650 356 h14" stroke="#F2FFFF" stroke-width="1.6" stroke-linecap="round" opacity=".8"/></g>
+          <path id="qa-tanque-brilho" d="M606 368 h20 M640 370 h24" stroke="#E6FFFF" stroke-width="2" stroke-linecap="round" opacity="0"/></g>
+        <path d="M596 ${VY - 1} H604 M670 ${VY - 1} H678" stroke="#F2F6F0" stroke-width="3" stroke-linecap="round"/><path d="M596 ${VY - 1} H604 M670 ${VY - 1} H678" stroke="#1E9CB4" stroke-width="1.4" stroke-dasharray="2 2"/>
+        <g id="qa-fonte" style="opacity:0;transition:opacity .8s"><path d="M637 ${VY + 4} V${VY - 20}" stroke="#BFF0FF" stroke-width="2.4" stroke-linecap="round"/><path class="qa-jato" d="M637 ${VY - 20} q-10 -4 -16 14 M637 ${VY - 20} q10 -4 16 14" stroke="#E6FAFF" stroke-width="1.8" fill="none" stroke-dasharray="3 4" stroke-linecap="round"/><circle cx="637" cy="${VY - 22}" r="2.6" fill="#E6FAFF"/></g>
+        <g id="qa-ondas"></g>
+        <rect x="596" y="${VY - 26}" width="82" height="54" fill="transparent"/>
+      </g>
+      <g id="qa-comporta" class="toque"><g id="qa-tabua" style="transition:transform .8s cubic-bezier(.3,1.4,.5,1)"><rect x="589" y="${f1(T(548) - 14)}" width="7" height="16" rx="1.4" fill="#B07A44" stroke="#5E3414" stroke-width="1.2"/><circle cx="592.5" cy="${f1(T(548) - 17)}" r="2.4" fill="#8A5A2A" stroke="#5E3414" stroke-width="1"/></g><rect x="578" y="${f1(T(548) - 34)}" width="24" height="44" fill="transparent"/></g>
+      <g id="qa-dica-jardim" class="qa-dica3" style="display:none">${brilhoHotspot(612, 318)}</g>
+    </g>
+    <!-- borda do corte: casca do chão com areia -->
+    <g pointer-events="none">
+    <path d="M-10 ${f1(P(-10))} L${linha(0, 800, P, 0, 8)} L810 ${f1(P(810))}" stroke="#A8703E" stroke-width="5" fill="none" opacity=".45"/>
+    <path d="M-10 ${f1(P(-10))} L${linha(0, 800, P, 0, 8)} L810 ${f1(P(810))}" stroke="#FFEFCC" stroke-width="2.2" fill="none"/>
+    <path id="qa-grama" d="M560 ${f1(P(560) + 1)} L${linha(560, 800, P, 1, 8)} L800 ${f1(P(800) + 6)} L${linha(560, 800, P, 6, 8).split(' L').reverse().join(' L')}Z" fill="url(#qaVerde)" pointer-events="none" style="opacity:0;transition:opacity 1.4s"/>
+    <g>${Array.from({ length:46 }, () => { const x = R(0, 590); return tufo(x, P(x) + 1, R(.7, 1.1), '#F6E2A0', '#A08A4A'); }).join('')}</g>
+    ${arbusto(150, P(150) + 1, 9)}${arbusto(312, P(312) + 1, 8)}${arbusto(452, P(452) + 1, 7)}${pedra(232, P(232) + 2, 7, 5)}${pedra(296, P(296) + 2, 5, 4)}${pedra(500, P(500) + 2, 6, 4)}
+    <!-- montinhos de terra (aparecem quando os poços são cavados) -->
+    ${[MAE, ...POCOS].map((x, i) => `<g class="qa-monte" data-i="${i}" style="transform-box:fill-box;transform-origin:50% 100%;transform:scale(0);transition:transform .7s cubic-bezier(.3,1.5,.5,1)">${monte(x, i === 0 ? 1.15 : 1)}</g>`).join('')}
+    </g>
+    ${POCOS.map((x, i) => marca(x, i + 1)).join('')}
+    <!-- sarilho e cavador no poço-mãe -->
+    <g id="qa-sarilho" class="toque" style="opacity:0;pointer-events:none;transition:opacity .8s">
+      <g transform="translate(${MAE} ${f1(P(MAE))}) scale(1.4) translate(${-MAE} ${f1(-P(MAE))})">
+      <path d="M${MAE - 15} ${f1(P(MAE - 15) + 2)} L${MAE - 12} ${f1(P(MAE) - 27)} M${MAE + 15} ${f1(P(MAE + 15) + 2)} L${MAE + 12} ${f1(P(MAE) - 27)}" stroke="#5E3414" stroke-width="4.4" stroke-linecap="round"/><path d="M${MAE - 15} ${f1(P(MAE - 15) + 2)} L${MAE - 12} ${f1(P(MAE) - 27)} M${MAE + 15} ${f1(P(MAE + 15) + 2)} L${MAE + 12} ${f1(P(MAE) - 27)}" stroke="#B07A44" stroke-width="2.2" stroke-linecap="round"/>
+      <rect x="${MAE - 15}" y="${f1(P(MAE) - 30)}" width="30" height="6" rx="3" fill="#8A5A2A" stroke="#4E2A10" stroke-width="1.2"/><path d="M${MAE - 12} ${f1(P(MAE) - 28.6)} h24" stroke="#D8A46A" stroke-width="1" opacity=".8"/>
+      <path id="qa-corda" d="M${MAE} ${f1(P(MAE) - 24)} V${f1(P(MAE) + 10)}" stroke="#E2C89A" stroke-width="1.2"/>
+      <g id="qa-balde"><path d="M${MAE - 4} ${f1(P(MAE) + 10)} h8 l-1 7 h-6Z" fill="#6E4A2E" stroke="#3A2414" stroke-width="1"/><path d="M${MAE - 4} ${f1(P(MAE) + 10)} q4 -4 8 0" stroke="#3A2414" stroke-width=".8" fill="none"/></g>
+      <g id="qa-manivela" style="transform-box:fill-box;transform-origin:50% 50%"><circle cx="${MAE + 17}" cy="${f1(P(MAE) - 27)}" r="7" fill="none" stroke="#5E3414" stroke-width="2.4"/><circle cx="${MAE + 17}" cy="${f1(P(MAE) - 27)}" r="7" fill="none" stroke="#C88A50" stroke-width="1"/>${[0, 45, 90, 135].map(a => `<path d="M${f1(MAE + 17 + 7 * Math.cos(a / 57.3))} ${f1(P(MAE) - 27 + 7 * Math.sin(a / 57.3))} L${f1(MAE + 17 - 7 * Math.cos(a / 57.3))} ${f1(P(MAE) - 27 - 7 * Math.sin(a / 57.3))}" stroke="#8A5A2A" stroke-width="1.3"/>`).join('')}<circle cx="${MAE + 17}" cy="${f1(P(MAE) - 27)}" r="1.8" fill="#4E2A10"/></g><path d="M${MAE - 8} ${f1(P(MAE) - 30)} l2 6 M${MAE - 4} ${f1(P(MAE) - 30)} l2 6 M${MAE} ${f1(P(MAE) - 30)} l2 6 M${MAE + 4} ${f1(P(MAE) - 30)} l2 6" stroke="#E2C89A" stroke-width="1.2"/>
+      ${cavador(MAE + 30, P(MAE) + 7)}
+      </g>
+    </g>
+    <!-- lampião do cavador no túnel -->
+    <g id="qa-lamp" class="toque" style="display:none;cursor:grab"><g id="qa-lamp-pos">
+      <circle r="30" fill="url(#qaLampLuz)"/>
+      <g><path d="M-9 7 v-6 M-5 7 v-6" stroke="#5E4A3A" stroke-width="2.4" stroke-linecap="round"/><path d="M-12 1 C-12 -6 -2 -8 -2 -1Z" fill="#3E7AB8" stroke="#1E3A6A" stroke-width=".8"/><circle cx="-6" cy="-9" r="3.6" fill="#A87050" stroke="#5E3414" stroke-width=".8"/><path d="M-10 -10 C-10 -15 -2 -15 -2 -10Z" fill="#FFC83D" stroke="#9A6A08" stroke-width=".8"/><circle cx="-2.4" cy="-11.6" r="1.2" fill="#FFF6C8"/><path d="M-3 -3 l5 -1" stroke="#A87050" stroke-width="1.8" stroke-linecap="round"/></g>
+      <g><path d="M3 -8 h6 l-1 2 h-4Z" fill="#6E4A2E"/><rect x="2.6" y="-6" width="7" height="9" rx="1.6" fill="#FFE48A" stroke="#7A4A1A" stroke-width="1"/><path d="M6 -4.4 q-1.6 2 0 3.6 q1.6 -1.6 0 -3.6Z" fill="#FF8A1E"/><path d="M2.6 3 h7" stroke="#7A4A1A" stroke-width="1.4"/></g>
+      <g id="qa-lamp-dica">${brilhoHotspot(16, -18)}</g>
+      <circle r="28" fill="transparent"/></g></g>
+    <!-- romãzeira -->
+    <g id="qa-roma" class="toque" data-fig="roma">
+      <ellipse cx="574" cy="${f1(P(574) + 2)}" rx="22" ry="3.4" fill="#4A2A10" opacity=".3"/>
+      <path d="M574 ${f1(P(574) + 2)} C572 316 576 308 572 298 M573 312 C566 306 560 302 556 294 M574 306 C582 300 588 296 592 288" stroke="#6E4428" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M574 ${f1(P(574) + 2)} C572 316 576 308 572 298" stroke="#A8724A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <path d="${copa(560, 288, 17, 13, 10, .28)}" fill="url(#qaRomaCopa)" stroke="#2E5A1E" stroke-width="1.4"/><path d="${copa(588, 284, 16, 13, 10, .28)}" fill="url(#qaRomaCopa)" stroke="#2E5A1E" stroke-width="1.4"/><path d="${copa(574, 272, 18, 14, 10, .28)}" fill="url(#qaRomaCopa)" stroke="#2E5A1E" stroke-width="1.4"/>
+      <path d="M560 264 q8 -6 18 -5" stroke="#E0FFB0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>
+      <g fill="#C8F07A" opacity=".6">${Array.from({ length:14 }, () => `<ellipse cx="${f1(R(548, 600))}" cy="${f1(R(264, 296))}" rx="1.6" ry="1"/>`).join('')}</g>
+      ${[[560, 292, 4.2], [586, 290, 4], [574, 276, 3.8], [550, 282, 3.4]].map(([x, y, r]) => `<g><circle cx="${x}" cy="${y}" r="${r}" fill="url(#qaRomaFruto)" stroke="#6E0A1A" stroke-width="1"/><path d="M${x - 1.6} ${f1(y - r)} l1.6 -2 l1.6 2" fill="#C82A3A" stroke="#6E0A1A" stroke-width=".7"/><circle cx="${f1(x - r * .35)}" cy="${f1(y - r * .35)}" r="${f1(r * .25)}" fill="#fff" opacity=".6"/></g>`).join('')}
+      <g class="qa-romas-novas">${[[568, 286, 3.6], [596, 280, 3.4], [556, 272, 3.2]].map(([x, y, r], k) => `<g style="transform-box:fill-box;transform-origin:50% 50%;transform:scale(0);transition:transform .7s cubic-bezier(.3,1.6,.5,1) ${(1 + k * .25).toFixed(2)}s"><circle cx="${x}" cy="${y}" r="${r}" fill="url(#qaRomaFruto)" stroke="#6E0A1A" stroke-width="1"/><circle cx="${f1(x - r * .35)}" cy="${f1(y - r * .35)}" r="${f1(r * .25)}" fill="#fff" opacity=".6"/></g>`).join('')}${flor(582, 266, 2.6, '#FF7A2A', '#A8400E')}${flor(548, 290, 2.4, '#FF7A2A', '#A8400E')}</g>
+      <g id="qa-roma-cai"><circle cx="586" cy="290" r="4" fill="url(#qaRomaFruto)" stroke="#6E0A1A" stroke-width="1" style="opacity:0"/></g>
+      ${brilhoHotspot(598, 262)}
+      <rect x="540" y="254" width="62" height="64" fill="transparent"/>
+    </g>
+    <g class="qa-jardim-cresce" style="transform-box:fill-box;transform-origin:50% 100%;transform:scale(0);transition:transform .9s cubic-bezier(.3,1.5,.5,1) 1s">${rosa(602, VY - 1, 1)}${rosa(676, VY - 1, .9)}</g>
+    <!-- casa com iwan (varanda em arco), cúpula, porta de madeira e badgir (torre de vento) -->
+    <g id="qa-casa">
+      <ellipse cx="744" cy="${VY + 1}" rx="64" ry="4.4" fill="#4A2A10" opacity=".3"/>
+      <path d="M690 250 C690 222 728 222 728 250Z" fill="url(#qaCupula)" stroke="#8A5A32" stroke-width="1.6"/><path d="M696 244 C698 232 708 228 716 228" stroke="#FFEACC" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/><path d="M709 229 v-6" stroke="#8A5A32" stroke-width="2.4" stroke-linecap="round"/><circle cx="709" cy="222" r="2" fill="#C9955E" stroke="#8A5A32" stroke-width=".8"/>
+      <g id="qa-badgir" class="toque">
+        <path d="M752 252 V160 H786 V252Z" fill="url(#qaAdobe)" stroke="#8A5A32" stroke-width="1.6"/>
+        <path d="M786 252 V160 l7 -5 V250Z" fill="url(#qaAdobeLado)" stroke="#8A5A32" stroke-width="1.2"/>
+        <path d="M748 160 H790 l5 -5 H753Z" fill="#F2D4A2" stroke="#8A5A32" stroke-width="1.2"/><path d="M748 160 H790" stroke="#8A5A32" stroke-width="1.8"/>
+        ${[756, 763.4, 770.8, 778.2].map(x => `<rect x="${x}" y="168" width="4.6" height="38" rx="1.2" fill="#2E1A0E"/><path d="M${x + 1} 170 v8" stroke="#6E4428" stroke-width=".8"/>`).join('')}
+        <path d="M754 212 H784 M754 216 H784" stroke="#B8875A" stroke-width="1.2"/><path d="M754 226 H784 M754 238 H784" stroke="#C89A68" stroke-width=".8" opacity=".6"/>
+        <path d="M755 164 V250" stroke="#FFF0D2" stroke-width="1.8" opacity=".6"/>
+        <g class="qa-dica3" style="display:none">${brilhoHotspot(798, 170)}</g>
+        <rect x="744" y="150" width="54" height="102" fill="transparent"/>
+      </g>
+      <path d="M684 ${VY} V250 H800 V${VY}Z" fill="url(#qaAdobe)" stroke="#8A5A32" stroke-width="1.8"/>
+      <path d="M682 250 H802" stroke="#C9955E" stroke-width="4.4"/><path d="M682 248.4 H802" stroke="#FFF0D2" stroke-width="1.2" opacity=".75"/>
+      <g stroke="#C89A68" stroke-width=".8" opacity=".45" fill="none">${Array.from({ length:15 }, (_, k) => { const y = VY - 6 - k * 5.6; let d = `M686 ${f1(y)}H799`; for (let x = 688 + (k % 2) * 6; x < 798; x += 12) d += `M${x} ${f1(y)}v-5.6`; return `<path d="${d}"/>`; }).join('')}</g>
+      <g fill="#F6DCB0" opacity=".55">${[[694, 262, 8, 4], [786, 276, 7, 5], [690, 322, 6, 4], [794, 318, 5, 3]].map(([x, y, a, b]) => `<ellipse cx="${x}" cy="${y}" rx="${a}" ry="${b}"/>`).join('')}</g>
+      <g stroke="#A8784A" stroke-width=".8" opacity=".5">${Array.from({ length:26 }, () => { const x = R(688, 798), y = R(256, 334); return `<path d="M${f1(x)} ${f1(y)} l${f1(R(-2, 2))} ${f1(R(-1, 1))}"/>`; }).join('')}</g>
+      <g><rect x="688" y="282" width="14" height="22" rx="2" fill="#3A2414" stroke="#6E4428" stroke-width="1.6"/><path d="M688 289 h14 M688 296 h14 M695 282 v22" stroke="#B0703C" stroke-width="1.2"/><path d="M686 305 h18" stroke="#C9955E" stroke-width="2.4" stroke-linecap="round"/><path d="M690 284 l4 4" stroke="#FFD88A" stroke-width=".8" opacity=".6"/></g>
+      <path d="M703 ${VY} V294 C703 274 738 263 738 263 C738 263 773 274 773 294 V${VY}" fill="none" stroke="#B8875A" stroke-width="5"/>
+      <path d="M703 ${VY} V294 C703 274 738 263 738 263 C738 263 773 274 773 294 V${VY}" fill="none" stroke="#1E9CB4" stroke-width="1.6" stroke-dasharray="3 3"/>
+      <path d="M708 ${VY} V294 C708 278 738 270 738 270 C738 270 768 278 768 294 V${VY}Z" fill="url(#qaIwan)"/>
+      <g clip-path="url(#qaIwanClip)">
+        <path d="M728 286 C728 278 748 278 748 286 V304 H728Z" fill="#5A3420" opacity=".6"/><path d="M732 300 h12" stroke="#C88A5E" stroke-width="1.6"/><circle cx="735" cy="298" r="2" fill="#2EA6C8"/><circle cx="741" cy="298" r="1.6" fill="#E5392C"/>
+        <path d="M708 ${VY - 2} H768" stroke="#8E2A3A" stroke-width="5"/><path d="M710 ${VY - 2} H766" stroke="#E8B04A" stroke-width="1.2" stroke-dasharray="3 2"/><path d="M710 ${VY - 4.4} H766" stroke="#1E4E9A" stroke-width=".8"/>
+        <g id="qa-vento-dentro" style="opacity:0;transition:opacity .8s"><path class="qa-vento" d="M764 270 C756 274 744 272 736 276" stroke="url(#qaVento)" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-dasharray="8 8"/></g>
+        <g id="qa-avo" transform="translate(724 ${VY - 3}) scale(1.5) translate(-724 ${-(VY - 3)})">${avo(724, VY - 3)}</g>
+        <g id="qa-menina" transform="translate(754 ${VY - 3}) scale(1.5) translate(-754 ${-(VY - 3)})">${menina(754, VY - 3)}</g>
+      </g>
+      <path d="M708 294 C708 278 738 270 738 270 C738 270 768 278 768 294" stroke="#6E4428" stroke-width="1.4" fill="none"/>
+      <g><path d="M776 ${VY} V306 C776 297 796 297 796 306 V${VY}Z" fill="url(#qaMadeira)" stroke="#4E2A10" stroke-width="1.6"/><path d="M781 300 V${VY} M786 298 V${VY} M791 300 V${VY}" stroke="#5E3414" stroke-width=".9" opacity=".7"/>
+        <g fill="#E8C060" stroke="#7A5A10" stroke-width=".4">${[[779, 312], [793, 312], [779, 326], [793, 326], [786, 304]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.1"/>`).join('')}</g><circle cx="789" cy="320" r="2.2" fill="none" stroke="#E8C060" stroke-width="1"/><path d="M774 ${VY} h24" stroke="#9A6A3E" stroke-width="2.4"/></g>
+      <g id="qa-gato" class="toque"><g id="qa-gato-in" style="transform-box:fill-box;transform-origin:50% 100%">${gato(784, VY - 1)}</g><rect x="770" y="${VY - 38}" width="34" height="40" fill="transparent"/></g>
+      <g id="qa-poupa" class="toque"><g id="qa-poupa-in">${poupa(740, 248)}</g><rect x="722" y="226" width="30" height="26" fill="transparent"/></g>
+    </g>
+    <!-- vento entrando na torre -->
+    <g id="qa-vento" style="opacity:0;transition:opacity .8s" pointer-events="none">
+      <path class="qa-vento" d="M846 166 C826 170 812 174 794 176 M850 186 C830 188 812 190 794 190" stroke="url(#qaVento)" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-dasharray="10 9"/>
+      <path class="qa-vento" d="M769 178 V256" stroke="#BFEFFF" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-dasharray="6 8" opacity=".9"/>
+      <g id="qa-vento-baixo" style="opacity:0;transition:opacity .8s"><path d="M764 266 C754 272 738 268 730 273 C725 277 730 281 735 279 C739 277 736 274 732 275" stroke="#3E8AD0" stroke-width="4" fill="none" stroke-linecap="round" opacity=".45"/><path class="qa-vento" d="M764 266 C754 272 738 268 730 273 C725 277 730 281 735 279 C739 277 736 274 732 275" stroke="#FFFFFF" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-dasharray="9 6"/>
+        <path d="M776 280 q6 -5 12 0 M694 276 q6 -6 12 -2" stroke="#E6F8FF" stroke-width="2" fill="none" stroke-linecap="round"/></g>
+    </g>
+    <!-- Yuzi, o guepardo -->
+    <g id="qa-yuzi" class="toque" data-fig="guepardo"><ellipse cx="104" cy="${f1(P(104) + 1)}" rx="30" ry="4" fill="#4A2A10" opacity=".3"/>${pedra(104, P(104) + 3, 34, 9)}<g id="qa-yuzi-in" style="transform-origin:100px ${f1(P(100))}px"><svg x="66" y="${f1(P(100) - 82)}" width="68" height="80" viewBox="0 0 110 130"><use href="#f-guepardo"/></svg></g>${brilhoHotspot(132, P(100) - 74)}</g>
+    <!-- vista de cima: fila de crateras -->
+    <g id="qa-vista" style="opacity:0;transition:opacity .8s" pointer-events="none"><g class="cresce">
+      <circle cx="712" cy="96" r="58" fill="#fff" stroke="#8A5A32" stroke-width="3"/>
+      <g clip-path="url(#qaVistaClip)">
+        <rect x="650" y="36" width="130" height="120" fill="#EED0A0"/>
+        <path d="M650 36 L700 36 C690 50 674 60 650 66Z" fill="#B07A5E"/><path d="M650 36 L676 36 C670 44 660 50 650 52Z" fill="#fff"/>
+        ${[[684, 70], [696, 82], [708, 94], [720, 106], [732, 118]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5.4" fill="#C8925A" stroke="#8A5A32" stroke-width="1"/><circle cx="${x}" cy="${y}" r="2" fill="#3A2414"/>`).join('')}
+        <path d="M676 62 L744 130" stroke="#3EA6F0" stroke-width="1.4" stroke-dasharray="3 3" opacity=".7"/>
+        <path d="${copa(752, 138, 20, 14, 9, .3)}" fill="#6EB84A" stroke="#2E6A22" stroke-width="1"/><rect x="742" y="134" width="12" height="8" fill="#E2B47C" stroke="#8A5A32" stroke-width=".8"/>
+      </g>
+      <path d="M712 38 v6 M712 148 v6" stroke="#8A5A32" stroke-width="2"/>
+    </g></g>
+    <!-- noite (para fazer gelo) -->
+    <g id="qa-noite" style="opacity:0;transition:opacity 1.2s" pointer-events="none"><rect width="800" height="500" fill="#14204A" opacity=".5"/><g fill="#FFF8D2">${Array.from({ length:26 }, () => `<circle cx="${f1(R(10, 790))}" cy="${f1(R(8, 200))}" r="${f1(R(.8, 1.8))}"/>`).join('')}</g><circle cx="680" cy="60" r="16" fill="#FFF6D8"/><circle cx="688" cy="54" r="14" fill="#2A3A6A" opacity=".9"/></g>
+    <rect width="800" height="500" fill="url(#qaVinheta)" pointer-events="none"/><rect width="800" height="500" filter="url(#qaGrao)" pointer-events="none"/>
+  </svg>`;
+  const c = criarCena(palco, svg), s = c.svg;
+  /* terra voando (partículas próprias desenhadas no canvas) */
+  const terra = [];
+  const jogaTerra = (x, y, n) => { for (let i = 0; i < n; i++) terra.push({ x:x + sorte(-4, 4), y, vx:sorte(-2.2, 2.2), vy:sorte(-4.6, -2), r:sorte(1.4, 3.2), cor:['#C8925A', '#E2B47E', '#9A6A3E'][i % 3], chao:y + sorte(2, 8) }); };
+  c.desenho(ctx => {
+    for (let i = terra.length - 1; i >= 0; i--) { const p = terra[i]; p.vy += .3; p.x += p.vx; p.y += p.vy;
+      ctx.globalAlpha = 1; ctx.fillStyle = p.cor; ctx.strokeStyle = '#6E4428'; ctx.lineWidth = .8; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 7); ctx.fill(); ctx.stroke();
+      if (p.vy > 0 && p.y > p.chao) terra.splice(i, 1); }
+  });
+  const pocosR = [...s.querySelectorAll('.qa-poco')], montes = [...s.querySelectorAll('.qa-monte')], feixes = [...s.querySelectorAll('.qa-feixe')];
+  const fundoPoco = i => i === 0 ? FUNDO_MAE : T(POCOS[i - 1]) - 14;
+  const xPoco = i => i === 0 ? MAE : POCOS[i - 1];
+  el(s, '#qa-roma').after(el(s, '#qa-comporta'));
+  const fluxos = [...s.querySelectorAll('.qa-fluxo, .qa-fluxo2, .qa-vento, .qa-jato')];
+  fluxos.forEach(p => p.animate([{ strokeDashoffset:0 }, { strokeDashoffset:-32 }], { duration:p.classList.contains('qa-vento') ? 700 : 1000, iterations:Infinity }));
+  el(s, '#qa-aquifero-onda').animate([{ strokeDashoffset:0 }, { strokeDashoffset:-34 }], { duration:3200, iterations:Infinity });
+  const balde = el(s, '#qa-balde'), corda = el(s, '#qa-corda');
+  const sobeBalde = prof => { const a = balde.animate([{ transform:`translateY(${prof}px)` }, { transform:'translateY(0)' }], { duration:900, easing:'ease-in-out' }); el(s, '#qa-manivela').animate([{ transform:'rotate(0)' }, { transform:'rotate(720deg)' }], { duration:900 }); el(s, '#qa-braco').animate([{ transform:'rotate(0)' }, { transform:'rotate(-30deg)' }, { transform:'rotate(20deg)' }, { transform:'rotate(-30deg)' }, { transform:'rotate(0)' }], { duration:900 }); return a; };
+  /* 1. o poço-mãe: cavar no pé da montanha até achar a água */
+  const pocoMae = el(s, '.qa-poco[data-i="0"]');
+  const gMae = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  gMae.innerHTML = marca(MAE, 0); const mMae = gMae.firstElementChild; el(s, '#qa-sarilho').after(mMae);
+  s.querySelectorAll('.qa-marca').forEach(m => { if (+m.dataset.i > 0) m.style.display = 'none'; });
+  const cavaPoco = (i, ate, dur, fim) => { const r = pocosR[i], y0 = P(xPoco(i)), h0 = +r.getAttribute('height');
+    tween(dur, k => { r.setAttribute('height', f1(h0 + (ate - y0 - h0) * k)); if (Math.random() < .25) jogaTerra(xPoco(i), y0 - 2, 1); }, fim); jogaTerra(xPoco(i), y0 - 2, 8); };
+  mMae.addEventListener('click', e => { e.stopPropagation(); if (fase !== 'mae' || ocupado) return; ocupado = true; cavadas++;
+    toca('clique'); el(s, '#qa-sarilho').style.opacity = 1; el(s, '#qa-sarilho').style.pointerEvents = '';
+    const ate = P(MAE) + (FUNDO_MAE - P(MAE)) * cavadas / 3;
+    montes[0].style.transform = `scale(${(.45 + cavadas * .18).toFixed(2)})`;
+    depois(200, () => sobeBalde(Math.min(110, ate - P(MAE) - 14)));
+    cavaPoco(0, ate, 900, () => { ocupado = false;
+      if (cavadas === 1) api.diz('Cava, cava... aqui em cima a terra é bem seca.');
+      if (cavadas === 2) api.diz('Mais fundo! A neve da montanha derrete e a água se esconde debaixo da terra.');
+      if (cavadas === 3) { mMae.style.display = 'none'; montes[0].style.transform = 'scale(1)'; toca('splash');
+        const ag = el(s, '#qa-mae-agua'), yA = W(MAE);
+        tween(1400, k => { ag.setAttribute('y', f1(FUNDO_MAE - (FUNDO_MAE - yA) * k)); ag.setAttribute('height', f1((FUNDO_MAE - yA) * k)); });
+        for (let k = 0; k < 4; k++) c.add({ tipo:'respingo', x:MAE + sorte(-3, 3), y:yA + 2, t:k * 3, cor:'#E6F8FF' });
+        c.brilhos(MAE, yA, 6, '#BFEAFF'); pocos = 1; api.hud('<span class="chip">Poços: 1/5</span>');
+        api.diz('Achamos água! Este é o poço-mãe. Agora toque nas marcas para cavar uma fila de poços até a vila.');
+        fase = 'pocos'; s.querySelectorAll('.qa-marca').forEach(m => { if (+m.dataset.i > 0) { m.style.display = ''; m.classList.add('cresce'); } }); }
+    });
+  });
+  const FALAS_P = ['Cada poço dá ar fresco para quem cava lá embaixo.', 'O balde sobe cheio de terra, e a terra vira um montinho em volta da boca.', 'Os poços ficam cada vez mais rasos, porque o chão vai descendo até a vila.'];
+  s.querySelectorAll('.qa-marca').forEach(m => { const i = +m.dataset.i; if (!i) return;
+    m.addEventListener('click', e => { e.stopPropagation(); if (fase !== 'pocos' || m.dataset.feito) return; m.dataset.feito = 1; m.style.display = 'none';
+      toca('clique'); depois(150, () => toca('pop')); montes[i].style.transform = 'scale(1)';
+      cavaPoco(i, fundoPoco(i), 1100, () => {
+        pocos++; api.hud(`<span class="chip">Poços: ${pocos}/5</span>`); toca('ok');
+        if (pocos < 5) api.diz(FALAS_P[Math.min(2, pocos - 2)]);
+        else { fase = 'vista'; toca('vitoria'); el(s, '#qa-vista').style.opacity = 1;
+          api.diz('Vistos lá do alto, os poços parecem uma fila de crateras no deserto!');
+          depois(5600, comecaTunel); }
+      });
+    });
+  });
+  /* 2. o túnel: arrastar o lampião do poço-mãe até a vila, descendo bem devagar */
+  const lamp = el(s, '#qa-lamp'), lampPos = el(s, '#qa-lamp-pos'), cavaR = el(s, '#qa-cava');
+  const poeLamp = x => { lampPos.setAttribute('transform', `translate(${f1(x)} ${f1(T(x) - 8)})`); cavaR.setAttribute('width', f1(Math.max(0, x - 190 + 10))); };
+  function comecaTunel(){
+    fase = 'tunel'; el(s, '#qa-vista').style.opacity = 0; lamp.style.display = ''; el(s, '#qa-trilha').style.display = ''; poeLamp(cava);
+    el(s, '#qa-trilha').animate([{ opacity:.35 }, { opacity:1 }, { opacity:.35 }], { duration:1600, iterations:Infinity });
+    api.hud('<span class="chip">Túnel: 0/5</span>');
+    api.diz('Agora arraste o lampião pela trilha, do poço-mãe até a vila. O túnel desce só um pouquinho!');
+  }
+  function avanca(x){
+    if (x <= cava) return; cava = Math.min(XO + 8, x); poeLamp(cava);
+    if (Math.random() < .3) jogaTerra(cava + 10, T(cava) - 6, 1);
+    while (trecho < 5 && cava >= CHK[trecho]) {
+      trecho++; api.hud(`<span class="chip">Túnel: ${trecho}/5</span>`);
+      if (trecho < 5) { feixes[trecho].style.opacity = .65; feixes[0].style.opacity = .65; toca('ok'); c.brilhos(CHK[trecho - 1], T(CHK[trecho - 1]) - 20, 4, '#FFF2B0');
+        if (trecho === 1) api.diz('Uma luz lá de cima! Pelos poços entram luz e ar fresco.');
+        if (trecho === 3) api.diz('Os cavadores sabem fazer o túnel descer só um tiquinho, sem errar.'); }
+      else { fase = 'agua'; toca('vitoria'); lamp.style.display = 'none'; el(s, '#qa-trilha').style.display = 'none'; correAgua(); }
+    }
+  }
+  let pega = null, animL = false;
+  lamp.addEventListener('pointerdown', e => { if (fase !== 'tunel' || animL) return; e.stopPropagation(); const p = c.ponto(e); pega = { x0:p.x, y0:p.y, moveu:false }; s.setPointerCapture(e.pointerId); lamp.style.cursor = 'grabbing'; el(s, '#qa-lamp-dica').style.display = 'none'; toca('clique'); });
+  s.addEventListener('pointermove', e => { if (!pega) return; const p = c.ponto(e);
+    if (Math.hypot(p.x - pega.x0, p.y - pega.y0) > 8) pega.moveu = true; if (!pega.moveu || fase !== 'tunel') return;
+    const dy = p.y - (T(Math.max(MAE, p.x)) - 8);
+    if (Math.abs(dy) <= 34) { if (p.x > cava) avanca(Math.min(p.x, cava + 46)); }
+    else if (p.x > cava - 30 && performance.now() - avisoT > 3200) { avisoT = performance.now(); toca('glub');
+      api.diz(dy < 0 ? 'Ops, assim o túnel sobe! A água não corre para cima.' : 'Fundo demais! O túnel desce só um pouquinho.'); }
+  });
+  s.addEventListener('pointerup', () => { if (!pega) return; const m = pega.moveu; pega = null; lamp.style.cursor = 'grab';
+    if (!m && fase === 'tunel') { const x0 = cava, x1 = CHK[trecho] + .5; animL = true;
+      tween(900, k => avanca(x0 + (x1 - x0) * k), () => { animL = false; }); } });
+  function correAgua(){
+    const ar = el(s, '#qa-aguarect'); el(s, '#qa-gotas').style.opacity = 1;
+    for (let i = 0; i < 8; i++) c.add({ tipo:'infiltra', x0:MAE - 40 + i * 10, y0:W(MAE - 40 + i * 10) + 20, x1:MAE + 20 + i * 5, y1:T(MAE + 20) - 4, dur:sorte(50, 80), f:sorte(0, 6) });
+    toca('splash'); api.diz('O túnel chegou na vila! Olhe a água correndo sozinha, só com a força da gravidade.');
+    tween(3000, k => { ar.setAttribute('width', f1((XO + 20 - 190) * k)); }, () => {
+      el(s, '#qa-canal-agua').style.opacity = 1; el(s, '.qa-fluxo2').style.opacity = .9; toca('splash');
+      for (let k = 0; k < 5; k++) c.add({ tipo:'respingo', x:XO + 8 + sorte(-4, 4), y:T(XO) - 2, t:k * 2, cor:'#E6F8FF' });
+      c.brilhos(XO, T(XO) - 12, 6, '#BFEAFF'); aguaVila = true;
+      depois(1200, () => api.diz('Debaixo da terra, o sol forte não esquenta a água, e ela quase não evapora.'));
+      depois(6200, comecaVila);
+    });
+  }
+  /* 3. a água na vila: jardim, casa do gelo e torre de vento */
+  function comecaVila(){
+    fase = 'vila'; s.querySelectorAll('.qa-dica3').forEach(h => h.style.display = '');
+    api.hud('<span class="chip">Vila: 0/3</span>');
+    api.diz('A água chegou na vila! Toque no jardim, na casa do gelo e na torre de vento.');
+  }
+  const feitos = {};
+  const marcaVila = (k, fala) => { if (feitos[k]) return false; feitos[k] = 1; vila++; api.hud(`<span class="chip">Vila: ${vila}/3</span>`); api.diz(fala);
+    if (vila === 3) depois(5600, () => { fase = 'fim'; toca('vitoria'); c.brilhos(400, 250, 10, '#FFE27A');
+      api.diz('O povo do Irã inventou o qanat há uns 3 mil anos, e muitos ainda funcionam hoje. Que ideia genial para cuidar de cada gota!'); depois(6800, api.fim); });
+    return true; };
+  function jardim(){
+    if (!marcaVila('jardim', 'Um jardim persa! A água corre nos canais e enche o espelho-d\'água. As plantas fazem sombra no calor.')) return;
+    el(s, '#qa-dica-jardim').style.display = 'none'; el(s, '#qa-tabua').style.transform = 'translateY(-14px)'; toca('clique');
+    const ag = el(s, '#qa-tanque-agua');
+    depois(500, () => { toca('splash'); tween(2200, k => ag.setAttribute('y', f1(364 - 24 * k)), () => { el(s, '#qa-fonte').style.opacity = 1; el(s, '#qa-tanque-brilho').setAttribute('opacity', '.8'); el(s, '#qa-tanque-brilho').setAttribute('transform', 'translate(0 -24)'); el(s, '#qa-reflexo').style.opacity = 1; }); });
+    depois(1600, () => { s.querySelectorAll('.qa-jardim-cresce').forEach(g => g.style.transform = 'scale(1)'); el(s, '#qa-grama').style.opacity = .85; toca('planta');
+      s.querySelectorAll('.qa-romas-novas > g').forEach(g => g.style.transform = 'scale(1)'); c.brilhos(650, 300, 8, '#FFE27A'); });
+  }
+  el(s, '#qa-comporta').addEventListener('click', e => { e.stopPropagation(); if (fase === 'vila') jardim(); else { toca('clique'); api.diz('Uma comporta de madeira. Ela abre e fecha o caminho da água.'); } });
+  el(s, '#qa-tanque').addEventListener('click', e => { e.stopPropagation(); if (fase === 'vila' && !feitos.jardim) return jardim(); const p = c.ponto(e);
+    if (feitos.jardim) { toca('glub'); ondinhas(Math.max(606, Math.min(668, p.x))); api.diz('Ploc! A água do qanat é fresquinha, porque veio debaixo da terra.'); }
+    else { toca('clique'); api.diz('O tanque do jardim está vazio. Ele espera a água do qanat.'); } });
+  el(s, '#qa-yakh').addEventListener('click', () => {
+    if (fase !== 'vila' || feitos.yakh) { toca('clique'); if (!feitos.yakh) api.diz('Que cúpula alta! É o yakhchal, a casa do gelo. As paredes grossas de barro guardam o frio.'); else { c.add({ tipo:'floco', x:462 + sorte(-20, 20), y:200, vy:.8, f:0, r:2.4, chao:250 }); api.diz('Lá dentro o gelo dura até o verão!'); } return; }
+    marcaVila('yakh', 'No inverno, a água congela à noite numa poça rasa. O gelo vai para o yakhchal e dura até o verão!');
+    s.querySelectorAll('#qa-yakh .qa-dica3').forEach(h => h.style.display = 'none');
+    el(s, '#qa-poca-agua').style.opacity = 1; toca('splash');
+    depois(900, () => { el(s, '#qa-noite').style.opacity = 1; el(s, '#qa-sol').style.opacity = 0; toca('vapor'); for (let i = 0; i < 30; i++) c.add({ tipo:'floco', x:sorte(420, 580), y:150 - i * 3, vy:sorte(.6, 1), f:sorte(0, 6), r:sorte(1.4, 2.6), chao:sorte(240, 266) }); });
+    depois(2600, () => { el(s, '#qa-poca-gelo').style.opacity = 1; toca('ok'); c.brilhos(536, 262, 5, '#FFFFFF'); });
+    depois(4200, () => { el(s, '#qa-noite').style.opacity = 0; el(s, '#qa-sol').style.opacity = 1; el(s, '#qa-yakh-corte').style.opacity = 1; toca('pop'); c.brilhos(462, 244, 5, '#BFEAFF'); });
+  });
+  el(s, '#qa-badgir').addEventListener('click', e => { e.stopPropagation();
+    if (fase !== 'vila' || feitos.badgir) { toca('clique'); if (!feitos.badgir) api.diz('Esta torre é um badgir, uma torre de vento. Ela pega a brisa lá no alto.'); return; }
+    marcaVila('badgir', 'O badgir pega a brisa lá no alto e manda para dentro de casa. Que fresquinho!');
+    s.querySelectorAll('#qa-badgir .qa-dica3').forEach(h => h.style.display = 'none');
+    el(s, '#qa-vento').style.opacity = 1; [520, 640, 780].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .5, 'sine', .03, f * 1.3), i * 180));
+    depois(900, () => { el(s, '#qa-vento-dentro').style.opacity = 1; el(s, '#qa-vento-baixo').style.opacity = 1; for (let i = 0; i < 6; i++) c.add({ tipo:'vapor', x0:769, y0:258, x1:722 + sorte(-6, 40), y1:274 + sorte(-4, 4), dur:sorte(50, 80), f:sorte(0, 6), r:sorte(2, 3.4), x:0, y:0 });
+      el(s, '#qa-menina .qa-bracos').animate([{ transform:'rotate(0)' }, { transform:'scaleY(-1)' }, { transform:'rotate(0)' }], { duration:900, iterations:2 });
+      el(s, '#qa-avo .qa-lenco').animate([{ transform:'rotate(0)' }, { transform:'rotate(-4deg)' }, { transform:'rotate(3deg)' }, { transform:'rotate(0)' }], { duration:700, iterations:3 }); });
+  });
+  const ondinhas = x => { const g = el(s, '#qa-ondas');
+    for (let k = 0; k < 3; k++) depois(k * 220, () => { const e = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      e.setAttribute('cx', x); e.setAttribute('cy', 341); e.setAttribute('rx', 2); e.setAttribute('ry', .8); e.setAttribute('fill', 'none'); e.setAttribute('stroke', '#F2FFFF'); e.setAttribute('stroke-width', 1.6); g.appendChild(e);
+      tween(1100, q => { e.setAttribute('rx', f1(2 + 22 * q)); e.setAttribute('ry', f1(.8 + 2.6 * q)); e.setAttribute('opacity', f1(1 - q)); }, () => e.remove()); });
+    for (let i = 0; i < 3; i++) c.add({ tipo:'bolha', x:x + sorte(-6, 6), y:356, vy:sorte(.3, .6), r:sorte(1.2, 2.2), topo:342, f:sorte(0, 6) }); };
+  /* toques extras */
+  let gatoOcupado = false;
+  el(s, '#qa-gato').addEventListener('click', e => { e.stopPropagation(); if (gatoOcupado) return; gatoOcupado = true;
+    [660, 880, 620].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .22, 'sine', .04, f * 1.25), i * 140));
+    el(s, '#qa-gato-in').animate([{ transform:'scale(1)' }, { transform:'scale(1.08,.9)' }, { transform:'scale(.96,1.08)' }, { transform:'scale(1)' }], { duration:700 });
+    el(s, '#qa-gato .qa-gato-cauda').animate([{ transform:'rotate(0)' }, { transform:'rotate(-14deg)' }, { transform:'rotate(10deg)' }, { transform:'rotate(0)' }], { duration:900, iterations:2 });
+    api.diz('Miau! O gato-persa tem esse nome por causa da Pérsia, o nome antigo do Irã.'); depois(1400, () => { gatoOcupado = false; }); });
+  let cabraOcupada = false;
+  el(s, '#qa-rebanho').addEventListener('click', e => { e.stopPropagation(); if (cabraOcupada) return; cabraOcupada = true;
+    s.querySelectorAll('.qa-cabra').forEach((g, i) => { depois(i * 220, () => { g.animate([{ transform:'translateY(0)' }, { transform:'translateY(-9px)' }, { transform:'translateY(0)' }], { duration:420, easing:'ease-out' }); somOn && tom(420 - i * 40, 0, .28, 'triangle', .035, 380 - i * 40); }); });
+    api.diz('Méé! Um pastor com suas cabras. Os bichos também bebem a água que vem do qanat.'); depois(1400, () => { cabraOcupada = false; }); });
+  el(s, '#qa-yuzi').addEventListener('click', () => { [180, 150, 180, 150].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .18, 'triangle', .04, f * .9), i * 120));
+    el(s, '#qa-yuzi-in').animate([{ transform:'translateY(0) scale(1)' }, { transform:'translateY(-10px) scale(1.04,.96)' }, { transform:'translateY(0) scale(1)' }, { transform:'translateY(-4px)' }, { transform:'translateY(0)' }], { duration:800 });
+    api.diz(fase === 'mae' ? 'Prrr! Toque na marca vermelha, ao pé da montanha, para cavar.' : fase === 'pocos' ? 'Prrr! Toque nas marcas vermelhas para cavar os poços.' : fase === 'tunel' ? 'Prrr! Arraste o lampião pela trilha de pontinhos.' : 'Prrr! Eu sou um guepardo-asiático. Hoje só existimos aqui no Irã.'); });
+  el(s, '#qa-onagro').addEventListener('click', () => { [620, 300, 600, 290].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .22, 'sawtooth', .03, f * .85), i * 200));
+    el(s, '#qa-onagro-in').animate([{ transform:'rotate(0)' }, { transform:'rotate(-3deg)' }, { transform:'rotate(2deg)' }, { transform:'rotate(0)' }], { duration:800 });
+    api.diz('Um onagro-persa, um asno selvagem! Ele aguenta o calor e anda longe atrás de água.'); });
+  let romaOcupada = false;
+  el(s, '#qa-roma').addEventListener('click', () => { if (romaOcupada) return; romaOcupada = true; toca('pop');
+    const f = el(s, '#qa-roma-cai circle'); f.style.opacity = 1;
+    const a = f.animate([{ transform:'translateY(0)' }, { transform:`translateY(${f1(P(586) - 292)}px)` }], { duration:600, easing:'cubic-bezier(.5,0,1,1)', fill:'forwards' });
+    a.onfinish = () => { f.style.opacity = 0; a.cancel(); toca('splash');
+      for (let i = 0; i < 12; i++) c.add({ tipo:'petala', x:586 + sorte(-8, 8), y:P(586) - 10 - i * 2, vy:sorte(.4, .9), f:sorte(0, 6), chao:P(586) + 2, cor:['#E0203E', '#FF5A6A', '#B0102A'][i % 3], borda:'#6E0A1A' });
+      depois(1600, () => { romaOcupada = false; }); };
+    api.diz('Uma romã! Por dentro ela tem centenas de sementinhas vermelhas e docinhas.'); });
+  let jerOcupado = false;
+  el(s, '#qa-toca').addEventListener('click', e => { e.stopPropagation(); if (jerOcupado) return; jerOcupado = true; toca('pop');
+    el(s, '#qa-jerboa-in').animate([{ transform:'translate(0,0)' }, { transform:'translate(-4px,-14px)' }, { transform:'translate(0,0)' }, { transform:'translate(-3px,-10px)' }, { transform:'translate(0,0)' }], { duration:1000 });
+    api.diz('Um jerboa! Ele pula como um cangurinho e passa o calor do dia dentro da toca.'); depois(1200, () => { jerOcupado = false; }); });
+  el(s, '#qa-poupa').addEventListener('click', e => { e.stopPropagation(); const cr = el(s, '#qa-poupa .qa-crista');
+    [440, 440, 440].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .14, 'sine', .05, f * .8), i * 220));
+    cr.style.transform = 'scale(1.35) rotate(-8deg)'; depois(900, () => { cr.style.transform = ''; });
+    api.diz('Pu-pu-pu! É a poupa. Ela abre a crista como um leque.'); });
+  el(s, '#qa-pico').addEventListener('click', () => { toca('chuva');
+    for (let i = 0; i < 26; i++) c.add({ tipo:'floco', x:sorte(70, 240), y:30 - i * 3, vy:sorte(.8, 1.3), f:sorte(0, 6), r:sorte(1.6, 3), chao:sorte(70, 120) });
+    for (let i = 0; i < 6; i++) c.add({ tipo:'infiltra', x0:sorte(40, 180), y0:P(110) + 6, x1:sorte(30, 190), y1:sorte(W(100) + 10, 360), dur:sorte(70, 110), f:sorte(0, 6) });
+    api.diz('A neve da montanha derrete devagar, e a água entra na terra. Lá embaixo ela fica guardada entre as pedrinhas.'); });
+  el(s, '#qa-sarilho').addEventListener('click', e => { e.stopPropagation(); if (ocupado) return; toca('clique'); sobeBalde(40);
+    api.diz('Este é o muqanni, o cavador de qanats. É um trabalho de muita coragem e cuidado!'); });
+  api.hud('<span class="chip">Poços: 0/5</span>');
+  api.diz('Oi, eu sou o Yuzi, um guepardo-asiático! Aqui no Irã quase não chove. Toque na marca vermelha para cavar e achar água.');
+  return () => { vivo = false; timers.forEach(clearTimeout); c.parar(); };
+}
+/* ================= JOGO 15: Poços de degraus, guardar a monção (Índia) ================= */
+function jogoBaoli(palco, api){
+  semente = 131;
+  let vivo = true, fase = 'vento', zw = 6.88, alvoZw = 6.88, taxa = 1, chovendo = 0, ultQ = performance.now(), nuvensOk = 0, blocos = 0, andares = 0, anda = false, ocupado = false;
+  const timers = [], depois = (ms, fn) => { const t = setTimeout(() => vivo && fn(), ms); timers.push(t); return t; };
+  const tween = (ms, fn, fim) => { const t0 = performance.now(); (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / ms); fn(k * k * (3 - 2 * k), k); if (k < 1) requestAnimationFrame(q); else fim && fim(); })(t0); };
+  const F = n => n.toFixed(1);
+  /* o poço: meia pirâmide invertida de degraus, cortada na frente. x = lado, d = fundo (0 frente, 1 trás), z = andares para baixo */
+  const NV = 7, ZW_SECA = 5.5, W = k => 200 - k * 22, D = k => 1 - k * .1;
+  const P = (x, d, z) => { const sc = 1 - .17 * d; return [400 + x * sc, 292 - 66 * d + z * 28 * sc]; };
+  const linha = a => 'M' + a.map(p => F(p[0]) + ' ' + F(p[1])).join(' L');
+  const poli = a => linha(a) + 'Z';
+  const espelho = a => a.map(([x, y]) => [800 - x, y]);
+  /* ---------- paredes e escadas ---------- */
+  let paredes = '';
+  for (let k = 0; k < NV; k++) {
+    const w = W(k), d = D(k), u = 30, m = Math.floor(2 * w / u), off = -m * u / 2 + (k % 2 ? u / 2 : 0);
+    const fundoP = poli([P(-w, d, k), P(w, d, k), P(w, d, k + 1), P(-w, d, k + 1)]);
+    paredes += `<path d="${fundoP}" fill="url(#baRi)"/><path d="${fundoP}" fill="url(#baBloco)"/><path d="${fundoP}" fill="#2A1206" opacity="${(.03 + k * .035).toFixed(3)}" stroke="#7A4A2A" stroke-width=".8"/>`;
+    let luz = '', som = '', deg = '', ar = '';
+    for (let j = 0; j < m - (k % 2 ? 1 : 0); j++) {
+      const x0 = off + j * u, cx = x0 + u / 2, pl = 2.2, ta = P(cx - pl, d, k + .2), tb = P(cx + pl, d, k + .2), e = P(x0 + .6, d, k + 1), dd = P(x0 + u - .6, d, k + 1), mid = P(cx, d, k + 1), mt = P(cx, d, k + .2);
+      luz += poli([ta, mt, mid, e]) + ' '; som += poli([mt, tb, dd, mid]) + ' ';
+      ar += `M${F(e[0])} ${F(e[1])} L${F(ta[0])} ${F(ta[1])} L${F(tb[0])} ${F(tb[1])} L${F(dd[0])} ${F(dd[1])} `;
+      for (const q of [.14, .26, .38, .5, .62, .74, .86]) { const h = pl + (u / 2 - .6 - pl) * q, l = P(cx - h, d, k + .2 + .8 * q), r = P(cx + h, d, k + .2 + .8 * q); deg += `M${F(l[0])} ${F(l[1])} L${F(r[0])} ${F(r[1])} `; }
+    }
+    paredes += `<path d="${som}" fill="#9A5E36"/><path d="${luz}" fill="#FBE0B0"/><path d="${deg}" stroke="#6E3A1A" stroke-width=".8" opacity=".75"/><path d="${ar}" stroke="#5E3018" stroke-width="1" fill="none" stroke-linejoin="round"/>`;
+    paredes += `<path d="${poli([P(-w, d, k), P(w, d, k), P(w, d, k + .22), P(-w, d, k + .22)])}" fill="#3A1A08" opacity=".3"/><path d="${linha([P(-w, d, k + .5), P(w, d, k + .5)])}" stroke="#FFE6BC" stroke-width=".7" opacity=".35" stroke-dasharray="1 2"/>`;
+    for (const sx of [-1, 1]) {
+      const lado = poli([P(sx * w, 0, k), P(sx * w, d, k), P(sx * w, d, k + 1), P(sx * w, 0, k + 1)]);
+      paredes += `<path d="${lado}" fill="url(#${sx < 0 ? 'baSl' : 'baSr'})"/><path d="${lado}" fill="url(#baBloco)"/><path d="${lado}" fill="url(#baFundo)" stroke="#6E4224" stroke-width=".8"/><path d="${poli([P(sx * w, 0, k), P(sx * w, d, k), P(sx * w, d, k + .2), P(sx * w, 0, k + .2)])}" fill="#3A1A08" opacity=".26"/>`;
+      const a = k % 2 ? .12 : d - .12, b = k % 2 ? d - .12 : .12, n = 7, esc = [P(sx * w, a, k)];
+      for (let q = 0; q < n; q++) { const dn = a + (b - a) * (q + 1) / n; esc.push(P(sx * w, dn, k + q / n), P(sx * w, dn, k + (q + 1) / n)); }
+      esc.push(P(sx * w, a, k + 1.7 / n));
+      paredes += `<path d="${poli(esc)}" fill="${sx < 0 ? '#FCE6BC' : '#E8BE86'}" stroke="#5E3018" stroke-width=".9" stroke-linejoin="round"/>`;
+      { let st = ''; for (let q = 1; q < n; q++) { const dn = a + (b - a) * q / n, t1 = P(sx * w, dn, k + q / n), t2 = P(sx * w, dn - (b - a) / n * .9, k + q / n); st += `M${F(t1[0])} ${F(t1[1])} L${F(t2[0])} ${F(t2[1])} `; } paredes += `<path d="${st}" stroke="#FFF6E0" stroke-width="1" opacity=".75"/>`; }
+      paredes += `<path d="${linha([P(sx * w, b, k + 1), P(sx * w, a, k + 1.7 / n)])}" stroke="#6E3A1A" stroke-width="1.4" opacity=".5"/>`;
+    }
+    if (k < NV - 1) {
+      const w2 = W(k + 1), d2 = D(k + 1);
+      paredes += `<path d="${poli([P(-w, 0, k + 1), P(-w, d, k + 1), P(w, d, k + 1), P(w, 0, k + 1), P(w2, 0, k + 1), P(w2, d2, k + 1), P(-w2, d2, k + 1), P(-w2, 0, k + 1)])}" fill="url(#baPiso)" stroke="#9A6A40" stroke-width=".6"/>`;
+      paredes += `<path d="${linha([P(-w2, 0, k + 1), P(-w2, d2, k + 1), P(w2, d2, k + 1), P(w2, 0, k + 1)])}" stroke="#FFF4DC" stroke-width="1.6" fill="none" opacity=".9"/>`;
+      { let jn = ''; for (let q = 1; q < 8; q++) { const xq = -w + (2 * w) * q / 8, a1 = P(xq, d, k + 1), a2 = P(xq * w2 / w, d2, k + 1); jn += `M${F(a1[0])} ${F(a1[1])} L${F(a2[0])} ${F(a2[1])} `; } paredes += `<path d="${jn}" stroke="#B8875A" stroke-width=".6" opacity=".6"/>`; }
+    }
+  }
+  paredes += `<path d="${poli([P(-W(6), 0, 7), P(-W(6), D(6), 7), P(W(6), D(6), 7), P(W(6), 0, 7)])}" fill="#3E6A5E"/>`;
+  /* contorno do furo (corte da frente) e região do poço */
+  const perfil = [];
+  for (let j = 0; j < NV; j++) { perfil.push(P(-W(j), 0, j + 1)); if (j < NV - 1) perfil.push(P(-W(j + 1), 0, j + 1)); }
+  const dirP = espelho(perfil);
+  const regiao = [P(-W(0), 0, 0), P(-W(0), D(0), 0), P(W(0), D(0), 0), P(W(0), 0, 0), ...dirP, ...perfil.slice().reverse()];
+  const solo = [[0, 292], P(-W(0), 0, 0), ...perfil, ...dirP.slice().reverse(), P(W(0), 0, 0), [800, 292], [800, 500], [0, 500]];
+  function aguaPaths(z){
+    if (z >= NV - .01) return ['M0 0', 'M0 0'];
+    const k = Math.min(NV - 1, Math.floor(z)), w = W(k), d = D(k);
+    const sup = poli([P(-w, 0, z), P(-w, d, z), P(w, d, z), P(w, 0, z)]);
+    const esq = [P(-w, 0, z)];
+    for (let j = k; j < NV; j++) { esq.push(P(-W(j), 0, j + 1)); if (j < NV - 1) esq.push(P(-W(j + 1), 0, j + 1)); }
+    return [sup, poli([...esq, ...espelho(esq).reverse()])];
+  }
+  /* ---------- pessoas e bichos ---------- */
+  const menina = () => `<ellipse cx="0" cy="1" rx="8" ry="1.8" fill="#3E2A14" opacity=".25"/>
+    <path d="M-2.6 -12 V-1.5 M2.6 -12 V-1.5" stroke="#B8A890" stroke-width="3.8" stroke-linecap="round"/><path d="M-2.6 -12 V-1.5 M2.6 -12 V-1.5" stroke="#F6EEE2" stroke-width="2.6" stroke-linecap="round"/><path d="M-5 0 h3.6 M1.2 0 h3.6" stroke="#8A3A1E" stroke-width="2.2" stroke-linecap="round"/><path d="M-4.4 -.6 h1.4 M1.8 -.6 h1.4" stroke="#FFC83D" stroke-width=".7"/>
+    <path d="M-6 -27 C-7 -20 -9 -14 -9.4 -10 H9.4 C9 -14 7 -20 6 -27Z" fill="url(#baKurtaP)" stroke="#7A1440" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M-6 -27 C-7 -20 -9 -14 -9.4 -10 H9.4 C9 -14 7 -20 6 -27Z" fill="url(#baDobra)"/>
+    <path d="M-9.2 -11 H9.2" stroke="#FFC83D" stroke-width="2.4"/><path d="M-9 -11 H9" stroke="#E5392C" stroke-width=".9" stroke-dasharray="1 1.2"/>
+    <path d="M-2.6 -27 L0 -23.8 L2.6 -27" stroke="#FFC83D" stroke-width="1" fill="none" stroke-linejoin="round"/><path d="M0 -23.8 V-18" stroke="#FFC83D" stroke-width=".6" stroke-dasharray="1 1"/>
+    <path d="M-5.4 -27 C-2 -24 3 -18 7 -11.6" stroke="#E2701A" stroke-width="3.8" fill="none" stroke-linecap="round"/><path d="M-5.4 -27 C-2 -24 3 -18 7 -11.6" stroke="#FFA02E" stroke-width="2.8" fill="none" stroke-linecap="round"/><path d="M-5.4 -27 C-2 -24 3 -18 7 -11.6" stroke="#FFF2C8" stroke-width=".6" fill="none" stroke-dasharray="1 1.4"/>
+    <path d="M6.2 -12 l-.6 2.6 M7.2 -11.8 l0 2.8 M8.2 -11.8 l.6 2.6" stroke="#E5392C" stroke-width=".7" stroke-linecap="round"/>
+    <path d="M-6 -26 C-8 -22 -9 -18 -8 -15" stroke="#7A4428" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M-6 -26 C-8 -22 -9 -18 -8 -15" stroke="#A86E48" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-9 -16.6 l2 .4" stroke="#FFD447" stroke-width="1" stroke-linecap="round"/>
+    <g class="ba-pq"><path d="M6 -26 C8 -22 9 -19 8.4 -16.6" stroke="#7A4428" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M6 -26 C8 -22 9 -19 8.4 -16.6" stroke="#A86E48" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="9.6" cy="-13.6" r="5.2" fill="url(#baBarro)" stroke="#6E2A10" stroke-width="1"/><path d="M5 -13 C7 -11.6 12 -11.6 14.2 -13" stroke="#FFF3DC" stroke-width=".8" fill="none" stroke-dasharray="1 1"/><ellipse cx="9.6" cy="-18.6" rx="2.8" ry="1.1" fill="#8A3A18"/><path d="M6.4 -15 q1 -3 3 -3.6" stroke="#FFD2A8" stroke-width="1" fill="none" stroke-linecap="round"/></g>
+    <g class="ba-pc" style="display:none"><path d="M6 -26 C8 -32 7 -38 4.4 -41" stroke="#7A4428" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M6 -26 C8 -32 7 -38 4.4 -41" stroke="#A86E48" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="-41" rx="4.4" ry="1.4" fill="#FFA02E" stroke="#A8400E" stroke-width=".6"/><circle cx="0" cy="-46.2" r="5.4" fill="url(#baBarro)" stroke="#6E2A10" stroke-width="1"/><path d="M-4.8 -45 C-2 -43.6 2 -43.6 4.8 -45" stroke="#FFF3DC" stroke-width=".8" fill="none" stroke-dasharray="1 1"/><ellipse cx="0" cy="-51.4" rx="2.8" ry="1" fill="#3FA8D8"/><path d="M-3 -47 q1 -3 3 -3.6" stroke="#FFD2A8" stroke-width="1" fill="none" stroke-linecap="round"/></g>
+    <rect x="-1.5" y="-30" width="3" height="3.6" fill="#A86E48"/>
+    <circle cx="0" cy="-34.4" r="6.6" fill="url(#baPeleM)" stroke="#5E3418" stroke-width="1"/>
+    <path d="M-6.9 -34.4 C-7.2 -43.4 7.2 -43.4 6.9 -34.4 C5.4 -39 -1.6 -40.2 -6.9 -34.4Z" fill="#1E1410"/><path d="M-4 -40 C-1 -41.6 2 -41.4 4 -40" stroke="#5E4A40" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <path d="M-6.2 -33.4 C-8.8 -28.4 -8.8 -24 -7.6 -19.6" stroke="#1E1410" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M-8.4 -29 l1.6 .6 M-8.6 -25.6 l1.6 .6 M-8.2 -22.4 l1.6 .6" stroke="#4A3A30" stroke-width=".7"/><circle cx="-7.6" cy="-19.4" r="1.4" fill="#FFC83D" stroke="#B07A08" stroke-width=".4"/>
+    <ellipse cx="2.9" cy="-34.2" rx="1.5" ry="1.9" fill="#12121A"/><circle cx="3.4" cy="-35" r=".65" fill="#fff"/><circle cx="2.4" cy="-33.4" r=".3" fill="#fff"/>
+    <path d="M1.4 -37.4 q1.6 -1 3.4 -.2" stroke="#2A1A10" stroke-width=".7" fill="none" stroke-linecap="round"/><path d="M5.4 -33 q.8 1 .1 1.6" stroke="#7A4428" stroke-width=".6" fill="none" stroke-linecap="round"/>
+    <circle cx="-2.4" cy="-32.6" r=".9" fill="#FFC83D" stroke="#B07A08" stroke-width=".3"/>
+    <ellipse cx="3.6" cy="-31" rx="1.8" ry="1.1" fill="#FF7A7A" opacity=".55"/><path d="M1 -30.4 q2 2 4.2 0" stroke="#5E2410" stroke-width="1" fill="#C8505A" stroke-linecap="round"/>`;
+  const zig = (x0, y, n, dx, h) => `M${x0} ${y} ` + Array.from({ length:n }, (_, i) => `l${dx} ${i % 2 ? h : -h}`).join(' ');
+  const mulher = (x, y) => `<g transform="translate(${x} ${y}) scale(1.45)"><ellipse cx="0" cy="1" rx="11" ry="2.2" fill="#5E3A14" opacity=".22"/>
+    <path d="M-10 0 C-10 -7 -7 -15 -5 -19 H5 C7 -15 10 -7 10 0Z" fill="url(#baGhagraP)" stroke="#6E0E1E" stroke-width="1" stroke-linejoin="round"/><path d="M-10 0 C-10 -7 -7 -15 -5 -19 H5 C7 -15 10 -7 10 0Z" fill="url(#baDobra)"/>
+    <path d="M-9.8 -1.8 C-4 -.4 4 -.4 9.8 -1.8" stroke="#1E7A5E" stroke-width="3.4" fill="none"/><path d="${zig(-9.4, -1.4, 16, 1.17, .9)}" stroke="#FFD447" stroke-width=".7" fill="none"/>
+    <path d="M-7.6 -9 C-2 -8 2 -8 7.6 -9" stroke="#FFD447" stroke-width="1.2" fill="none"/><path d="M-6 -15.4 C-2 -14.8 2 -14.8 6 -15.4" stroke="#FF8AB8" stroke-width=".9" fill="none"/>
+    <path d="M-5 -19 L-4.6 -27 H4.6 L5 -19Z" fill="#2E8A6E" stroke="#145A44" stroke-width=".9"/><path d="M-4.6 -21 H4.6" stroke="#FFD447" stroke-width=".7" stroke-dasharray="1 .8"/>
+    <path d="M4 -26 C7 -30 7 -35 5 -38.4" stroke="#7A4A2A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M4 -26 C7 -30 7 -35 5 -38.4" stroke="#B07A50" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M5.2 -31 h2.6 M5.4 -32.4 h2.4 M5.6 -33.8 h2.2" stroke="#E5392C" stroke-width=".8"/>
+    <path d="M-5.6 -35 C-7.4 -29 -9 -22 -8.2 -14 C-6 -16 -4.4 -20 -3.4 -26 C-1 -24 3 -22 5 -19 C4 -24 3 -30 4.8 -35 C2 -38.6 -3 -38.6 -5.6 -35Z" fill="url(#baOdhniP)" stroke="#A8400E" stroke-width=".9" stroke-linejoin="round"/>
+    <path d="M-8.2 -14 C-6 -16 -4.4 -20 -3.4 -26 C-1 -24 3 -22 5 -19" stroke="#FFD447" stroke-width="1.1" fill="none"/>
+    <circle cx="0" cy="-31.6" r="4.8" fill="#B07A50" stroke="#5E3418" stroke-width=".9"/>
+    <path d="M-6 -30.6 C-6.4 -38.8 6.4 -38.8 6 -30.6 C4 -35.2 -4 -35.2 -6 -30.6Z" fill="url(#baOdhniP)" stroke="#A8400E" stroke-width=".8"/><path d="M-5.6 -31.6 C-4 -35 4 -35 5.6 -31.6" stroke="#FFD447" stroke-width=".8" fill="none"/>
+    <ellipse cx="1.9" cy="-31.6" rx="1.1" ry="1.4" fill="#12121A"/><circle cx="2.3" cy="-32.2" r=".45" fill="#fff"/><path d="M.8 -34.2 q1.2 -.8 2.6 -.1" stroke="#2A1A10" stroke-width=".6" fill="none" stroke-linecap="round"/>
+    <ellipse cx="2.6" cy="-29.4" rx="1.4" ry=".8" fill="#FF7A7A" opacity=".5"/><path d="M.4 -28.4 q1.6 1.4 3.2 0" stroke="#5E2410" stroke-width=".8" fill="#C8505A" stroke-linecap="round"/><circle cx="-1.6" cy="-30" r=".7" fill="#FFD447" stroke="#B07A08" stroke-width=".25"/>
+    <ellipse cx="0" cy="-40.6" rx="5.4" ry="4.4" fill="url(#baLatao)" stroke="#7A5A10" stroke-width=".9"/><path d="M-5.2 -40 C-2 -38.6 2 -38.6 5.2 -40" stroke="#8A6418" stroke-width=".6" fill="none"/><path d="M-3 -42 q2 -2 4 -1.6" stroke="#FFF6C8" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <circle cx="0" cy="-47.6" r="3.8" fill="url(#baBarro)" stroke="#6E2A10" stroke-width=".8"/><path d="M-3.4 -47 C-1 -46 1 -46 3.4 -47" stroke="#FFF3DC" stroke-width=".6" fill="none" stroke-dasharray=".8 .8"/><ellipse cx="0" cy="-51" rx="2" ry=".8" fill="#8A3A18"/></g>`;
+  const menino = (x, y) => `<g transform="translate(${x} ${y}) scale(1.45)"><ellipse cx="0" cy="1" rx="8" ry="1.8" fill="#5E3A14" opacity=".22"/>
+    <path d="M-2.4 -10 V-1 M2.4 -10 V-1" stroke="#5E3418" stroke-width="3.2" stroke-linecap="round"/><path d="M-2.4 -10 V-1 M2.4 -10 V-1" stroke="#7A4A2A" stroke-width="2.2" stroke-linecap="round"/><path d="M-4.4 0 h3.4 M1 0 h3.4" stroke="#2A2A34" stroke-width="2.4" stroke-linecap="round"/><path d="M-4 -.8 h2 M1.4 -.8 h2" stroke="#fff" stroke-width=".6"/>
+    <path d="M-5.2 -14.4 H5.2 L5.6 -9 H.6 L0 -11 L-.6 -9 H-5.6Z" fill="#2E3A6A" stroke="#141E44" stroke-width=".7"/>
+    <rect x="-9" y="-23.6" width="5.4" height="9.6" rx="2" fill="#E5392C" stroke="#7A1410" stroke-width=".8"/><rect x="-8.4" y="-19.4" width="4.2" height="3.4" rx="1" fill="#FFC83D" stroke="#A8700E" stroke-width=".5"/>
+    <path d="M-5 -24 C-5 -26.4 5 -26.4 5 -24 L5.2 -14 H-5.2Z" fill="#9ACFFF" stroke="#2E6AB0" stroke-width=".9"/><path d="M-5 -24 C-5 -26.4 5 -26.4 5 -24 L5.2 -14 H-5.2Z" fill="url(#baDobra)"/>
+    <path d="M-2.4 -25.6 L0 -23 L2.4 -25.6 L1 -26.2 L0 -25 L-1 -26.2Z" fill="#fff" stroke="#2E6AB0" stroke-width=".5"/><path d="M0 -23 V-14.6" stroke="#2E6AB0" stroke-width=".5"/><g fill="#fff"><circle cx=".9" cy="-21" r=".4"/><circle cx=".9" cy="-18" r=".4"/></g><rect x="1.8" y="-22.4" width="2.4" height="2" fill="none" stroke="#2E6AB0" stroke-width=".5"/>
+    <path d="M-3.6 -24.6 L-3.2 -15" stroke="#B8241C" stroke-width="1.4"/>
+    <g id="ba-aceno"><path d="M4.6 -23.4 C7 -26 8 -29 8.6 -32" stroke="#5E3418" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M4.6 -23.4 C7 -26 8 -29 8.6 -32" stroke="#7A4A2A" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="8.8" cy="-32.6" r="1.6" fill="#7A4A2A" stroke="#5E3418" stroke-width=".5"/></g>
+    <circle cx="0" cy="-30" r="5" fill="#7A4A2A" stroke="#3E2414" stroke-width=".9"/><path d="M-5.2 -30.4 C-5.4 -37 5.4 -37 5.2 -30.4 C3 -33.4 -2 -34 -5.2 -30.4Z M-1 -35.4 l1 -2.4 l1 2" fill="#1A1410"/>
+    <ellipse cx="2" cy="-30" rx="1.2" ry="1.5" fill="#12121A"/><circle cx="2.4" cy="-30.6" r=".5" fill="#fff"/><path d="M.8 -32.6 q1.2 -.8 2.6 -.1" stroke="#1A1410" stroke-width=".6" fill="none" stroke-linecap="round"/>
+    <ellipse cx="3" cy="-27.8" rx="1.4" ry=".8" fill="#FF7A6A" opacity=".45"/><path d="M.2 -27.4 q1.8 1.8 3.6 0Z" fill="#fff" stroke="#3E1408" stroke-width=".7" stroke-linejoin="round"/></g>`;
+  const crianca = (pele, camisa, short, cabelo, menina) => `<path d="M-2 -9 V-1 M2 -9 V-1" stroke="${pele}" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M-4 -12 H4 L4.4 -7.6 H-4.4Z" fill="${short}"/><path d="M-4.4 -19 C-4.4 -21 4.4 -21 4.4 -19 L4.2 -11.6 H-4.2Z" fill="${camisa}" stroke="#2A2A34" stroke-width=".6"/>
+    <path d="M-4 -18.6 l-3.4 -4 M4 -18.6 l3.4 -4" stroke="${pele}" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="0" cy="-23.8" r="4.2" fill="${pele}" stroke="#3E2414" stroke-width=".7"/><path d="M-4.4 -24 C-4.6 -29.6 4.6 -29.6 4.4 -24 C2.6 -26.6 -2 -27 -4.4 -24Z" fill="${cabelo}"/>${menina ? `<circle cx="-4.6" cy="-22.6" r="1.6" fill="${cabelo}"/><circle cx="4.6" cy="-22.6" r="1.6" fill="${cabelo}"/>` : ''}
+    <circle cx="-1.5" cy="-23.6" r=".7" fill="#12121A"/><circle cx="1.5" cy="-23.6" r=".7" fill="#12121A"/><path d="M-1.6 -21.6 q1.6 1.6 3.2 0Z" fill="#fff" stroke="#3E1408" stroke-width=".5"/>`;
+  const ra = (x, y, s, i) => `<g class="ba-ra toque" data-i="${i}" style="opacity:0;transition:opacity 1s;pointer-events:none"><g transform="translate(${x} ${y}) scale(${s})"><g class="ba-ra-in">
+    <ellipse cx="0" cy="1" rx="10" ry="2" fill="#2A3A14" opacity=".25"/>
+    <path d="M-6 -2 C-12 -2 -13 -7 -8 -8 C-6 -6 -5 -4 -3 -3Z M6 -2 C12 -2 13 -7 8 -8 C6 -6 5 -4 3 -3Z" fill="#D8B818" stroke="#6E5A08" stroke-width=".8" stroke-linejoin="round"/>
+    <path d="M-12 0 h5 M7 0 h5" stroke="#6E5A08" stroke-width="1.6" stroke-linecap="round"/>
+    <ellipse cx="0" cy="-6" rx="8" ry="5.6" fill="url(#baRa)" stroke="#6E5A08" stroke-width=".9"/>
+    <path d="M-3 -9 C-1 -10 1 -10 3 -9" stroke="#3E7A2A" stroke-width="1.2" fill="none" opacity=".6"/>
+    <g class="ba-saco" style="transform-box:fill-box;transform-origin:50% 30%;transform:scale(.25)"><circle cx="-5.4" cy="-3.6" r="3" fill="#6AB4FF" stroke="#2E5AA8" stroke-width=".7"/><circle cx="5.4" cy="-3.6" r="3" fill="#6AB4FF" stroke="#2E5AA8" stroke-width=".7"/><circle cx="-6.2" cy="-4.6" r=".8" fill="#fff" opacity=".8"/><circle cx="4.6" cy="-4.6" r=".8" fill="#fff" opacity=".8"/></g>
+    <path d="M-4 -1 C-6 1 -5 1 -3 0 M4 -1 C6 1 5 1 3 0" stroke="#6E5A08" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <circle cx="-3.6" cy="-10.6" r="2.4" fill="#F2DA30" stroke="#6E5A08" stroke-width=".7"/><circle cx="3.6" cy="-10.6" r="2.4" fill="#F2DA30" stroke="#6E5A08" stroke-width=".7"/>
+    <circle cx="-3.4" cy="-10.6" r="1.3" fill="#12121A"/><circle cx="3.8" cy="-10.6" r="1.3" fill="#12121A"/><circle cx="-3" cy="-11.1" r=".45" fill="#fff"/><circle cx="4.2" cy="-11.1" r=".45" fill="#fff"/>
+    <path d="M-3 -5.4 q3 2 6 0" stroke="#6E5A08" stroke-width=".8" fill="none" stroke-linecap="round"/></g><circle r="14" cy="-5" fill="transparent"/></g></g>`;
+  const esquilo = `<path d="M5 -4 C16 -8 19 -20 11 -26 C6 -22 9 -14 2 -8Z" fill="#8A6A4E" stroke="#4E3A28" stroke-width=".9" stroke-linejoin="round"/><path d="M8 -8 C13 -12 14 -18 11 -23" stroke="#C8A888" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="0" cy="-5" rx="8" ry="4.8" fill="#A88466" stroke="#4E3A28" stroke-width=".9"/><ellipse cx="-1" cy="-3.4" rx="5" ry="2.2" fill="#E8D8C0"/>
+    <path d="M-5 -8.4 C-1 -10.4 3 -10.2 6 -8" stroke="#3E2A1A" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M-5.4 -8.6 C-1 -10.6 3 -10.4 6.2 -8.2 M-5 -6.6 C-1 -8.2 3 -8 6.4 -6" stroke="#F8EEDC" stroke-width=".9" fill="none" stroke-linecap="round"/><path d="M-4.6 -10.2 C-1 -12 2.4 -11.8 5.2 -10" stroke="#F8EEDC" stroke-width=".8" fill="none" stroke-linecap="round"/>
+    <path d="M-5 -1 v1.6 M3 -1 v1.6" stroke="#4E3A28" stroke-width="1.4" stroke-linecap="round"/>
+    <circle cx="-8" cy="-8" r="4" fill="#A88466" stroke="#4E3A28" stroke-width=".9"/><path d="M-8 -12 l1 -2.6 l1.4 2.4Z" fill="#8A6A4E" stroke="#4E3A28" stroke-width=".6"/>
+    <circle cx="-9.4" cy="-8.6" r="1.2" fill="#12121A"/><circle cx="-9" cy="-9" r=".4" fill="#fff"/><circle cx="-12" cy="-7.4" r=".7" fill="#3E2A1A"/><path d="M-10 -6.4 l1.2 .3" stroke="#F8EEDC" stroke-width=".6"/>`;
+  const construtor = (x, y) => `<g transform="translate(${x} ${y})"><ellipse cx="0" cy="1" rx="11" ry="2.2" fill="#5E3A14" opacity=".22"/>
+    <path d="M13 -30 L5 0" stroke="#6E4A2A" stroke-width="2" stroke-linecap="round"/><path d="M2 -1 L9 1 L8 5 L1 3Z" fill="#9AA0AE" stroke="#4E5260" stroke-width=".8"/>
+    <path d="M-2.8 -13 V-1 M2.8 -13 V-1" stroke="#F2EEE4" stroke-width="3.6" stroke-linecap="round"/><path d="M-5 0 h3.4 M1.6 0 h3.4" stroke="#6E3A1E" stroke-width="2" stroke-linecap="round"/>
+    <path d="M-6.4 -28 C-7.4 -22 -8.4 -16 -7.6 -11 H7.6 C8.4 -16 7.4 -22 6.4 -28Z" fill="#FBF8F0" stroke="#8A8270" stroke-width=".9"/><path d="M-4 -28 L-3.6 -18 H3.6 L4 -28" fill="#3E6AB0" stroke="#1E3A6A" stroke-width=".7"/>
+    <path d="M6 -26 C9 -24 11 -22 11.4 -20" stroke="#8A5634" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M-6 -26 C-2 -24 3 -24 8 -26" stroke="#8A5634" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <circle cx="0" cy="-32.4" r="4.8" fill="#8A5634" stroke="#3E2414" stroke-width=".9"/><path d="M.6 -30.2 q1.6 -.8 3.4 .2" stroke="#1E1410" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="2" cy="-32.8" rx=".9" ry="1.1" fill="#12121A"/><circle cx="2.3" cy="-33.2" r=".35" fill="#fff"/>
+    <path d="M-5.8 -33 C-6.4 -41.6 6.4 -41.6 5.8 -33 C3 -35.4 -3 -35.4 -5.8 -33Z" fill="#E5392C" stroke="#8A1410" stroke-width=".9"/><path d="M-5 -36 C-2 -38 2 -38 5 -36 M-5.4 -34.4 C-2 -36.4 2 -36.4 5.4 -34.4" stroke="#FFC83D" stroke-width=".9" fill="none"/><path d="M-5.4 -34 C-8 -31 -8.4 -27 -7.4 -24" stroke="#FFC83D" stroke-width="2" fill="none" stroke-linecap="round"/></g>`;
+  const construtora = (x, y) => `<g transform="translate(${x} ${y})"><ellipse cx="0" cy="1" rx="10" ry="2.2" fill="#5E3A14" opacity=".22"/>
+    <path d="M-9 0 C-9 -7 -6.4 -14 -4.6 -18 H4.6 C6.4 -14 9 -7 9 0Z" fill="#3E5EC8" stroke="#1E2E6A" stroke-width="1"/><path d="M-8.6 -1.8 C-4 -.6 4 -.6 8.6 -1.8" stroke="#FFC83D" stroke-width="2" fill="none"/>
+    <path d="M-4.6 -18 L-4.2 -26 H4.2 L4.6 -18Z" fill="#FFC83D" stroke="#A8700E" stroke-width=".8"/>
+    <path d="M-4 -25 C-7 -30 -7 -35 -5 -38.6 M4 -25 C7 -30 7 -35 5 -38.6" stroke="#9A6440" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+    <path d="M-5.2 -34 C-7 -28 -8 -22 -7.4 -15 C-5 -18 -4 -22 -3 -26 C0 -24 3 -22 4.6 -18 C4 -24 3 -29 4.6 -34Z" fill="#E84A8A" stroke="#8A1E4A" stroke-width=".8"/>
+    <circle cx="0" cy="-31" r="4.4" fill="#9A6440" stroke="#4E2E14" stroke-width=".9"/><path d="M-5.4 -30 C-5.8 -37.6 5.8 -37.6 5.4 -30 C4 -34 -4 -34 -5.4 -30Z" fill="#E84A8A" stroke="#8A1E4A" stroke-width=".8"/>
+    <ellipse cx="1.7" cy="-31" rx=".9" ry="1.1" fill="#12121A"/><circle cx="2" cy="-31.4" r=".35" fill="#fff"/><path d="M.4 -28.2 q1.4 1 2.8 0" stroke="#5E2410" stroke-width=".8" fill="none" stroke-linecap="round"/>
+    <path d="M-8 -39 C-6 -36 6 -36 8 -39Z" fill="#6A6E7A" stroke="#33363E" stroke-width=".8"/><path d="${copa(0, -40.4, 6.6, 3, 7, .3)}" fill="#9A6A3A" stroke="#5E3A1A" stroke-width=".7"/></g>`;
+  /* ---------- paisagem ---------- */
+  const tufo = (x, y, s, c1, c2) => `<path d="M${x - 3 * s} ${y} q-1 ${F(-5 * s)} -3 ${F(-8 * s)} M${x} ${y} q0 ${F(-6 * s)} 1 ${F(-10 * s)} M${x + 3 * s} ${y} q1 ${F(-4 * s)} 4 ${F(-7 * s)}" stroke="${c2}" stroke-width="${F(2.6 * s)}" fill="none" stroke-linecap="round"/><path d="M${x - 3 * s} ${y} q-1 ${F(-5 * s)} -3 ${F(-8 * s)} M${x} ${y} q0 ${F(-6 * s)} 1 ${F(-10 * s)} M${x + 3 * s} ${y} q1 ${F(-4 * s)} 4 ${F(-7 * s)}" stroke="${c1}" stroke-width="${F(1.3 * s)}" fill="none" stroke-linecap="round"/>`;
+  const casa = (x, y0, w, h, cor, esc, extra) => `<g><rect x="${x}" y="${y0}" width="${w}" height="${h}" fill="${cor}" stroke="${esc}" stroke-width="1.2"/><rect x="${x}" y="${y0}" width="${w}" height="${h}" fill="url(#baParede)"/>
+    <path d="M${x - 1.6} ${y0} h${w + 3.2} v-3.6 h-${w + 3.2}Z" fill="#F6EBD6" stroke="${esc}" stroke-width=".8"/><g fill="#F6EBD6" stroke="${esc}" stroke-width=".6">${Array.from({ length:Math.floor(w / 7) }, (_, i) => `<rect x="${x + 1 + i * 7}" y="${y0 - 6.4}" width="3.4" height="2.8"/>`).join('')}</g>
+    <path d="M${x + w * .22} ${y0 + h} v-9 a4 4 0 0 1 8 0 v9Z" fill="#6A3A22" stroke="${esc}" stroke-width=".8"/><path d="M${x + w * .22 + 4} ${y0 + h} v-12" stroke="#3E1E10" stroke-width=".6"/>
+    <path d="M${x + w * .62} ${y0 + 15} v-6 a3.4 3.4 0 0 1 6.8 0 v6Z" fill="#2E5A6A" stroke="#F6EBD6" stroke-width="1.2"/>${extra || ''}</g>`;
+  const ZT = [1.8, 3.4, 5.0, 6.8];
+  const PUF = [[-40, -4, 20, 1], [30, -12, 22, 1], [-6, -24, 18, 1], [-50, 8, 17, 0], [-26, -8, 23, 0], [6, -18, 27, 0], [36, -4, 22, 0], [56, 8, 15, 0]];
+  const fofo = (cb, cf, lin, aro, barriga) => `<g stroke="${lin}" stroke-width="5">${PUF.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}<ellipse cx="2" cy="10" rx="62" ry="13"/></g>
+      ${PUF.filter(q => q[3]).map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${cb}"/>`).join('')}<ellipse cx="2" cy="10" rx="62" ry="13" fill="${barriga}"/>
+      ${PUF.filter(q => !q[3]).map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${cf}"/>`).join('')}<ellipse cx="2" cy="12" rx="58" ry="9" fill="${barriga}" opacity=".85"/>
+      <g stroke="${aro}" stroke-width="3" fill="none" stroke-linecap="round">${PUF.filter(q => !q[3]).map(([x, y, r]) => `<path d="M${F(x - r * .7)} ${F(y - r * .5)} A${r * .86} ${r * .86} 0 0 1 ${F(x + r * .3)} ${F(y - r * .82)}"/>`).join('')}</g>`;
+  const nuvem = (i, n) => `<g class="ba-nuvem toque" data-i="${i}" transform="translate(${n.x} ${n.y})"><g style="animation:flutua ${(3 + i * .7).toFixed(1)}s ease-in-out infinite alternate"><g transform="scale(${n.s})">
+      <g class="ba-nc">${fofo('url(#baNuvL2)', 'url(#baNuvL)', '#8FA0C2', '#FFFFFF', '#C6D2EA')}</g>
+      <g class="ba-ne" style="opacity:0;transition:opacity 1.6s">${fofo('url(#baNuvD2)', 'url(#baNuvD)', '#262E48', '#FFE9C8', '#3A4462')}<g stroke="#9AB8FF" stroke-width="2.2" stroke-linecap="round" opacity=".55">${[-40, -16, 8, 32].map(x => `<path d="M${x} 24 l-3 7"/>`).join('')}</g></g>
+    </g></g><ellipse cx="0" cy="0" rx="${(76 * n.s).toFixed(0)}" ry="${(40 * n.s).toFixed(0)}" fill="transparent"/></g>`;
+  const NUV = [{ x:110, y:96, s:1, tx:318, ty:80 }, { x:176, y:140, s:.78, tx:452, ty:66 }, { x:58, y:146, s:.74, tx:548, ty:100 }];
+  /* johad: dique de terra em meia-lua */
+  const JA = [628, 258], JC = [690, 296], JB = [752, 258];
+  const bez = t => [(1 - t) * (1 - t) * JA[0] + 2 * (1 - t) * t * JC[0] + t * t * JB[0], (1 - t) * (1 - t) * JA[1] + 2 * (1 - t) * t * JC[1] + t * t * JB[1]];
+  const monte = (t0, t1) => { const n = 8, cima = [], baixo = []; for (let i = 0; i <= n; i++) { const t = t0 + (t1 - t0) * i / n, [x, y] = bez(t), h = 6.4 * Math.sin(Math.PI * (.12 + .76 * i / n)); cima.push([x, y - h]); baixo.push([x, y + 3.4]); } return `M${F(baixo[0][0])} ${F(baixo[0][1])} ` + cima.map(p => `L${F(p[0])} ${F(p[1])}`).join(' ') + ' ' + baixo.reverse().map(p => `L${F(p[0])} ${F(p[1])}`).join(' ') + 'Z'; };
+  const SLOTS = [[.2, .4], [.4, .6], [.6, .8]].map(([a, b]) => ({ a, b, c:bez((a + b) / 2) }));
+  const TERRA = [{ x:784, y:258 }, { x:770, y:276 }, { x:792, y:290 }];
+  const torrao = `<path d="${copa(0, 0, 13, 7, 9, .3)}" fill="url(#baMonte)" stroke="#5E3A1A" stroke-width="1.4"/><path d="M-7 -3 q4 -4 9 -3" stroke="#D8A870" stroke-width="1.6" fill="none" stroke-linecap="round"/><g fill="#5E3A1A"><circle cx="3" cy="1" r="1"/><circle cx="-4" cy="2" r=".8"/><circle cx="7" cy="-1" r=".7"/></g>`;
+  /* ---------- svg ---------- */
+  const svg = `<svg viewBox="0 0 800 500" role="img" aria-label="Poço de degraus na Índia, cortado para mostrar as escadas, a água e a terra; uma vila, um pavão, o mar ao longe e nuvens de monção">
+    <defs>
+      <linearGradient id="baCeu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5FAEE6"/><stop offset=".55" stop-color="#A8D6F0"/><stop offset="1" stop-color="#FBE3BC"/></linearGradient>
+      <linearGradient id="baMon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E3A58"/><stop offset="1" stop-color="#7A8098"/></linearGradient>
+      <radialGradient id="baSolG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF6C8"/><stop offset=".55" stop-color="#FFC83D"/><stop offset="1" stop-color="#F0961E"/></radialGradient>
+      <linearGradient id="baMar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4AA8E0"/><stop offset="1" stop-color="#1E6AB0"/></linearGradient>
+      <linearGradient id="baMorro" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C8A4B8"/><stop offset="1" stop-color="#E6C8C0"/></linearGradient>
+      <linearGradient id="baMorro2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B88C8C"/><stop offset="1" stop-color="#DDB49A"/></linearGradient>
+      <linearGradient id="baTerra" gradientUnits="userSpaceOnUse" x1="0" y1="186" x2="0" y2="292"><stop offset="0" stop-color="#F0D6A4"/><stop offset="1" stop-color="#DCA666"/></linearGradient>
+      <linearGradient id="baVerde" gradientUnits="userSpaceOnUse" x1="0" y1="186" x2="0" y2="292"><stop offset="0" stop-color="#B8D47A"/><stop offset="1" stop-color="#7EB04A"/></linearGradient>
+      <linearGradient id="baRi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9BE88"/><stop offset="1" stop-color="#C98E58"/></linearGradient>
+      <linearGradient id="baSl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F4CF98"/><stop offset="1" stop-color="#E2AE72"/></linearGradient>
+      <linearGradient id="baSr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A86A3E"/><stop offset="1" stop-color="#C08250"/></linearGradient>
+      <linearGradient id="baPiso" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBE7C2"/><stop offset="1" stop-color="#EAC690"/></linearGradient>
+      <linearGradient id="baAs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46B8CC"/><stop offset=".55" stop-color="#7AD8DE"/><stop offset="1" stop-color="#A8F0EE"/></linearGradient>
+      <linearGradient id="baAg" gradientUnits="userSpaceOnUse" x1="0" y1="300" x2="0" y2="490"><stop offset="0" stop-color="#3AAAC8"/><stop offset="1" stop-color="#0E4A70"/></linearGradient>
+      <linearGradient id="baFundo" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2A1206" stop-opacity="0"/><stop offset="1" stop-color="#2A1206" stop-opacity=".22"/></linearGradient>
+      <pattern id="baBloco" width="26" height="9.4" patternUnits="userSpaceOnUse"><path d="M0 .3 H26 M0 4.9 H26 M7 .3 V4.9 M20 4.9 V9.4" stroke="#6E3A1A" stroke-width=".55" opacity=".32" fill="none"/><path d="M0 1 H26 M0 5.6 H26" stroke="#FFF2D8" stroke-width=".5" opacity=".28"/><circle cx="4" cy="3" r=".5" fill="#8A5A30" opacity=".35"/><circle cx="15" cy="7.4" r=".6" fill="#8A5A30" opacity=".3"/><circle cx="22" cy="2.4" r=".4" fill="#FFF2D8" opacity=".4"/></pattern>
+      <pattern id="baCaus" width="40" height="16" patternUnits="userSpaceOnUse"><path d="M-2 5 C4 1 8 9 14 5 S24 1 30 5 S38 9 42 5 M-2 13 C3 10 9 16 15 12 S25 9 31 13 S38 16 42 13" stroke="#FFFFFF" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M10 5 C12 8 11 10 13 12 M30 5 C28 8 30 10 28 13" stroke="#FFFFFF" stroke-width=".7" fill="none" opacity=".7"/></pattern>
+      <linearGradient id="baLencolG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8AD4FA" stop-opacity=".85"/><stop offset=".45" stop-color="#3E8EE0" stop-opacity=".6"/><stop offset="1" stop-color="#2E6AC8" stop-opacity="0"/></linearGradient>
+      <radialGradient id="baNuvL" cx=".42" cy=".25" r=".75"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".6" stop-color="#F2F6FF"/><stop offset="1" stop-color="#C6D2EA"/></radialGradient>
+      <radialGradient id="baNuvL2" cx=".42" cy=".25" r=".75"><stop offset="0" stop-color="#EEF2FA"/><stop offset="1" stop-color="#AEBCD8"/></radialGradient>
+      <radialGradient id="baNuvD" cx=".42" cy=".22" r=".8"><stop offset="0" stop-color="#9AA6C4"/><stop offset=".55" stop-color="#6A7698"/><stop offset="1" stop-color="#3E4868"/></radialGradient>
+      <radialGradient id="baNuvD2" cx=".42" cy=".22" r=".8"><stop offset="0" stop-color="#7A86A6"/><stop offset="1" stop-color="#323C5A"/></radialGradient>
+      <pattern id="baKurtaP" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="#D93A7A"/><circle cx="2.5" cy="2.5" r=".75" fill="#FFE6F0"/><circle cx="2.5" cy="2.5" r=".3" fill="#FFC83D"/><circle cx="0" cy="0" r=".35" fill="#FFC83D"/><circle cx="5" cy="0" r=".35" fill="#FFC83D"/><circle cx="0" cy="5" r=".35" fill="#FFC83D"/><circle cx="5" cy="5" r=".35" fill="#FFC83D"/></pattern>
+      <pattern id="baGhagraP" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#C8283E"/><path d="M3 1.6 L4.4 3 L3 4.4 L1.6 3Z" fill="#FFD447"/><circle cx="3" cy="3" r=".45" fill="#2E8A6E"/><g fill="#FFE6E0"><circle cx="0" cy="0" r=".45"/><circle cx="6" cy="0" r=".45"/><circle cx="0" cy="6" r=".45"/><circle cx="6" cy="6" r=".45"/></g></pattern>
+      <pattern id="baOdhniP" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="4" fill="#FF8A2E"/><circle cx="1" cy="1" r=".55" fill="#FFE27A"/><circle cx="3" cy="3" r=".4" fill="#E5392C"/></pattern>
+      <linearGradient id="baDobra" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".2"/></linearGradient>
+      <radialGradient id="baRa" cx=".4" cy=".3"><stop offset="0" stop-color="#FFF27A"/><stop offset=".6" stop-color="#E8C820"/><stop offset="1" stop-color="#A88A10"/></radialGradient>
+      <linearGradient id="baSombra" gradientUnits="userSpaceOnUse" x1="0" y1="226" x2="0" y2="490"><stop offset="0" stop-color="#1A2440" stop-opacity="0"/><stop offset=".5" stop-color="#2A1A30" stop-opacity=".16"/><stop offset="1" stop-color="#1A1430" stop-opacity=".42"/></linearGradient>
+      <linearGradient id="baPav" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6CE98"/><stop offset="1" stop-color="#D49C64"/></linearGradient>
+      <linearGradient id="baParede" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient>
+      <radialGradient id="baNuv" cx=".45" cy=".3" r=".8"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C8D4EA"/></radialGradient>
+      <radialGradient id="baNuvC" cx=".45" cy=".3" r=".8"><stop offset="0" stop-color="#9AA4BE"/><stop offset="1" stop-color="#4A5470"/></radialGradient>
+      <radialGradient id="baBarro" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#F2A870"/><stop offset=".6" stop-color="#C9622E"/><stop offset="1" stop-color="#7E3416"/></radialGradient>
+      <radialGradient id="baLatao" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFF0A0"/><stop offset=".6" stop-color="#E0B040"/><stop offset="1" stop-color="#8A6418"/></radialGradient>
+      <radialGradient id="baPeleM" cx=".4" cy=".35"><stop offset="0" stop-color="#B8805A"/><stop offset="1" stop-color="#8A5636"/></radialGradient>
+      <radialGradient id="baLang" cx=".4" cy=".3"><stop offset="0" stop-color="#E2DCD0"/><stop offset="1" stop-color="#9A948A"/></radialGradient>
+      <linearGradient id="baMonte" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C08850"/><stop offset="1" stop-color="#8A5A2E"/></linearGradient>
+      <linearGradient id="baLagoG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ED0E6"/><stop offset="1" stop-color="#2E8AC0"/></linearGradient>
+      <linearGradient id="baNeem" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4E9A44"/><stop offset="1" stop-color="#22663A"/></linearGradient>
+      <linearGradient id="baKhejri" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B4C48A"/><stop offset="1" stop-color="#7A9058"/></linearGradient>
+      <pattern id="baPoros" width="36" height="12" patternUnits="userSpaceOnUse"><path d="M3 4 h8 M21 10 h6" stroke="#DDF2FF" stroke-width="1.2" stroke-linecap="round" opacity=".45"/></pattern>
+      <clipPath id="baAguaC"><path id="ba-cl-sup" d="M0 0"/><path id="ba-cl-sec" d="M0 0"/></clipPath>
+      <clipPath id="baPocoC"><path d="${poli(regiao)}"/></clipPath>
+      <clipPath id="baSoloC"><path d="${poli(solo)}"/></clipPath>
+      <radialGradient id="baVinheta" cx=".5" cy=".45" r=".78"><stop offset=".62" stop-color="#2A1206" stop-opacity="0"/><stop offset="1" stop-color="#2A1206" stop-opacity=".32"/></radialGradient>
+      <filter id="baGrao"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .05 0"/></filter>
+    </defs>
+    <rect width="800" height="300" fill="url(#baCeu)"/>
+    <g id="ba-sol"><circle cx="704" cy="64" r="56" fill="#FFE27A" opacity=".22"/><circle cx="704" cy="64" r="40" fill="#FFE27A" opacity=".3"/><circle cx="704" cy="64" r="27" fill="url(#baSolG)" stroke="#E8901E" stroke-width="2.4"/><path d="M690 54 q8 -9 20 -9" stroke="#FFF6C8" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+    <g class="deriva" opacity=".75"><use href="#nuvem" x="560" y="30" width="70" height="30" style="color:#fff"/><use href="#nuvem" x="250" y="40" width="56" height="24" style="color:#fff"/></g>
+    <g id="ba-arco" style="opacity:0;transition:opacity 2s" fill="none" stroke-width="5">${['#FF6A6A', '#FFB347', '#FFE27A', '#7AD07A', '#5AB4FF', '#9A7AE6'].map((c, i) => `<path d="M${520 + i * 5} 200 A${150 - i * 5} ${130 - i * 5} 0 0 1 ${820 - i * 5} 200" stroke="${c}" opacity=".7"/>`).join('')}</g>
+    <path d="M150 188 C190 168 230 160 270 166 C310 150 352 154 392 160 C440 146 490 150 534 158 C584 140 630 146 676 150 C720 134 764 140 800 148 V190 H150Z" fill="url(#baMorro)"/>
+    <g id="ba-forte" fill="#D9B4A4" stroke="#A07A80" stroke-width=".8"><path d="M700 146 V134 h46 v12Z"/>${[700, 715, 730, 746].map(x => `<rect x="${x - 4}" y="${130}" width="8" height="16" rx="3"/>`).join('')}<path d="M718 134 v-8 h12 v8Z"/><g fill="#A07A80" stroke="none">${[707, 722, 738].map(x => `<rect x="${x}" y="137" width="2" height="3"/>`).join('')}</g></g>
+    <path d="M300 190 C340 176 380 172 420 178 C470 168 520 172 560 180 C610 170 680 172 720 180 C760 174 790 176 800 178 V192 H300Z" fill="url(#baMorro2)" opacity=".85"/>
+    <path d="M0 170 C60 168 150 170 236 176 C244 180 246 186 240 190 H0Z" fill="url(#baMar)"/>
+    <g stroke="#E6F6FF" stroke-width="1.2" fill="none" opacity=".85">${[[14, 176], [60, 180], [110, 177], [160, 183], [196, 179], [36, 185]].map(([x, y]) => `<path d="M${x} ${y} q4 -2 8 0 q4 2 8 0"/>`).join('')}</g>
+    <g id="ba-barco" transform="translate(88 180)"><path d="M-10 0 C-6 4 6 4 10 0Z" fill="#8A5A2E" stroke="#4E2E14" stroke-width=".8"/><path d="M0 0 V-14" stroke="#4E2E14" stroke-width="1"/><path d="M1 -14 C8 -10 10 -4 9 -1 L1 -1Z" fill="#FFF6E0" stroke="#8A7A5A" stroke-width=".7"/></g>
+    <rect id="ba-monsao" width="800" height="300" fill="url(#baMon)" style="opacity:0;transition:opacity 2s" pointer-events="none"/>
+    <path d="M0 190 C60 188 150 188 244 186 H800 V300 H0Z" fill="url(#baTerra)"/>
+    <path d="M0 190 C60 188 150 188 244 186" stroke="#FFF2D0" stroke-width="2.4" fill="none" opacity=".8"/>
+    <g id="ba-campos">${[0, 1, 2, 3].map(i => `<path d="M${10 + i * 6} ${196 + i * 7} H${236 - i * 4}" stroke="#C08A50" stroke-width="3.2" stroke-linecap="round" opacity=".7"/>`).join('')}<g class="ba-verdeja" style="opacity:0;transition:opacity 2.4s">${[0, 1, 2, 3].map(i => Array.from({ length:16 }, (_, j) => tufo(16 + i * 6 + j * 13.4, 196 + i * 7, .55 + i * .08, '#9AD050', '#3E7A22')).join('')).join('')}</g></g>
+    <g stroke="#B88A50" stroke-width="1.1" fill="none" opacity=".7">${Array.from({ length:26 }, () => { const x = R(10, 790), y = R(206, 288); if (x > 190 && x < 610) return ''; return `<path d="M${F(x)} ${F(y)} q4 -2 8 0"/>`; }).join('')}</g>
+    <g class="ba-verdeja" style="opacity:0;transition:opacity 2.4s"><path d="M0 230 C40 226 120 232 200 236 L210 292 H0Z" fill="url(#baVerde)" opacity=".55"/><path d="M600 236 C660 230 740 232 800 228 V292 H604Z" fill="url(#baVerde)" opacity=".55"/></g>
+    <!-- khejri e esquilo (esquerda, ao fundo) -->
+    <g id="ba-khejri"><path d="M226 216 C224 204 228 194 222 182 M224 198 C214 190 210 186 204 184 M226 192 C234 186 240 180 246 178" stroke="#6E5440" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="${copa(214, 176, 18, 10, 9, .4)}" fill="url(#baKhejri)" stroke="#5E6E3E" stroke-width="1.2"/><path d="${copa(240, 172, 16, 9, 9, .4)}" fill="url(#baKhejri)" stroke="#5E6E3E" stroke-width="1.2"/><path d="${copa(226, 164, 15, 9, 9, .4)}" fill="#C4D29A" stroke="#5E6E3E" stroke-width="1.2"/>
+      <g fill="#E8E0A0">${[[212, 172], [236, 168], [226, 160], [246, 174]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.2"/>`).join('')}</g></g>
+    <g id="ba-esquilo" class="toque"><g transform="translate(252 223) scale(-1.15 1.15)"><g id="ba-esq-in">${esquilo}</g></g><rect x="234" y="196" width="36" height="30" fill="transparent"/></g>
+    <!-- vila (direita, ao fundo) -->
+    <g id="ba-vila">
+      ${casa(636, 176, 46, 54, '#E8A090', '#9A4E3E', `<g><rect x="663" y="186" width="16" height="11" fill="#F2B8A4" stroke="#9A4E3E" stroke-width=".8"/><path d="M661 186 Q671 178 681 186Z" fill="#E8B07A" stroke="#9A4E3E" stroke-width=".8"/><path d="M665 197 h12" stroke="#9A4E3E" stroke-width="1"/><g fill="#5A2A1E">${[666, 670, 674].map(x => `<rect x="${x}" y="189" width="2.4" height="6" rx="1.2"/>`).join('')}</g></g>`)}
+      ${casa(600, 190, 40, 40, '#5E86D6', '#2A4A8A', `<path d="M606 198 h10 v8 h-10Z" fill="#8AC8F0" stroke="#F6EBD6" stroke-width="1"/>`)}
+      ${casa(680, 194, 42, 34, '#7A9EE6', '#2E4E9A', `<g transform="translate(688 190) skewX(-20)"><rect x="0" y="-8" width="22" height="8" fill="#1E3A7A" stroke="#E6ECF8" stroke-width=".8"/><path d="M5.5 -8 v8 M11 -8 v8 M16.5 -8 v8 M0 -4 h22" stroke="#7AA8E6" stroke-width=".6"/></g>`)}
+      ${casa(720, 184, 46, 46, '#E8C070', '#9A6A1E', `<g><rect x="748" y="168" width="12" height="12" rx="2" fill="#2A2A34" stroke="#12121A" stroke-width=".8"/><path d="M748 172 h12" stroke="#4E4E5A" stroke-width="1"/></g>`)}
+      ${casa(764, 196, 40, 34, '#5E86D6', '#2A4A8A', '')}
+      <g class="balanca" style="animation-duration:3s"><path d="M640 186 C650 190 662 190 672 186" stroke="#5E4A3A" stroke-width=".7" fill="none"/>${[['#E5392C', 644], ['#FFC83D', 652], ['#2EAE8A', 660], ['#E84A8A', 667]].map(([c, x]) => `<path d="M${x} 188.6 h6 l-1 9 h-4Z" fill="${c}" stroke="#4E2E1E" stroke-width=".5"/>`).join('')}</g>
+      <g>${[[612, 228], [628, 230], [700, 228]].map(([x, y]) => `<path d="${copa(x, y - 5, 7, 6, 7, .35)}" fill="#C8288A" stroke="#7A1458" stroke-width=".8"/><g fill="#FF7AC8">${[[-3, -7], [2, -4], [4, -9]].map(([dx, dy]) => `<circle cx="${x + dx}" cy="${y + dy}" r="1.3"/>`).join('')}</g>`).join('')}</g>
+    </g>
+    <!-- nim com o langur -->
+    <g id="ba-nim"><path d="M582 230 C584 214 578 204 582 190 M582 206 C574 200 568 196 562 196 M582 200 C592 194 598 190 604 186" stroke="#5E4030" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="${copa(584, 176, 36, 20, 12, .3)}" fill="url(#baNeem)" stroke="#1E5A2E" stroke-width="1.6"/><path d="${copa(566, 168, 18, 12, 9, .3)}" fill="#5AAA4E"/><path d="${copa(600, 164, 18, 11, 9, .3)}" fill="#4E9E46"/>
+      ${textura(584, 176, 30, 16, 12, '#8ACB6A', 1.2)}</g>
+    <g id="ba-langur" class="toque" data-fig="langur"><g id="ba-lang-pos"><svg x="584" y="163" width="38" height="45" viewBox="0 0 110 130"><use href="#f-langur"/></svg></g>${brilhoHotspot(626, 168)}</g>
+    <!-- pavilhão do poço -->
+    <g id="ba-pavilhao" class="toque" data-fig="baoli">
+      <rect x="292" y="216" width="216" height="10" fill="#D9A06A" stroke="#8A5A30" stroke-width="1"/>
+      <rect x="300" y="194" width="200" height="22" fill="url(#baPav)" stroke="#8A5A30" stroke-width="1.2"/>
+      <g fill="#6A3420">${Array.from({ length:9 }, (_, i) => { const x = 309 + i * 22.6; return `<path d="M${x} 216 V204 C${x} 197 ${x + 13} 197 ${x + 13} 204 V216Z"/>`; }).join('')}</g>
+      <g fill="#FFE6C0" opacity=".6">${Array.from({ length:10 }, (_, i) => `<rect x="${302 + i * 22.6}" y="196" width="2" height="19"/>`).join('')}</g>
+      <rect x="294" y="189" width="212" height="5" fill="#E8B07A" stroke="#8A5A30" stroke-width="1"/><path d="M296 194 H504" stroke="#6A3A1A" stroke-width="1.2" opacity=".5"/>
+      <rect x="314" y="174" width="172" height="15" fill="url(#baPav)" stroke="#8A5A30" stroke-width="1.1"/>
+      <g fill="#7A3E22">${Array.from({ length:7 }, (_, i) => { const x = 350 + i * 15.4; return `<path d="M${x} 189 V181 C${x} 176 ${x + 9} 176 ${x + 9} 181 V189Z"/>`; }).join('')}</g>
+      ${[318, 466].map(x => `<g><rect x="${x}" y="176" width="16" height="11" fill="#F2C48E" stroke="#8A5A30" stroke-width=".8"/><path d="M${x - 2} 176 Q${x + 8} 168 ${x + 18} 176Z" fill="#E8B07A" stroke="#8A5A30" stroke-width=".8"/><g fill="#6A3420"><rect x="${x + 3}" y="179" width="3" height="6" rx="1.4"/><rect x="${x + 10}" y="179" width="3" height="6" rx="1.4"/></g><path d="M${x - 1} 187 h18" stroke="#8A5A30" stroke-width="1.6"/></g>`).join('')}
+      <g fill="#F2C48E" stroke="#8A5A30" stroke-width=".7">${Array.from({ length:15 }, (_, i) => `<rect x="${316 + i * 11.4}" y="169.4" width="5" height="4.6"/>`).join('')}</g>
+      <path d="M316 176 H484" stroke="#FFF2D8" stroke-width="1" opacity=".7"/>
+      ${brilhoHotspot(492, 182)}
+    </g>
+    <!-- poço -->
+    <path d="${poli(regiao)}" fill="#7A4A2A"/>
+    <g id="ba-paredes">${paredes}</g>
+    <path id="ba-cascata" d="M508 226 V230" stroke="#BFF0FF" stroke-width="4" fill="none" stroke-dasharray="5 6" stroke-linecap="round" style="opacity:0;transition:opacity .8s"/>
+    <rect width="800" height="500" fill="url(#baSombra)" clip-path="url(#baPocoC)" pointer-events="none"/>
+    <g id="ba-agua" class="toque">
+      <path id="ba-ag-sec" d="M0 0" fill="url(#baAg)" opacity=".56"/>
+      <path id="ba-ag-sup" d="M0 0" fill="url(#baAs)" opacity=".5"/>
+      <g clip-path="url(#baAguaC)" pointer-events="none"><rect id="ba-caus" x="160" y="200" width="520" height="300" fill="url(#baCaus)" opacity=".2"/><g><rect id="ba-caus2" x="160" y="206" width="520" height="300" fill="url(#baCaus)" opacity=".2"/></g></g>
+      <path id="ba-ag-fundo" d="M0 0" stroke="#E6FFFF" stroke-width="1" fill="none" opacity=".6"/>
+      <path id="ba-ag-borda" d="M0 0" stroke="#E6FFFF" stroke-width="2" fill="none" opacity=".95"/>
+    </g>
+    <g id="ba-criancas">${[[189, .72, '#7A4A2A', '#FFC83D', '#2E6AB0', '#1A1410', false], [189, .42, '#9A6440', '#2EAE8A', '#E84A8A', '#1A1410', true]].map(([x, d, pe, ca, sh, cb, mn], i) => { const q = P(x, d, 1), sc = (1 - .17 * d) * 1.4; return `<g class="ba-cr toque" data-i="${i}" style="opacity:0;transition:opacity 1s;pointer-events:none"><g transform="translate(${F(q[0])} ${F(q[1])}) scale(${sc.toFixed(3)})"><g class="ba-cr-in">${crianca(pe, ca, sh, cb, mn)}</g><rect x="-8" y="-30" width="16" height="32" fill="transparent"/></g></g>`; }).join('')}</g>
+    <path d="${linha([P(-W(0), 0, 0), P(-W(0), D(0), 0), P(W(0), D(0), 0), P(W(0), 0, 0)])}" stroke="#B87E4A" stroke-width="6" fill="none" stroke-linejoin="round"/>
+    <path d="${linha([P(-W(0), 0, 0), P(-W(0), D(0), 0), P(W(0), D(0), 0), P(W(0), 0, 0)])}" stroke="#F8DCAC" stroke-width="2.4" fill="none" stroke-linejoin="round" transform="translate(0 -1.4)"/>
+    <!-- terra cortada -->
+    <g clip-path="url(#baSoloC)" id="ba-solo">
+      <rect x="0" y="292" width="800" height="208" fill="#C98E54"/>
+      <path d="M0 298 C160 302 300 296 400 300 C520 304 660 296 800 300" stroke="#A86E3A" stroke-width="1" fill="none" opacity=".45"/>
+      <path d="M0 312 C120 306 260 316 400 310 C540 304 680 314 800 308 V500 H0Z" fill="#E2B67E"/>
+      <path d="M0 312 C120 306 260 316 400 310 C540 304 680 314 800 308" stroke="#F6D8A8" stroke-width="2" fill="none" opacity=".7"/>
+      <g fill="#C8975E" opacity=".55">${Array.from({ length:34 }, () => `<circle cx="${F(R(0, 800))}" cy="${F(R(320, 362))}" r="${F(R(.8, 1.5))}"/>`).join('')}</g>
+      <path d="M0 370 C140 364 260 374 400 368 C540 362 660 372 800 366 V500 H0Z" fill="#C77A62"/>
+      <path d="M0 370 C140 364 260 374 400 368 C540 362 660 372 800 366" stroke="#E2A088" stroke-width="2" fill="none" opacity=".6"/>
+      <g stroke="#A85A48" stroke-width="1.2" fill="none" opacity=".45" stroke-linecap="round"><path d="M0 388 C200 382 400 394 800 384"/><path d="M0 406 C220 402 420 412 800 402"/><path d="M60 396 C120 394 160 398 220 396 M520 392 C580 390 640 394 720 392"/></g>
+      <path d="M0 428 C140 424 280 432 400 428 C540 424 680 432 800 426 V500 H0Z" fill="#A88A70"/>
+      <path d="M0 428 C140 424 280 432 400 428 C540 424 680 432 800 426" stroke="#C8AE94" stroke-width="2" fill="none" opacity=".6"/>
+      <g>${Array.from({ length:26 }, () => { const x = R(0, 800), y = R(438, 496), rx = R(3, 6.4); return `<ellipse cx="${F(x)}" cy="${F(y)}" rx="${F(rx)}" ry="${F(rx * R(.55, .75))}" fill="${['#C2A88E', '#B89C82', '#CDB49A'][Math.floor(R(0, 3))]}" opacity=".8"/><ellipse cx="${F(x - rx * .25)}" cy="${F(y - rx * .2)}" rx="${F(rx * .4)}" ry="${F(rx * .2)}" fill="#E6D4BE" opacity=".6"/>`; }).join('')}</g>
+      <g stroke="#7A5232" stroke-width="1.1" fill="none" opacity=".6" stroke-linecap="round">${[30, 90, 150, 640, 700, 760].map(x => `<path d="M${x} 292 q-4 10 2 18 q4 6 -2 12 M${x + 4} 296 q6 6 4 14"/>`).join('')}</g>
+      <g id="ba-lencol"><rect id="ba-lencol-r" x="0" y="480" width="800" height="40" fill="#2E6AC8" opacity=".26"/><rect id="ba-lencol-b" x="0" y="480" width="800" height="40" fill="url(#baLencolG)"/><rect id="ba-lencol-p" x="0" y="480" width="800" height="40" fill="url(#baPoros)"/><path id="ba-lencol-l" d="M0 0 ${Array.from({ length:41 }, () => 'q5 -2.4 10 0 q5 2.4 10 0').join(' ')}" stroke="#E6F6FF" stroke-width="2.4" fill="none" transform="translate(0 480)"/></g>
+      <rect x="0" y="292" width="800" height="6" fill="#6E9A3A" opacity=".35"/>
+    </g>
+    <path d="${poli(solo)}" fill="none" stroke="#5E3418" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M0 292.6 H200 M600 292.6 H800" stroke="#FFE6B8" stroke-width="1.6" opacity=".8"/>
+    <!-- johad -->
+    <g id="ba-johad">
+      <ellipse cx="690" cy="258" rx="58" ry="12" fill="#B88A58" stroke="#8A5E34" stroke-width="1.2"/>
+      <path d="M650 256 l10 3 l8 -4 M676 262 l10 -3 l9 4 l10 -2 M716 256 l10 3 l8 -2" stroke="#7A5030" stroke-width="1" fill="none" opacity=".8"/>
+      <g id="ba-lago" style="transform-box:fill-box;transform-origin:50% 50%;transform:scale(0)"><ellipse cx="690" cy="257" rx="55" ry="10.6" fill="url(#baLagoG)" stroke="#1E6A9A" stroke-width="1.2"/><path d="M660 255 h20 M700 259 h16" stroke="#E6FFFF" stroke-width="1.3" stroke-linecap="round"/></g>
+      <path d="${monte(0, .2)}" fill="url(#baMonte)" stroke="#5E3A1A" stroke-width="1.2"/><path d="${monte(.8, 1)}" fill="url(#baMonte)" stroke="#5E3A1A" stroke-width="1.2"/>
+      ${SLOTS.map((sl, i) => `<g class="ba-vaga" data-i="${i}"><path class="ba-fant" d="${monte(sl.a, sl.b)}" fill="#FFF6E0" fill-opacity=".25" stroke="#FFF6E0" stroke-width="1.4" stroke-dasharray="4 3" style="opacity:0"/><path class="ba-cheio" d="${monte(sl.a, sl.b)}" fill="url(#baMonte)" stroke="#5E3A1A" stroke-width="1.2" style="transform-box:fill-box;transform-origin:50% 100%;transform:scale(0);transition:transform .6s cubic-bezier(.3,1.6,.5,1)"/><g class="ba-hint" style="display:none">${brilhoHotspot(+F(sl.c[0]), +F(sl.c[1] - 12))}</g></g>`).join('')}
+      <g class="ba-verdeja" style="opacity:0;transition:opacity 2.4s">${[.08, .3, .5, .7, .92].map(t => { const [x, y] = bez(t); return tufo(+F(x), +F(y - 4), .7, '#9AD050', '#3E7A22'); }).join('')}${tufo(636, 252, .9, '#7AC04A', '#2E6A1E')}${tufo(744, 250, .9, '#7AC04A', '#2E6A1E')}</g>
+    </g>
+    <g id="ba-ras">${ra(620, 290, 1.15, 0)}${ra(632, 266, 1, 1)}${ra(748, 266, 1, 2)}</g>
+    <g id="ba-construtores" style="opacity:0;transition:opacity 1.2s"><g transform="translate(614 256) scale(1.25) translate(-614 -256)">${construtor(614, 256)}</g><g transform="translate(770 252) scale(1.25) translate(-770 -252)">${construtora(770, 252)}</g></g>
+    <g id="ba-terras">${TERRA.map((t, i) => `<g class="ba-terra toque" data-i="${i}" transform="translate(${t.x} ${t.y})" style="display:none;cursor:grab">${torrao}<circle r="22" fill="transparent"/></g>`).join('')}</g>
+    <!-- gente e pavão (esquerda, na frente) -->
+    <g id="ba-mulher" class="toque">${mulher(146, 274)}<rect x="130" y="198" width="32" height="76" fill="transparent"/></g>
+    <g id="ba-menino" class="toque">${menino(186, 268)}<rect x="172" y="214" width="28" height="56" fill="transparent"/></g>
+    <g class="toque" data-fig="cantaro" id="ba-potes"><svg x="96" y="262" width="28" height="30" viewBox="0 0 100 110"><use href="#f-cantaro"/></svg><svg x="116" y="272" width="20" height="22" viewBox="0 0 100 110"><use href="#f-cantaro"/></svg>${brilhoHotspot(124, 260)}</g>
+    <g id="ba-pavao" class="toque" data-fig="pavao"><g id="ba-pav-in" style="transform-box:fill-box;transform-origin:50% 100%"><g class="balanca" style="animation-duration:4.2s"><svg x="0" y="206" width="94" height="87" viewBox="0 0 130 120"><use href="#f-pavao"/></svg></g></g>${brilhoHotspot(84, 214)}</g>
+    <g>${tufo(10, 293, 1.3, '#C8B860', '#7A6A2E')}${tufo(214, 293, 1.1, '#C8B860', '#7A6A2E')}${tufo(612, 293, 1.2, '#C8B860', '#7A6A2E')}${tufo(788, 293, 1.3, '#C8B860', '#7A6A2E')}</g>
+    <!-- a menina -->
+    <g id="ba-menina" class="toque" style="cursor:grab"><g id="ba-men-pos"><g class="ba-men-in">${menina()}</g><rect x="-14" y="-50" width="28" height="52" fill="transparent"/></g><g id="ba-men-hint" style="display:none"></g></g>
+    <!-- nuvens e vento -->
+    <g id="ba-vento" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" style="opacity:.7;transition:opacity 1.5s">${[[20, 120, 250, 90], [10, 160, 230, 150], [60, 60, 270, 46]].map(([x0, y0, x1, y1], i) => `<path class="ba-vt" d="M${x0} ${y0} C${x0 + 70} ${y0 - 30} ${x1 - 80} ${y1 + 30} ${x1} ${y1}" stroke-dasharray="14 12"/><path d="M${x1 - 10} ${y1 - 6} l10 6 l-10 6" opacity=".9"/>`).join('')}</g>
+    <g id="ba-nuvens">${NUV.map((n, i) => nuvem(i, n)).join('')}</g>
+    <g id="ba-mao" pointer-events="none"><path d="M170 96 C220 60 270 60 300 70" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="6 9"/><path d="M304 72 l-12 6 l2 -12Z" fill="#fff"/></g>
+    <g id="ba-calor" pointer-events="none" style="opacity:0;transition:opacity 2.5s"><rect width="800" height="292" fill="#FF8A2E" opacity=".16"/>${[[120, 240], [660, 230], [300, 200]].map(([x, y]) => `<path class="ba-onda" d="M${x} ${y} q6 -6 12 0 t12 0 t12 0" stroke="#FFF2D0" stroke-width="2" fill="none" opacity=".7"/>`).join('')}</g>
+    <rect width="800" height="500" fill="url(#baVinheta)" pointer-events="none"/><rect width="800" height="500" filter="url(#baGrao)" pointer-events="none"/>
+  </svg>`;
+  const c = criarCena(palco, svg), s = c.svg;
+  /* ---------- água ---------- */
+  const agSup = el(s, '#ba-ag-sup'), agSec = el(s, '#ba-ag-sec'), agBorda = el(s, '#ba-ag-borda'), agFundo = el(s, '#ba-ag-fundo'), clSup = el(s, '#ba-cl-sup'), clSec = el(s, '#ba-cl-sec');
+  const lenR = el(s, '#ba-lencol-r'), lenB = el(s, '#ba-lencol-b'), lenP = el(s, '#ba-lencol-p'), lenL = el(s, '#ba-lencol-l'), cascata = el(s, '#ba-cascata');
+  function desenhaAgua(){
+    const [sup, sec] = aguaPaths(zw); agSup.setAttribute('d', sup); agSec.setAttribute('d', sec); clSup.setAttribute('d', sup); clSec.setAttribute('d', sec);
+    const k = Math.min(NV - 1, Math.floor(zw)), a = P(-W(k), 0, zw), b = P(W(k), 0, zw), a2 = P(-W(k), D(k), zw), b2 = P(W(k), D(k), zw);
+    agBorda.setAttribute('d', zw < NV ? `M${F(a[0])} ${F(a[1])} L${F(b[0])} ${F(b[1])}` : 'M0 0');
+    agFundo.setAttribute('d', zw < NV ? `M${F(a[0])} ${F(a[1])} L${F(a2[0])} ${F(a2[1])} L${F(b2[0])} ${F(b2[1])} L${F(b[0])} ${F(b[1])}` : 'M0 0');
+    const yl = 292 + zw * 28; lenB.setAttribute('y', F(yl)); lenB.setAttribute('height', '54'); lenR.setAttribute('y', F(yl)); lenR.setAttribute('height', F(Math.max(0, 500 - yl))); lenP.setAttribute('y', F(yl)); lenP.setAttribute('height', F(Math.max(0, 500 - yl))); lenL.setAttribute('transform', `translate(${(-(performance.now() / 60) % 20).toFixed(1)} ${F(yl)})`);
+    const fundo = P(130, D(k), zw)[1]; cascata.setAttribute('d', `M508 226 V${F(fundo)}`);
+  }
+  desenhaAgua();
+  const yAgua = () => { const k = Math.min(NV - 1, Math.floor(zw)); return [P(0, D(k), zw)[1], P(0, 0, zw)[1], W(k)]; };
+  const chuvaEm = (x0, x1, y0, n, ms) => {
+    for (let i = 0; i < n; i++) depois(i * ms / n, () => {
+      const x = sorte(x0, x1); let chao;
+      const [yb, yf, w] = yAgua();
+      if (x > 400 - w * .86 && x < 400 + w * .86 && zw < NV) chao = sorte(yb + 2, yf - 2);
+      else if (x > 232 && x < 568) chao = sorte(240, 300);
+      else if (x > 630 && x < 750 && fase === 'chuva2') chao = sorte(250, 264);
+      else chao = sorte(200, 290);
+      c.add({ tipo:'chuva', x, y:y0 + sorte(-8, 8), vx:.8, vy:sorte(9, 12), chao, cor:'#4A8EF0' });
+    });
+  };
+  const mao = el(s, '#ba-mao'); mao.animate([{ opacity:.2 }, { opacity:1 }, { opacity:.2 }], { duration:1600, iterations:Infinity });
+  s.querySelectorAll('.ba-vt').forEach((v, i) => v.animate([{ strokeDashoffset:0 }, { strokeDashoffset:-52 }], { duration:1400 + i * 300, iterations:Infinity }));
+  s.querySelectorAll('.ba-onda').forEach((v, i) => v.animate([{ transform:'translateY(0)', opacity:.1 }, { transform:'translateY(-14px)', opacity:.8 }, { transform:'translateY(-28px)', opacity:0 }], { duration:2400 + i * 500, iterations:Infinity }));
+  cascata.animate([{ strokeDashoffset:0 }, { strokeDashoffset:-22 }], { duration:500, iterations:Infinity });
+  el(s, '#ba-caus').animate([{ transform:'translate(0,0)' }, { transform:'translate(-40px,0)' }], { duration:5200, iterations:Infinity });
+  el(s, '#ba-caus2').animate([{ transform:'translate(-40px,0)', opacity:.04 }, { transform:'translate(-20px,0)', opacity:.18 }, { transform:'translate(0,0)', opacity:.04 }], { duration:3800, iterations:Infinity });
+  const verdeja = op => s.querySelectorAll('.ba-verdeja').forEach(g => g.style.opacity = op);
+  const trovao = () => { if (somOn) { try { ruido(1.4, 'lowpass', 180, .22); } catch (e) {} } };
+  /* pavão dança */
+  let dancando = false;
+  function danca(fala){
+    if (fala) api.diz(fala);
+    if (dancando) return; dancando = true;
+    if (somOn) { tom(620, 0, .34, 'triangle', .07, 980); tom(980, .4, .42, 'triangle', .06, 600); }
+    el(s, '#ba-pav-in').animate([{ transform:'translateY(0) rotate(0)' }, { transform:'translateY(-6px) rotate(-6deg)' }, { transform:'translateY(0) rotate(5deg)' }, { transform:'translateY(-6px) rotate(-5deg)' }, { transform:'translateY(0) rotate(4deg)' }, { transform:'translateY(-4px) rotate(-3deg)' }, { transform:'translateY(0) rotate(0)' }], { duration:1800, easing:'ease-in-out' }).onfinish = () => { dancando = false; };
+    c.brilhos(48, 240, 6, '#7AE0C8');
+    el(s, '#ba-pav-in').animate([{ filter:'brightness(1) saturate(1)' }, { filter:'brightness(1.25) saturate(1.6) hue-rotate(-12deg)' }, { filter:'brightness(1.05) saturate(1.2) hue-rotate(10deg)' }, { filter:'brightness(1.3) saturate(1.7)' }, { filter:'brightness(1) saturate(1)' }], { duration:1800, easing:'ease-in-out' });
+    for (let i = 0; i < 12; i++) depois(i * 110, () => { const a = Math.PI * (1.04 + .92 * i / 11), r = sorte(30, 42); c.add({ tipo:'brilho', x:33 + Math.cos(a) * r * 1.05, y:262 + Math.sin(a) * r, cor:['#7AF0FF', '#FFE27A', '#9AFF9A'][i % 3] }); });
+  }
+  /* ---------- 1. a monção: arrastar as nuvens do mar para a terra ---------- */
+  const nuvs = [...s.querySelectorAll('.ba-nuvem')], npos = NUV.map(n => ({ x:n.x, y:n.y, ok:false }));
+  const poeN = i => nuvs[i].setAttribute('transform', `translate(${F(npos[i].x)} ${F(npos[i].y)})`);
+  const voa = (i, x1, y1, ms, fim) => { const x0 = npos[i].x, y0 = npos[i].y; tween(ms, e => { npos[i].x = x0 + (x1 - x0) * e; npos[i].y = y0 + (y1 - y0) * e; poeN(i); }, fim); };
+  let arrN = null;
+  nuvs.forEach((g, i) => g.addEventListener('pointerdown', e => {
+    if (fase !== 'vento' || npos[i].ok || npos[i].voando) return; e.stopPropagation();
+    const p = c.ponto(e); arrN = { i, dx:p.x - npos[i].x, dy:p.y - npos[i].y, x0:p.x, y0:p.y, moveu:false };
+    s.setPointerCapture(e.pointerId); g.style.cursor = 'grabbing'; mao.style.display = 'none'; toca('clique');
+  }));
+  s.addEventListener('pointermove', e => {
+    if (!arrN) return; const p = c.ponto(e);
+    if (Math.hypot(p.x - arrN.x0, p.y - arrN.y0) > 8) arrN.moveu = true;
+    npos[arrN.i].x = Math.max(40, Math.min(760, p.x - arrN.dx)); npos[arrN.i].y = Math.max(40, Math.min(150, p.y - arrN.dy)); poeN(arrN.i);
+  });
+  s.addEventListener('pointerup', () => {
+    if (!arrN) return; const { i, moveu } = arrN; arrN = null; nuvs[i].style.cursor = '';
+    const n = NUV[i];
+    if (!moveu || npos[i].x > 250) { npos[i].voando = true; voa(i, n.tx, n.ty, moveu ? 900 : 1700, () => chegaNuvem(i)); if (!moveu) api.diz('O vento leva a nuvem do mar para a terra!'); }
+    else { voa(i, n.x, n.y, 700); api.diz('Arraste a nuvem até a terra seca, perto do poço!'); }
+  });
+  function chegaNuvem(i){
+    npos[i].ok = true; nuvensOk++;
+    el(nuvs[i], '.ba-ne').style.opacity = 1; el(nuvs[i], '.ba-nc').style.transition = 'opacity 1.6s'; el(nuvs[i], '.ba-nc').style.opacity = 0;
+    el(s, '#ba-monsao').style.opacity = (.16 * nuvensOk).toFixed(2);
+    trovao(); depois(500, () => toca('chuva'));
+    chuvaEm(npos[i].x - 60 * NUV[i].s, npos[i].x + 60 * NUV[i].s, npos[i].y + 18, 90, 3600);
+    chovendo++; cascata.style.opacity = 1; depois(4400, () => { if (--chovendo <= 0) cascata.style.opacity = 0; });
+    alvoZw = [4.9, 3.0, 1.1][nuvensOk - 1]; taxa = 1.1;
+    api.hud(`<span class="chip">Nuvens: ${nuvensOk}/3</span>`);
+    if (nuvensOk === 1) { api.diz('É a monção! No verão, o vento sopra do oceano e traz nuvens cheias de chuva.'); verdeja(.5); }
+    if (nuvensOk === 2) { api.diz('Olha o poço enchendo, andar por andar!'); danca(); }
+    if (nuvensOk === 3) {
+      fase = 'cheio'; verdeja(1); depois(1800, () => mostraRa(0, true));
+      depois(3800, () => {
+        toca('vitoria'); el(s, '#ba-arco').style.opacity = 1; el(s, '#ba-monsao').style.opacity = .1; danca();
+        api.diz('Quase toda a chuva do ano cai em poucos meses. Por isso o povo daqui aprendeu a guardar cada gota!');
+        depois(6400, comecaSeca);
+      });
+    }
+  }
+  /* ---------- 2. os meses secos: descer os degraus até a água ---------- */
+  function comecaSeca(){
+    fase = 'seca'; mostraRa(0, false); el(s, '#ba-vento').style.opacity = 0; el(s, '#ba-arco').style.opacity = 0; el(s, '#ba-monsao').style.opacity = 0; el(s, '#ba-calor').style.opacity = 1; verdeja(.25);
+    nuvs.forEach((g, i) => { voa(i, 900 + i * 60, npos[i].y - 20, 3000 + i * 400); });
+    api.hud('<span class="chip">Meses secos</span>');
+    api.diz('Agora vêm os meses secos. Sem chuva, a água vai baixando...');
+    alvoZw = ZW_SECA; taxa = .55;
+    const espera = () => { if (Math.abs(zw - ZW_SECA) < .02) comecaDescida(); else depois(300, espera); };
+    depois(1200, espera);
+  }
+  /* caminho da menina pelas escadas da parede esquerda */
+  const way = [[-W(0) - 12, D(0) - .12, 0]];
+  for (let k = 0; k < 6; k++) { const a = k % 2 ? .12 : D(k) - .12, b = k % 2 ? D(k) - .12 : .12; way.push([-W(k) + 7, a, k]); if (k < 5) way.push([-W(k) + 7, b, k + 1]); else { const f = ZW_SECA - .14 - 5; way.push([-W(k) + 7, a + (b - a) * f, 5 + f]); } }
+  const amostras = [], fimLance = [];
+  for (let j = 0; j < way.length - 1; j++) {
+    const A = way[j], B = way[j + 1], pa = P(...A), pb = P(...B), n = Math.max(2, Math.ceil(Math.hypot(pb[0] - pa[0], pb[1] - pa[1]) / 2.5));
+    for (let q = (j ? 1 : 0); q <= n; q++) { const t = q / n, x = A[0] + (B[0] - A[0]) * t, d = A[1] + (B[1] - A[1]) * t, z = A[2] + (B[2] - A[2]) * t, p = P(x, d, z); amostras.push({ x:p[0], y:p[1], sc:1 - .17 * d }); }
+    if (j >= 1 && j % 2 === 1) fimLance.push(amostras.length - 1);
+  }
+  let cur = 0, vira = 1;
+  const menG = el(s, '#ba-men-pos');
+  function poeMenina(){
+    const a = amostras[cur], b = amostras[Math.min(amostras.length - 1, cur + 2)], v = amostras[Math.max(0, cur - 2)];
+    const dx = (b.x - v.x); if (Math.abs(dx) > .6) vira = dx > 0 ? 1 : -1;
+    const k = a.sc * 1.3; menG.setAttribute('transform', `translate(${F(a.x)} ${F(a.y)}) scale(${(k * vira).toFixed(3)} ${k.toFixed(3)})`);
+  }
+  poeMenina();
+  function comecaDescida(){
+    fase = 'descer'; el(s, '#ba-calor').style.opacity = .55;
+    api.hud('<span class="chip">Andares: 0/6</span>');
+    api.diz('A água desceu, mas a escada chega até ela, em qualquer altura!');
+    api.diz('Arraste a menina pelos degraus até a água!');
+    const h = el(s, '#ba-men-hint'); h.style.display = '';
+    h.innerHTML = `<path d="${linha(amostras.slice(0, fimLance[1]).filter((_, i) => i % 3 === 0).map(a => [a.x, a.y - 8]))}" stroke="#fff" stroke-width="3" fill="none" stroke-dasharray="5 7" stroke-linecap="round" opacity=".9"/>${brilhoHotspot(+F(amostras[0].x + 12), +F(amostras[0].y - 50))}`;
+    h.animate([{ opacity:.25 }, { opacity:1 }, { opacity:.25 }], { duration:1600, iterations:Infinity });
+  }
+  function irPara(j){
+    if (j <= cur) return; cur = Math.min(amostras.length - 1, j); poeMenina();
+    while (andares < 6 && cur >= fimLance[andares]) {
+      andares++; toca('clique'); api.hud(`<span class="chip">Andares: ${andares}/6</span>`);
+      if (andares === 3) api.diz('Quanto mais fundo, mais fresquinho. As paredes fazem sombra na água.');
+    }
+    if (cur >= amostras.length - 1 && fase === 'descer') chegouAgua();
+  }
+  let arrM = null;
+  el(s, '#ba-menina').addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    if (fase !== 'descer' || anda) { if (fase !== 'descer') { toca('pop'); api.diz(fase === 'johad' || fase === 'chuva2' ? 'A água do poço é de todos. Cada um pega só o que precisa.' : 'Eu venho buscar água no poço de degraus.'); } return; }
+    const p = c.ponto(e); arrM = { x0:p.x, y0:p.y, moveu:false }; s.setPointerCapture(e.pointerId); el(s, '#ba-men-hint').style.display = 'none';
+  });
+  s.addEventListener('pointermove', e => {
+    if (!arrM) return; const p = c.ponto(e);
+    if (Math.hypot(p.x - arrM.x0, p.y - arrM.y0) > 6) arrM.moveu = true;
+    let melhor = -1, md = 1e9;
+    for (let j = cur; j < Math.min(amostras.length, cur + 40); j++) { const a = amostras[j], dd = Math.hypot(a.x - p.x, a.y - 29 * a.sc - p.y), nota = dd - .875 * (j - cur); if (dd < 80 && nota < md) { md = nota; melhor = j; } }
+    if (melhor > cur) irPara(melhor);
+  });
+  s.addEventListener('pointerup', () => { if (!arrM) return; const m = arrM.moveu; arrM = null; if (!m) avanca(); });
+  function avanca(){
+    if (fase !== 'descer' || anda) return; anda = true; const alvo = fimLance[Math.min(5, andares)];
+    (function passo(){ if (!vivo) return; if (cur < alvo && fase === 'descer') { irPara(cur + 1); requestAnimationFrame(passo); } else anda = false; })();
+  }
+  function chegouAgua(){
+    fase = 'agua'; anda = false;
+    const a = amostras[amostras.length - 1]; toca('splash');
+    for (let i = 0; i < 4; i++) c.add({ tipo:'respingo', x:a.x + 14 + i * 4, y:yAgua()[1] - 6, t:i * 3, cor:'#E6FFFF' });
+    depois(500, () => { menG.querySelector('.ba-pq').style.display = 'none'; menG.querySelector('.ba-pc').style.display = ''; toca('glub'); c.brilhos(a.x, a.y - 60, 5, '#BFF0FF'); });
+    api.diz('Lá no fundo, na sombra, a água fica fresquinha e evapora bem menos.');
+    depois(3000, () => {
+      api.diz('Ela leva a água para casa no cântaro de barro.');
+      const ini = cur, t0 = performance.now();
+      (function sobe(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / 5600); cur = Math.round(ini * (1 - k)); poeMenina(); if (k < 1) requestAnimationFrame(sobe); else { vira = 1; poeMenina(); depois(800, comecaJohad); } })(t0);
+    });
+  }
+  /* ---------- 3. o johad: murinho de terra que segura a chuva ---------- */
+  const terras = [...s.querySelectorAll('.ba-terra')], tpos = TERRA.map(t => ({ x:t.x, y:t.y, foi:false })), vagas = [...s.querySelectorAll('.ba-vaga')], ocupada = [false, false, false];
+  const poeT = (i, k) => terras[i].setAttribute('transform', `translate(${F(tpos[i].x)} ${F(tpos[i].y)}) scale(${k || 1})`);
+  function comecaJohad(){
+    fase = 'johad'; el(s, '#ba-construtores').style.opacity = 1;
+    terras.forEach(t => t.style.display = ''); vagas.forEach(v => { el(v, '.ba-fant').style.opacity = 1; el(v, '.ba-hint').style.display = ''; });
+    api.hud('<span class="chip">Johad: 0/3</span>');
+    api.diz('E se a seca for longa? As vilas daqui constroem johads: murinhos de terra que seguram a água da chuva.');
+    api.diz('Arraste a terra para montar o johad!');
+  }
+  let arrT = null;
+  terras.forEach((g, i) => g.addEventListener('pointerdown', e => {
+    if (fase !== 'johad' || tpos[i].foi || ocupado) return; e.stopPropagation();
+    const p = c.ponto(e); arrT = { i, dx:p.x - tpos[i].x, dy:p.y - tpos[i].y, x0:p.x, y0:p.y, moveu:false };
+    s.setPointerCapture(e.pointerId); g.style.cursor = 'grabbing'; toca('clique');
+  }));
+  s.addEventListener('pointermove', e => {
+    if (!arrT) return; const p = c.ponto(e);
+    if (Math.hypot(p.x - arrT.x0, p.y - arrT.y0) > 6) arrT.moveu = true;
+    tpos[arrT.i].x = Math.max(20, Math.min(790, p.x - arrT.dx)); tpos[arrT.i].y = Math.max(190, Math.min(300, p.y - arrT.dy)); poeT(arrT.i, 1.1);
+  });
+  s.addEventListener('pointerup', () => {
+    if (!arrT) return; const { i, moveu } = arrT; arrT = null; terras[i].style.cursor = 'grab';
+    let v = -1, md = 70;
+    SLOTS.forEach((sl, j) => { if (ocupada[j]) return; const dd = Math.hypot(sl.c[0] - tpos[i].x, sl.c[1] - tpos[i].y); if (dd < md) { md = dd; v = j; } });
+    if (!moveu) v = ocupada.indexOf(false);
+    if (v < 0) { const t = TERRA[i], x0 = tpos[i].x, y0 = tpos[i].y; tween(600, e => { tpos[i].x = x0 + (t.x - x0) * e; tpos[i].y = y0 + (t.y - y0) * e; poeT(i); }); api.diz('Leve a terra até o tracejado do murinho!'); return; }
+    ocupada[v] = true; tpos[i].foi = true; ocupado = true;
+    const x0 = tpos[i].x, y0 = tpos[i].y, [x1, y1] = SLOTS[v].c;
+    tween(560, (e, k) => { tpos[i].x = x0 + (x1 - x0) * e; tpos[i].y = y0 + (y1 - y0) * e - Math.sin(k * Math.PI) * 22; poeT(i, 1 - .3 * e); }, () => { ocupado = false; assenta(i, v); });
+  });
+  function assenta(i, v){
+    terras[i].style.display = 'none'; const vg = vagas[v]; el(vg, '.ba-fant').style.opacity = 0; el(vg, '.ba-hint').style.display = 'none'; el(vg, '.ba-cheio').style.transform = 'scale(1)';
+    toca('pop'); const [x, y] = SLOTS[v].c; for (let q = 0; q < 5; q++) c.add({ tipo:'respingo', x:x + sorte(-14, 14), y:y + sorte(-2, 3), t:q * 2, cor:'#8A5A2E' });
+    blocos++; api.hud(`<span class="chip">Johad: ${blocos}/3</span>`);
+    if (blocos === 1) api.diz('Isso! A terra bem socada vira um muro firme.');
+    if (blocos === 3) {
+      fase = 'nuvem2'; toca('ok'); api.diz('O johad está pronto! Agora só falta a chuva.');
+      el(s, '#ba-vento').style.opacity = .7; const g = nuvs[0]; el(g, '.ba-nc').style.opacity = 1; el(g, '.ba-ne').style.opacity = 0; npos[0].x = -90; npos[0].y = 70; poeN(0);
+      voa(0, 690, 96, 3200, () => {
+        el(g, '.ba-ne').style.opacity = 1; el(g, '.ba-nc').style.opacity = 0; fase = 'chuva2'; el(s, '#ba-monsao').style.opacity = .3; el(s, '#ba-calor').style.opacity = 0;
+        api.diz('Toque na nuvem para chover no johad!');
+        const h = document.createElementNS('http://www.w3.org/2000/svg', 'g'); h.id = 'ba-nuv-hint'; h.innerHTML = brilhoHotspot(740, 74); s.appendChild(h);
+      });
+    }
+  }
+  nuvs[0].addEventListener('click', e => {
+    if (fase !== 'chuva2' || ocupado) return; e.stopPropagation(); ocupado = true; fase = 'recarga';
+    const h = el(s, '#ba-nuv-hint'); if (h) h.remove(); el(s, '#ba-vento').style.opacity = 0;
+    trovao(); toca('chuva'); chuvaEm(600, 790, 116, 120, 4200); chovendo++; cascata.style.opacity = 1; depois(4600, () => { if (--chovendo <= 0) cascata.style.opacity = 0; }); depois(2200, () => toca('chuva'));
+    tween(3600, e => { el(s, '#ba-lago').style.transform = `scale(${(.15 + .85 * e).toFixed(3)})`; });
+    depois(1200, () => { el(s, '#ba-lago').style.transform = 'scale(.2)'; api.diz('A água da chuva fica presa no johad e não escorre embora.'); });
+    depois(3600, recarga);
+  });
+  function recarga(){
+    let n = 0;
+    for (let i = 0; i < 28; i++) depois(i * 160, () => {
+      const x = sorte(648, 732), yl = 292 + zw * 28 + 6;
+      c.add({ tipo:'infiltra', x0:x, y0:262, x1:x + sorte(-6, 6), y1:yl, dur:sorte(70, 100), f:sorte(0, 6), chega:() => {
+        const k = Math.min(NV - 1, Math.floor(zw)), xp = 400 + W(k) + 4, y2 = 292 + zw * 28 + 6;
+        c.add({ tipo:'infiltra', x0:x, y0:y2, x1:xp, y1:y2, dur:sorte(60, 90), f:sorte(0, 6), chega:() => { alvoZw = Math.max(1.8, alvoZw - .14); taxa = .8; n++; if (n % 6 === 1) toca('glub'); } });
+      } });
+    });
+    depois(1600, () => { verdeja(1); mostraRa(0, true); mostraRa(1, true); mostraRa(2, true); api.diz('Devagarinho, a água entra na terra e enche a água lá de baixo. O poço enche de novo!'); });
+    depois(5200, () => { danca(); el(s, '#ba-arco').style.opacity = 1; el(s, '#ba-monsao').style.opacity = .08; voa(0, 980, 60, 3600); });
+    const fim = () => {
+      if (zw > 2.2) { depois(400, fim); return; }
+      fase = 'fim'; toca('vitoria');
+      api.hud('<span class="chip">Poço cheio!</span>');
+      api.diz('Há mais de mil anos, o povo da Índia guarda a água da monção. Com poços de degraus e johads, até rios que tinham secado voltaram a correr!');
+      depois(6800, api.fim);
+    };
+    depois(6000, fim);
+  }
+  /* ---------- toques extras ---------- */
+  el(s, '#ba-pavao').addEventListener('click', () => { danca(fase === 'vento' ? 'Sou o Neel! Quando as nuvens da chuva chegam, eu abro o leque e danço.' : 'Meu leque tem mais de cem penas com desenhos de olhos!'); });
+  let esqOcupado = false;
+  el(s, '#ba-esquilo').addEventListener('click', e => { e.stopPropagation(); if (esqOcupado) return; esqOcupado = true;
+    if (somOn) [0, .1, .2, .3].forEach(t => tom(2600, t, .05, 'square', .02, 3400));
+    el(s, '#ba-esq-in').animate([{ transform:'translate(0,0) rotate(0)' }, { transform:'translate(14px,-2px) rotate(0)' }, { transform:'translate(20px,-8px) rotate(80deg)' }, { transform:'translate(21px,-30px) rotate(84deg)' }, { transform:'translate(21px,-30px) rotate(84deg)' }, { transform:'translate(20px,-8px) rotate(80deg)' }, { transform:'translate(0,0) rotate(0)' }], { duration:2600, easing:'ease-in-out' }).onfinish = () => { esqOcupado = false; };
+    api.diz('É um esquilo-palmista: ele tem três listras nas costas e sobe nas árvores num instante!'); });
+  let langOcupado = false;
+  el(s, '#ba-langur').addEventListener('click', () => { if (langOcupado) return; langOcupado = true;
+    if (somOn) { tom(900, 0, .12, 'square', .03, 1300); tom(1200, .14, .12, 'square', .03, 800); }
+    const lp = el(s, '#ba-lang-pos');
+    lp.animate([{ transform:'translate(0,0)' }, { transform:'translate(-60px,-70px)' }, { transform:'translate(-112px,-38px)' }], { duration:900, easing:'ease-in-out', fill:'forwards' }).onfinish = () => {
+      depois(1600, () => { lp.animate([{ transform:'translate(-112px,-38px)' }, { transform:'translate(-60px,-70px)' }, { transform:'translate(0,0)' }], { duration:900, easing:'ease-in-out', fill:'forwards' }).onfinish = () => { langOcupado = false; }; }); };
+    api.diz('O langur tem a cara preta e uma cauda mais comprida que o corpo!'); });
+  el(s, '#ba-pavilhao').addEventListener('click', () => { toca('ok'); api.diz('Na Índia, o poço de degraus Chand Baori tem uns 3.500 degraus. São 13 andares!'); });
+  el(s, '#ba-potes').addEventListener('click', () => { toca('pop'); api.diz('O pote de barro solta um pouquinho de água pelos furinhos. Ela evapora e deixa a água de dentro fresquinha.'); });
+  el(s, '#ba-mulher').addEventListener('click', e => { e.stopPropagation(); toca('pop'); api.diz('O poço de degraus também era lugar de encontro. Lá embaixo dava para descansar no fresquinho.'); });
+  el(s, '#ba-menino').addEventListener('click', e => { e.stopPropagation(); toca('pop'); el(s, '#ba-aceno').animate([{ transform:'rotate(0)' }, { transform:'rotate(-24deg)' }, { transform:'rotate(10deg)' }, { transform:'rotate(0)' }], { duration:700, iterations:2 }); api.diz('Hoje a vila tem torneira e painel solar, mas a água ainda vem da chuva guardada na terra.'); });
+  el(s, '#ba-vila').addEventListener('click', e => { e.stopPropagation(); toca('clique'); api.diz('Muitas casas daqui são pintadas de azul. Dizem que a cor deixa a casa mais fresca.'); });
+  el(s, '#ba-agua').addEventListener('click', e => { e.stopPropagation(); const p = c.ponto(e); toca('splash'); for (let i = 0; i < 3; i++) c.add({ tipo:'respingo', x:p.x, y:p.y, t:i * 4, cor:'#E6FFFF' }); peixePula = { x:p.x, y:p.y, t:0 }; api.diz('Tem peixinhos morando no poço!'); });
+  /* rãs que coaxam depois da chuva */
+  const ras = [...s.querySelectorAll('.ba-ra')];
+  function mostraRa(i, on){ const r = ras[i]; r.style.opacity = on ? 1 : 0; r.style.pointerEvents = on ? '' : 'none'; if (on && i !== 2) coaxa(i, true); }
+  function coaxa(i, quieta){
+    const r = ras[i];
+    if (somOn) [0, .32].forEach(t => { tom(150 + i * 14, t, .2, 'sawtooth', .05, 110); tom(300 + i * 20, t + .02, .16, 'triangle', .03, 220); });
+    el(r, '.ba-saco').animate([{ transform:'scale(.25)' }, { transform:'scale(1.15)' }, { transform:'scale(.4)' }, { transform:'scale(1.1)' }, { transform:'scale(.25)' }], { duration:760, easing:'ease-in-out' });
+    el(r, '.ba-ra-in').animate([{ transform:'translateY(0)' }, { transform:'translateY(-2px)' }, { transform:'translateY(0)' }, { transform:'translateY(-2px)' }, { transform:'translateY(0)' }], { duration:760 });
+    if (!quieta) api.diz('É a rã-touro-indiana! Na monção, o macho fica amarelo e enche dois balões azuis para coaxar.');
+  }
+  ras.forEach((r, i) => r.addEventListener('click', e => { e.stopPropagation(); coaxa(i); }));
+  /* criançada pulando na água do poço */
+  const crs = [...s.querySelectorAll('.ba-cr')]; let crVis = false; const crOcup = [false, false];
+  crs.forEach((g, i) => g.addEventListener('click', e => {
+    e.stopPropagation(); if (crOcup[i] || !crVis) return; crOcup[i] = true;
+    const x = 189, d = i ? .42 : .72, sc = (1 - .17 * d) * 1.4, q0 = P(x, d, 1), q1 = P(x - 34, d, zw + .15), dx = (q1[0] - q0[0]) / sc, dy = (q1[1] - q0[1]) / sc;
+    toca('pop');
+    el(g, '.ba-cr-in').animate([{ transform:'translate(0,0) rotate(0)', opacity:1 }, { transform:`translate(${F(dx * .45)}px,-26px) rotate(-20deg)`, opacity:1, offset:.45 }, { transform:`translate(${F(dx)}px,${F(dy)}px) rotate(-40deg)`, opacity:1, offset:.85 }, { transform:`translate(${F(dx)}px,${F(dy + 8)}px) rotate(-40deg)`, opacity:0 }], { duration:900, easing:'ease-in' }).onfinish = () => {
+      toca('splash'); for (let j = 0; j < 5; j++) c.add({ tipo:'respingo', x:q1[0] + sorte(-6, 6), y:q1[1] - 2, t:j * 2, cor:'#E6FFFF' });
+      const inn = el(g, '.ba-cr-in'); inn.style.opacity = 0;
+      depois(1500, () => { inn.animate([{ opacity:0 }, { opacity:1 }], { duration:600, fill:'forwards' }).onfinish = () => { inn.style.opacity = ''; crOcup[i] = false; }; });
+    };
+    api.diz(i ? 'Tchibum! No calor, a criançada se refresca na água do poço.' : 'Os degraus descem até a água. Dá para pular e nadar perto da escada!');
+  }));
+  const vigiaCr = () => { const v = zw < 3.2 && fase !== 'descer' && fase !== 'agua'; if (v !== crVis) { crVis = v; crs.forEach(g => { g.style.opacity = v ? 1 : 0; g.style.pointerEvents = v ? '' : 'none'; }); } };
+  let aves = [];
+  el(s, '#ba-nim').addEventListener('click', e => { e.stopPropagation(); if (aves.length) return; [1800, 2100, 1700, 2300].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .08, 'square', .025, f * 1.3), i * 120)); aves = Array.from({ length:6 }, (_, i) => ({ x:584 + sorte(-24, 24), y:172 + sorte(-10, 10), vx:-sorte(2.4, 3.4), vy:-sorte(.4, 1.2), f:sorte(0, 6) })); api.diz('Periquitos-de-colar! Eles moram nas árvores da vila.'); });
+  /* ---------- quadro a quadro: nível da água, peixes e periquitos ---------- */
+  let peixePula = null;
+  const peixes = [0, 1, 2].map(i => ({ a:i * 2.1, v:.006 + i * .002, cor:['#FF8A3A', '#FFC83D', '#FF6A5A'][i] }));
+  c.desenho(ctx => {
+    const agora = performance.now(), dt = Math.min(.06, (agora - ultQ) / 1000); ultQ = agora;
+    if (Math.abs(alvoZw - zw) > .0005) {
+      const antes = Math.floor(zw); zw += Math.sign(alvoZw - zw) * Math.min(taxa * dt, Math.abs(alvoZw - zw));
+      if (Math.floor(zw) !== antes && somOn) toca('glub');
+    }
+    desenhaAgua(); vigiaCr();
+    const t = performance.now() / 1000;
+    if (zw < 6.5) {
+      const k = Math.min(NV - 1, Math.floor(zw)), cx0 = P(0, D(k) * .5, zw), rx = W(k) * .55, ry = (P(0, 0, zw)[1] - P(0, D(k), zw)[1]) * .28;
+      peixes.forEach(p => {
+        p.a += p.v; const x = cx0[0] + Math.cos(p.a) * rx, y = cx0[1] + Math.sin(p.a) * ry, ang = Math.atan2(Math.cos(p.a) * ry, -Math.sin(p.a) * rx);
+        ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.globalAlpha = .55; ctx.fillStyle = p.cor;
+        const ab = Math.sin(t * 9 + p.a) * 1.6;
+        ctx.beginPath(); ctx.ellipse(0, 0, 7, 3, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(-11, -3.4 + ab); ctx.lineTo(-11, 3.4 + ab); ctx.closePath(); ctx.fill(); ctx.restore();
+      });
+    }
+    if (peixePula) {
+      const k = peixePula.t / 40; peixePula.t++;
+      const x = peixePula.x + k * 22, y = peixePula.y - Math.sin(k * Math.PI) * 30;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(-1.2 + k * 2.4); ctx.globalAlpha = 1; ctx.fillStyle = '#FF8A3A'; ctx.strokeStyle = '#8A3A10'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(0, 0, 8, 3.6, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(-12, -4); ctx.lineTo(-12, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#12121A'; ctx.beginPath(); ctx.arc(4.4, -.8, 1, 0, 7); ctx.fill(); ctx.restore();
+      if (k >= 1) { c.add({ tipo:'respingo', x, y, t:0, cor:'#E6FFFF' }); peixePula = null; }
+    }
+    if (aves.length) {
+      aves.forEach(a => {
+        a.x += a.vx; a.y += a.vy + Math.sin(t * 6 + a.f) * .4;
+        ctx.save(); ctx.translate(a.x, a.y); ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#2E8A2E'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(4, 0); ctx.lineTo(16, 3); ctx.stroke();
+        ctx.fillStyle = '#5ACB4A'; ctx.strokeStyle = '#1E6A1E'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(0, 0, 6, 3.4, 0, 0, 7); ctx.fill(); ctx.stroke();
+        const fl = Math.sin(t * 22 + a.f) * 6; ctx.fillStyle = '#3EA83A'; ctx.beginPath(); ctx.moveTo(-1, -1); ctx.lineTo(3, -1); ctx.lineTo(2, -1 - fl); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#E5392C'; ctx.beginPath(); ctx.arc(-6.4, .6, 1.6, 0, 7); ctx.fill(); ctx.restore();
+      });
+      if (aves.every(a => a.x < -30)) aves = [];
+    }
+  });
+  api.hud('<span class="chip">Nuvens: 0/3</span>');
+  api.diz('Oi, eu sou o Neel, um pavão-indiano! Aqui no Rajastão, na Índia, quase não chove durante o ano.');
+  api.diz('Arraste as nuvens do mar até a terra seca!');
+  return () => { vivo = false; timers.forEach(clearTimeout); c.parar(); };
+}
+/* ================= JOGO 19: Dujiangyan, o rio dividido ================= */
+function jogoDujiang(palco, api){
+  semente = 256;
+  let vivo = true, fase = 'rocha', ocupado = false, camada = 0, quente = false, cheios = 0, estacao = 'normal', feitas = { cheia:false, seca:false }, interno = false, gargalo = false;
+  const timers = [], depois = (ms, fn) => { const t = setTimeout(() => vivo && fn(), ms); timers.push(t); return t; };
+  const f1 = n => n.toFixed(1);
+  /* ---------- geometria dos rios (curvas de Bézier cúbicas) ---------- */
+  const bz = (a, b, c, d, t) => { const u = 1 - t; return u * u * u * a + 3 * u * u * t * b + 3 * u * t * t * c + t * t * t * d; };
+  const RIOS = {
+    longe:[[[400, 150], [400, 170], [399, 190], [398, 206]]],
+    perto:[[[398, 206], [398, 216], [398, 226], [400, 238]]],
+    fora:[[[396, 238], [372, 290], [362, 340], [366, 392]], [[366, 392], [370, 440], [352, 475], [318, 520]]],
+    dentro:[[[404, 238], [428, 290], [436, 340], [444, 382]], [[444, 382], [452, 414], [492, 424], [548, 420]]],
+    garg:[[[548, 420], [575, 419], [605, 419], [646, 422]]],
+    c1:[[[646, 422], [676, 410], [702, 384], [740, 366]], [[740, 366], [770, 352], [790, 346], [814, 342]]],
+    c2:[[[646, 422], [694, 428], [742, 436], [814, 444]]],
+    c3:[[[646, 422], [668, 444], [690, 472], [706, 514]]],
+    verte:[[[444, 396], [428, 402], [410, 406], [384, 410]]]
+  };
+  const dDe = segs => segs.map((s, i) => (i ? '' : `M${s[0][0]} ${s[0][1]} `) + `C${s[1][0]} ${s[1][1]} ${s[2][0]} ${s[2][1]} ${s[3][0]} ${s[3][1]}`).join(' ');
+  const amostra = segs => { const pts = []; let L = 0; segs.forEach(s => { for (let i = pts.length ? 1 : 0; i <= 30; i++) { const t = i / 30, x = bz(s[0][0], s[1][0], s[2][0], s[3][0], t), y = bz(s[0][1], s[1][1], s[2][1], s[3][1], t); if (pts.length) L += Math.hypot(x - pts[pts.length - 1].x, y - pts[pts.length - 1].y); pts.push({ x, y, L }); } }); return pts; };
+  const AM = {}; Object.keys(RIOS).forEach(k => AM[k] = amostra(RIOS[k]));
+  const noPonto = (k, d) => { const a = AM[k]; let i = 1; while (i < a.length - 1 && a[i].L < d) i++; const p = a[i - 1], q = a[i], k2 = Math.max(0, Math.min(1, (d - p.L) / ((q.L - p.L) || 1))); const dx = q.x - p.x, dy = q.y - p.y, m = Math.hypot(dx, dy) || 1; return { x:p.x + dx * k2, y:p.y + dy * k2, tx:dx / m, ty:dy / m }; };
+  const xEm = (k, y) => { const a = AM[k]; let m = a[0]; a.forEach(p => { if (Math.abs(p.y - y) < Math.abs(m.y - y)) m = p; }); return m.x; };
+  const dPerto = (k, x, y) => { let m = AM[k][0]; AM[k].forEach(p => { if (Math.hypot(p.x - x, p.y - y) < Math.hypot(m.x - x, m.y - y)) m = p; }); return m.L; };
+  /* largura de cada rio no começo e no fim (perspectiva: mais estreito lá longe) */
+  const PERF = { longe:[5, 18], perto:[18, 34], fora:[36, 64], dentro:[22, 27], garg:[20, 22], c1:[11, 8], c2:[11, 9], c3:[11, 15], verte:[16, 16] };
+  const larg = (k, d) => { const a = AM[k], u = Math.min(1, d / a[a.length - 1].L); return PERF[k][0] + (PERF[k][1] - PERF[k][0]) * u; };
+  const LARG = {}; Object.keys(PERF).forEach(k => LARG[k] = (PERF[k][0] + PERF[k][1]) / 2);
+  const fac = {}, prog = {}; Object.keys(RIOS).forEach(k => { fac[k] = 1; prog[k] = ['dentro', 'garg', 'c1', 'c2', 'c3'].includes(k) ? 0 : 1; });
+  const poli = (k, f, pr, mais) => { const a = AM[k], Lt = a[a.length - 1].L, L = Lt * pr, E = [], D = [];
+    if (pr <= .002) return 'M0 0Z';
+    const poe = (x, y, tx, ty, l) => { const w = (larg(k, l) * f + (mais || 0)) / 2; E.push(`${f1(x - ty * w)} ${f1(y + tx * w)}`); D.push(`${f1(x + ty * w)} ${f1(y - tx * w)}`); };
+    for (let i = 0; i < a.length; i++) { if (a[i].L > L) { const q = noPonto(k, L); poe(q.x, q.y, q.tx, q.ty, L); break; }
+      const j0 = Math.max(0, i - 1), j1 = Math.min(a.length - 1, i + 1), dx = a[j1].x - a[j0].x, dy = a[j1].y - a[j0].y, m = Math.hypot(dx, dy) || 1; poe(a[i].x, a[i].y, dx / m, dy / m, a[i].L); }
+    return 'M' + E.join(' L') + ' L' + D.reverse().join(' L') + 'Z'; };
+  const bordaX = (k, y, lado) => { const a = AM[k]; let m = a[0]; a.forEach(q => { if (Math.abs(q.y - y) < Math.abs(m.y - y)) m = q; }); return m.x + lado * larg(k, m.L) / 2; };
+  /* dique (Boca de Peixe): faixa entre a margem direita do rio de fora e a margem esquerda do rio de dentro */
+  const borda = (y0, y1, ponta) => { const esq = [], dir = []; for (let y = y0; y <= y1 + .1; y += 6) { esq.push([bordaX('fora', y, 1) + 1, y]); dir.push([bordaX('dentro', y, -1) - 1, y]); }
+    let d = ponta ? `M400 ${y0 - 14} C${f1(esq[0][0] - 1)} ${y0 - 8} ${f1(esq[0][0])} ${y0 - 2} ${f1(esq[0][0])} ${y0}` : `M${f1(esq[0][0])} ${y0}`;
+    esq.slice(1).forEach(p => d += ` L${f1(p[0])} ${p[1]}`); dir.reverse().forEach(p => d += ` L${f1(p[0])} ${p[1]}`);
+    return d + (ponta ? ` C${f1(dir[dir.length - 1][0])} ${y0 - 2} ${f1(dir[dir.length - 1][0] - 1)} ${y0 - 8} 400 ${y0 - 14}Z` : 'Z'); };
+  const DIQUE = [borda(232, 284, true), borda(284, 340), borda(340, 394)];
+  const textoDique = (y0, y1, i) => { let s2 = ''; for (let y = y0 - 10; y <= y1 + 2; y += 6) { const xa = bordaX('fora', y, 1), xb = bordaX('dentro', y, -1); for (let x = xa + 2; x < xb - 1; x += 6.4) { const r = R(2.4, 3.6); s2 += `<ellipse cx="${f1(x + R(-1, 1))}" cy="${f1(y + R(-1, 1))}" rx="${f1(r)}" ry="${f1(r * .76)}" fill="${['#A8B2C0', '#C8BCA4', '#8E98A8', '#B8A88C', '#D6CCB8'][Math.floor(R(0, 4.99))]}" stroke="#5E5A52" stroke-width=".6"/>`; } }
+    let l = ''; for (let k = -5; k < 9; k++) { const x = 356 + k * 13; l += `M${x} ${y0 - 16} l26 ${y1 - y0 + 30} M${x + 26} ${y0 - 16} l-26 ${y1 - y0 + 30} `; }
+    let h = ''; for (let y = y0 - 6; y < y1 + 6; y += 17) h += `M360 ${y} H460 `;
+    return `<clipPath id="duSegC${i}"><path d="${DIQUE[i]}"/></clipPath><g clip-path="url(#duSegC${i})"><path d="${DIQUE[i]}" fill="#5A4630"/>${s2}<path d="${l}" stroke="#5E3E18" stroke-width="2.2" fill="none" opacity=".75"/><path d="${l}" stroke="#E2C080" stroke-width="1.1" fill="none" opacity=".9"/><path d="${h}" stroke="#5E3E18" stroke-width="3" fill="none"/><path d="${h}" stroke="#EED39A" stroke-width="1.6" fill="none"/><path d="${DIQUE[i]}" fill="url(#duMolhado)"/></g>`; };
+  const brilhoBorda = (y0, y1, k, lado, dx) => { let d = ''; for (let y = y0; y <= y1; y += 6) d += `${d ? 'L' : 'M'}${f1(bordaX(k, y, lado) + dx)} ${y} `; return d; };
+  const VAGA = [{ x:401, y:258, a:84 }, { x:404, y:312, a:80 }, { x:410, y:367, a:76 }];
+  const CESTOS = [{ x:440, y:452 }, { x:514, y:458 }, { x:470, y:486 }];
+  const PEDRAS = [{ x:200, y:452, r:12, c:'#9AA6B8' }, { x:236, y:444, r:11, c:'#C2B49C' }, { x:270, y:456, r:12.5, c:'#8E9AAE' }, { x:214, y:480, r:12, c:'#B0A28A' }, { x:250, y:478, r:11.5, c:'#A4AEBC' }, { x:286, y:480, r:11, c:'#C9BBA0' }];
+  const CAMADAS = [
+    'M556 356 C566 346 584 342 600 343 C618 344 632 348 640 356 L640 384 C614 381 580 382 556 385Z',
+    'M556 385 C580 382 614 381 640 384 L640 411 C612 409 580 410 556 412Z',
+    'M556 412 C580 410 612 409 640 411 L640 438 C612 436 580 437 556 439Z'
+  ];
+  const CENTRO = [{ x:598, y:366 }, { x:598, y:397 }, { x:598, y:424 }];
+  /* ---------- pequenos desenhos ---------- */
+  const arvore = (x, y, s, cor, esc, luz, tronco) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 C-1 -10 1 -18 0 -26" stroke="${tronco || '#6E4A2E'}" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="${copa(0, -34, 17, 14, 9, .26)}" fill="${cor}" stroke="${esc}" stroke-width="1.6"/><path d="${copa(-4, -38, 9, 7, 7, .3)}" fill="${luz}" opacity=".7"/></g>`;
+  const cipreste = (x, y, s, cor, esc) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 V-8" stroke="#5A3E26" stroke-width="3"/><path d="M0 -50 C6 -36 10 -20 8 -8 C4 -4 -4 -4 -8 -8 C-10 -20 -6 -36 0 -50Z" fill="${cor}" stroke="${esc}" stroke-width="1.4"/><path d="M-2 -40 C-4 -30 -5 -20 -4 -12" stroke="#fff" stroke-width="1.4" fill="none" opacity=".25" stroke-linecap="round"/></g>`;
+  const pessoa = (x, y, pele, cabelo, camisa, calca, s, atras, frente, contorno) => { const e = contorno || '#5A3420';
+    return `<g transform="translate(${x} ${y}) scale(${s || 1})">
+    <ellipse cx="0" cy="1" rx="13" ry="3" fill="#1E2A14" opacity=".28"/>
+    ${atras || ''}
+    <path d="M-6.4 -17 L-6 -1 H-1 L0 -12 L1 -1 H6 L6.4 -17Z" fill="${calca}" stroke="#1E2440" stroke-width="1.1" stroke-linejoin="round"/>
+    <path d="M-3.8 -10 l.6 6 M3.8 -10 l-.6 6" stroke="#fff" stroke-width=".8" opacity=".25"/>
+    <path d="M-7.6 -.4 C-7.6 -2.6 -1 -2.6 -.6 -.4Z M.6 -.4 C1 -2.6 7.6 -2.6 7.6 -.4Z" fill="#3A2A1E" stroke="#1E140C" stroke-width=".8"/>
+    <path d="M-8.4 -16 C-9.4 -26 -7 -33 0 -33.6 C7 -33 9.4 -26 8.4 -16 C4 -14.6 -4 -14.6 -8.4 -16Z" fill="${camisa}" stroke="#1E2440" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M-8.6 -18.6 C-3 -17 3 -17 8.6 -18.6" stroke="#3A2A1E" stroke-width="2" fill="none"/>
+    <path d="M-3 -33 L0 -29 L3 -33" stroke="#fff" stroke-width="1.1" fill="none" opacity=".6" stroke-linejoin="round"/>
+    <path d="M-5 -27 q1.4 4 .4 8 M4.6 -26 q-1.6 3 -.6 6.4" stroke="#1E2440" stroke-width=".8" fill="none" opacity=".35"/>
+    <path d="M-6 -31 C-7 -27 -7.4 -23 -7 -19" stroke="#fff" stroke-width="1.4" fill="none" opacity=".3" stroke-linecap="round"/>
+    <path d="M-2.2 -33.6 V-36 H2.2 V-33.6Z" fill="${pele}"/>
+    <ellipse cx="-7.4" cy="-41" rx="1.8" ry="2.4" fill="${pele}" stroke="${e}" stroke-width=".8"/><ellipse cx="7.4" cy="-41" rx="1.8" ry="2.4" fill="${pele}" stroke="${e}" stroke-width=".8"/>
+    <ellipse cx="0" cy="-41.4" rx="7.4" ry="7.8" fill="${pele}" stroke="${e}" stroke-width="1.1"/>
+    <path d="M-7.8 -41 C-8.6 -50.6 8.6 -51.6 7.8 -41.6 C6.6 -45 3 -46.4 -.6 -45.6 C-3.6 -45 -6 -43.6 -7.8 -41Z" fill="${cabelo}" stroke="#0E0A08" stroke-width=".6"/>
+    <path d="M-3.4 -48 q3 -1.6 6 -.6" stroke="#fff" stroke-width="1" fill="none" opacity=".35" stroke-linecap="round"/>
+    <path d="M-5 -43.8 q1.6 -1.2 3 0 M2 -43.8 q1.6 -1.2 3 0" stroke="#2A1A10" stroke-width=".8" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-3.2" cy="-41" rx="1.2" ry="1.5" fill="#1A1210"/><ellipse cx="3.4" cy="-41" rx="1.2" ry="1.5" fill="#1A1210"/><circle cx="-2.8" cy="-41.6" r=".45" fill="#fff"/><circle cx="3.8" cy="-41.6" r=".45" fill="#fff"/>
+    <path d="M.2 -40 q.8 1.6 -.4 2" stroke="${e}" stroke-width=".7" fill="none" stroke-linecap="round"/>
+    <path d="M-2.4 -36.6 q2.4 2 4.8 0" stroke="#7A2E1E" stroke-width=".9" fill="#FFF" stroke-linecap="round"/>
+    <ellipse cx="-5" cy="-37.8" rx="1.6" ry=".9" fill="#FF8A7A" opacity=".45"/><ellipse cx="5.2" cy="-37.8" rx="1.6" ry=".9" fill="#FF8A7A" opacity=".45"/>
+    ${frente || ''}</g>`; };
+  const pinho = (x, y, s, cor, esc) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 V-12" stroke="#5A3E26" stroke-width="3.2" stroke-linecap="round"/>${[0, 1, 2, 3].map(k => { const yy = -7 - k * 8.6, w = 15 - k * 3.2; return `<path d="M${-w} ${yy} C${-w * .5} ${yy - 4} ${-w * .3} ${yy - 11} 0 ${yy - 13} C${w * .3} ${yy - 11} ${w * .5} ${yy - 4} ${w} ${yy} C${w * .4} ${yy - 2.6} ${-w * .4} ${yy - 2.6} ${-w} ${yy}Z" fill="${cor}" stroke="${esc}" stroke-width="1.1" stroke-linejoin="round"/><path d="M${-w * .6} ${yy - 2} C${-w * .3} ${yy - 5} ${-w * .2} ${yy - 8} 0 ${yy - 10}" stroke="#fff" stroke-width="1" fill="none" opacity=".25"/>`; }).join('')}</g>`;
+  const ARV = (x, y, tipo, s, cor, esc, luz) => tipo === 'p' ? pinho(x, y, s, cor, esc) : tipo === 'c' ? cipreste(x, y + 2, s * 1.1, cor, esc)
+    : tipo === 'b' ? `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 V-14" stroke="#6E4A2E" stroke-width="3"/><path d="${copa(-8, -22, 12, 9, 8, .3)}" fill="${cor}" stroke="${esc}" stroke-width="1.2"/><path d="${copa(8, -26, 13, 10, 8, .3)}" fill="${cor}" stroke="${esc}" stroke-width="1.2"/><path d="${copa(0, -34, 11, 8, 8, .3)}" fill="${luz}" stroke="${esc}" stroke-width="1.2"/></g>`
+    : tipo === 'm' ? `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 C-1 -8 1 -14 0 -20 M0 -12 l-6 -6 M0 -14 l6 -7" stroke="#5A3420" stroke-width="2.4" fill="none" stroke-linecap="round"/>${[[-8, -24, 9], [7, -27, 10], [0, -34, 9]].map(([dx, dy, r]) => `<path d="${copa(dx, dy, r, r * .78, 9, .34)}" fill="${cor}" stroke="${esc}" stroke-width="1.1"/>`).join('')}<path d="${copa(-2, -32, 5, 3.4, 6, .3)}" fill="${luz}" opacity=".7"/></g>`
+    : `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 C-1 -8 1 -14 0 -22" stroke="#6E4A2E" stroke-width="3.6" fill="none" stroke-linecap="round"/><path d="${copa(0, -28, 15, 12, 10, .26)}" fill="${cor}" stroke="${esc}" stroke-width="1.3"/><path d="${copa(-4, -32, 8, 5.6, 7, .3)}" fill="${luz}" opacity=".55"/></g>`;
+  const serra = (y0, pts) => { let d = `M-10 ${y0} L${pts[0][0]} ${pts[0][1]}`; for (let i = 0; i < pts.length - 1; i++) { const [x1, y1] = pts[i], [x2, y2] = pts[i + 1]; d += ` C${f1(x1 + (x2 - x1) * .42)} ${y1} ${f1(x2 - (x2 - x1) * .42)} ${y2} ${x2} ${y2}`; } return d + ` L810 ${y0}Z`; };
+  const casa = (x, y, s, i) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="1" rx="28" ry="3.4" fill="#2E4A14" opacity=".24"/>
+    <path d="M-20 0 V-19 H20 V0Z" fill="url(#duParede)" stroke="#6E5A44" stroke-width="1.2"/>
+    <path d="M-20 -19 H20 M-20 -9.6 H20 M-9 -19 V0 M9 -19 V0 M-20 -19 V0 M20 -19 V0" stroke="#6E4428" stroke-width="1.8" opacity=".9"/>
+    <rect x="-4.4" y="-9.6" width="8.8" height="9.6" fill="url(#duMadeira)" stroke="#3E2414" stroke-width=".9"/><path d="M0 -9.6 V0" stroke="#3E2414" stroke-width=".7"/>
+    <rect x="-16.4" y="-16.4" width="6" height="5" fill="${i % 2 ? '#FFE6A8' : '#BFE0F2'}" stroke="#3E2414" stroke-width=".8"/><path d="M-13.4 -16.4 V-11.4 M-16.4 -13.9 H-10.4" stroke="#3E2414" stroke-width=".5"/>
+    <rect x="10.4" y="-16.4" width="6" height="5" fill="#BFE0F2" stroke="#3E2414" stroke-width=".8"/><path d="M13.4 -16.4 V-11.4 M10.4 -13.9 H16.4" stroke="#3E2414" stroke-width=".5"/>
+    ${i === 1 ? '<path d="M-24 -4 h-6 v4 h6" fill="#C8401E" opacity=".0"/><g fill="#E5392C" stroke="#8A1A10" stroke-width=".6"><ellipse cx="-14" cy="-6" rx="1.6" ry="2.2"/><ellipse cx="14" cy="-6" rx="1.6" ry="2.2"/></g>' : ''}
+    <path d="M-30 -16 Q-25 -17.4 -22 -20.6 L-18 -28.6 H18 L22 -20.6 Q25 -17.4 30 -16 Q22 -18.6 0 -18.6 Q-22 -18.6 -30 -16Z" fill="url(#duTelha)" stroke="#262C38" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="${Array.from({ length:11 }, (_, j) => `M${-16 + j * 3.2} -28 L${-19.4 + j * 3.9} -19`).join(' ')}" stroke="#8E98A8" stroke-width=".8" opacity=".85"/>
+    <path d="M-20 -29 H20" stroke="#323846" stroke-width="2.6" stroke-linecap="round"/><path d="M-20 -29 q-3 0 -5 -3.4 M20 -29 q3 0 5 -3.4" stroke="#323846" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M-28 -16.4 Q-22 -18 -18 -18" stroke="#A8B0BE" stroke-width="1" fill="none" opacity=".8"/></g>`;
+  const colza = (x, y, w, h, n) => { let s2 = `<path d="M${x + 6} ${y} H${x + w - 6} L${x + w + 4} ${y + h} H${x - 4}Z" fill="#7CB24A" stroke="#4E8A2E" stroke-width="1"/>`;
+    for (let k = 0; k < n; k++) { const y0 = y + 2 + k * h / n, y1 = y0 + h / n - 2.4, a = (y0 - y) / h * 10 - 6, b = (y1 - y) / h * 10 - 6;
+      s2 += `<path d="M${f1(x + 6 - a)} ${f1(y0)} H${f1(x + w - 6 + a)} L${f1(x + w - 6 + b)} ${f1(y1)} H${f1(x + 6 - b)}Z" fill="url(#duColza)" stroke="#D8A20E" stroke-width=".6"/><path d="M${f1(x + 8 - a)} ${f1(y0 + 1)} H${f1(x + w - 8 + a)}" stroke="#FFF6B0" stroke-width="1" stroke-dasharray="2 3" opacity=".9"/>`; }
+    return s2; };
+  const cesto = (x, y, i) => `<g class="du-cesto" data-i="${i}"><g transform="translate(${x} ${y}) scale(.8) translate(${-x} ${-y})"><g class="du-cesto-in" style="transform-origin:${x}px ${y}px">
+    <ellipse cx="${x}" cy="${y + 15}" rx="40" ry="5" fill="#1E2A14" opacity=".25"/>
+    <path d="M${x - 34} ${y - 12} H${x + 30} C${x + 40} ${y - 12} ${x + 40} ${y + 12} ${x + 30} ${y + 12} H${x - 34} C${x - 42} ${y + 12} ${x - 42} ${y - 12} ${x - 34} ${y - 12}Z" fill="#3A2C1E"/>
+    <g class="du-cesto-pedras">${[0, 1].map(j => `<g class="du-cp" style="opacity:0;transition:opacity .4s">${[[-24, 0, 8, '#9AA6B8'], [-10, 4, 7.4, '#C2B49C'], [-16, -6, 6.4, '#8E9AAE'], [-2, -3, 7, '#B0A28A']].map(([dx, dy, r, c]) => `<ellipse cx="${x + dx + j * 26}" cy="${y + dy}" rx="${r}" ry="${(r * .8).toFixed(1)}" fill="${c}" stroke="#4E525E" stroke-width="1"/>`).join('')}</g>`).join('')}</g>
+    <g stroke="#5E3E18" stroke-width="3.6" fill="none">${[-30, -18, -6, 6, 18].map(dx => `<path d="M${x + dx} ${y - 12} l12 24 M${x + dx + 12} ${y - 12} l-12 24"/>`).join('')}<path d="M${x - 38} ${y} H${x + 34}"/></g>
+    <g stroke="url(#duTira)" stroke-width="2.2" fill="none">${[-30, -18, -6, 6, 18].map(dx => `<path d="M${x + dx} ${y - 12} l12 24 M${x + dx + 12} ${y - 12} l-12 24"/>`).join('')}<path d="M${x - 38} ${y} H${x + 34}"/></g>
+    <path d="M${x - 34} ${y - 12} H${x + 30} C${x + 40} ${y - 12} ${x + 40} ${y + 12} ${x + 30} ${y + 12} H${x - 34} C${x - 42} ${y + 12} ${x - 42} ${y - 12} ${x - 34} ${y - 12}Z" fill="none" stroke="#4A2E10" stroke-width="2"/>
+    <ellipse cx="${x + 30}" cy="${y}" rx="6" ry="12" fill="#2A1E12" stroke="#D8B070" stroke-width="2"/>
+    <path d="M${x - 32} ${y - 9} H${x + 26}" stroke="#FFF2C8" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+    <g class="du-cesto-hint" style="display:none">${brilhoHotspot(x - 6, y - 22)}</g></g><rect x="${x - 46}" y="${y - 24}" width="88" height="48" fill="transparent"/></g></g>`;
+  const chama = (x, y) => `<g transform="translate(${x} ${y})"><g class="du-fogo-in"><path d="M-16 0 C-20 -12 -10 -18 -12 -30 C-4 -24 0 -30 -2 -42 C8 -32 14 -24 10 -12 C16 -16 18 -22 16 -28 C24 -18 22 -4 14 0Z" fill="#FF8A2A" stroke="#C8401E" stroke-width="1.6" stroke-linejoin="round"/><path d="M-8 0 C-10 -8 -4 -12 -4 -20 C2 -14 6 -10 4 -4 C8 -6 9 -10 8 -14 C12 -8 10 -2 6 0Z" fill="#FFE27A"/></g></g>`;
+  /* rio em camadas: margem, água, faixa clara, lama (cheia) e brilho correndo */
+  const ondas = (k, fase2) => { if (LARG[k] < 10) return ''; const a = AM[k], Lt = a[a.length - 1].L, passo = k === 'garg' ? 7 : 15; let d = '';
+    for (let l = (fase2 ? passo / 2 : 0) + 6; l < Lt - 4; l += passo) { const q = noPonto(k, l), w = larg(k, l), o = (((l * 7.3) % 1.2) - .6) * w * .5, cx = q.x - q.ty * o, cy = q.y + q.tx * o, m = w * (k === 'garg' ? .32 : .16);
+      d += `M${f1(cx - q.tx * 3 - q.ty * m)} ${f1(cy - q.ty * 3 + q.tx * m)} Q${f1(cx + q.tx * 2)} ${f1(cy + q.ty * 2)} ${f1(cx - q.tx * 3 + q.ty * m)} ${f1(cy - q.ty * 3 - q.tx * m)} `; }
+    return `<path class="du-onda${fase2 ? '2' : ''}" d="${d}" stroke="#E6F7FF" stroke-width="${k === 'garg' ? 2 : 1.3}" fill="none" stroke-linecap="round"/>`; };
+  const rio = (k) => `<g class="du-rio" data-k="${k}"><path class="du-agua" d="${poli(k, 1, prog[k])}" fill="url(#duAgua)" stroke="#245E96" stroke-width="1.3" stroke-linejoin="round"/>
+      <path class="du-funda" d="${poli(k, .58, prog[k])}" fill="#22649E" opacity=".42"/>
+      <path class="du-clara" d="${poli(k, .2, prog[k])}" fill="#BFE8FF" opacity=".28"/>
+      <path class="du-lama" d="${poli(k, 1, prog[k])}" fill="#A8865A" style="opacity:0;transition:opacity 2s"/>
+      <path class="du-espuma" d="${poli(k, 1, prog[k])}" fill="none" stroke="#F6FCFF" stroke-width="${LARG[k] > 12 ? 2 : 1.2}" stroke-dasharray="3 4 8 4" opacity=".8"/>
+      <g class="du-ondas" style="opacity:${prog[k] ? 1 : 0};transition:opacity 1s">${ondas(k)}${ondas(k, true)}</g>
+      <path class="du-corre" d="${dDe(RIOS[k])}" stroke="#F2FBFF" stroke-width="${Math.max(1.2, LARG[k] * .07).toFixed(1)}" fill="none" stroke-linecap="round" stroke-dasharray="6 ${(14 + LARG[k] * .5).toFixed(0)}" style="opacity:${prog[k] ? .75 : 0};transition:opacity 1s"/>
+      ${LARG[k] > 14 ? `<path class="du-corre" d="${dDe(RIOS[k])}" transform="translate(${(LARG[k] * .22).toFixed(1)} 0)" stroke="#D8F2FF" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-dasharray="4 ${(20 + LARG[k] * .6).toFixed(0)}" style="opacity:${prog[k] ? .6 : 0};transition:opacity 1s"/>` : ''}</g>`;
+  const margem = (k, mais) => `<path class="du-margem" d="${poli(k, 1.32, 1, mais || 10)}" fill="url(#duCascalho)" stroke="#8C7650" stroke-width="1.4" stroke-linejoin="round"/><path d="${poli(k, 1.32, 1, mais || 10)}" fill="url(#duSeixo)" opacity=".7"/>`;
+  /* arrozais da planície de Chengdu */
+  const LIN = [306, 326, 350, 380, 416, 458, 506];
+  let arrozais = '', nArroz = 0;
+  LIN.slice(0, -1).forEach((y0, r) => { const y1 = LIN[r + 1] - 3, w = 34 + r * 9, inc = .16; let x = 662 + (r % 2) * w * .45 - (r > 3 ? 14 : 0) + (y0 > 430 ? 10 : 0);
+    if (x > 662) { const x0 = 656; arrozais += `<path d="M${x0 + (y1 - y0) * inc} ${y0} H${x - 3 + (y1 - y0) * inc} L${x - 3} ${y1} H${x0}Z" fill="#B49A66" stroke="#7E6A40" stroke-width="1"/>`; }
+    while (x < 812) { const xa = x, xb = x + w - 3, dx = (y1 - y0) * inc, cor = ['#7CCB5A', '#9ED86A', '#62B85A', '#B4DE6E'][(r + nArroz) % 4];
+      arrozais += `<g class="du-arroz"><path d="M${xa + dx} ${y0} H${xb + dx} L${xb} ${y1} H${xa}Z" fill="url(#duTerraArroz)" stroke="#7E6A40" stroke-width="1"/>
+        <path class="du-arroz-agua" d="M${xa + dx + 1.5} ${y0 + 1.5} H${xb + dx - 1.5} L${xb - 1.5} ${y1 - 1.5} H${xa + 1.5}Z" fill="url(#duEspelho)" style="opacity:0;transition:opacity 1s"/>
+        <g class="du-arroz-verde" style="opacity:0;transition:opacity 1.2s"><path d="M${xa + dx + 1.5} ${y0 + 1.5} H${xb + dx - 1.5} L${xb - 1.5} ${y1 - 1.5} H${xa + 1.5}Z" fill="${cor}" opacity=".88"/>
+        <path d="${Array.from({ length:Math.max(2, Math.round((y1 - y0) / 6)) }, (_, j) => { const yy = y0 + 4 + j * 6; return yy < y1 - 2 ? `M${f1(xa + 4 + (y1 - yy) * inc)} ${yy} H${f1(xb - 4 + (y1 - yy) * inc)}` : ''; }).join(' ')}" stroke="#3E8A2A" stroke-width="${(1 + r * .3).toFixed(1)}" stroke-dasharray="${(1.6 + r * .4).toFixed(1)} ${(2.4 + r * .5).toFixed(1)}" fill="none"/></g></g>`;
+      x += w; nArroz++; } });
+  const svg = `<svg viewBox="0 0 800 500" role="img" aria-label="Vale do rio Min, na China, com montanhas, a Boca de Peixe dividindo o rio, o Gargalo do Jarro aberto na rocha, arrozais da planície de Chengdu, uma vila e uma panda-gigante">
+    <defs>
+      <linearGradient id="duCeu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6FB4E6"/><stop offset=".55" stop-color="#BFE0F2"/><stop offset="1" stop-color="#F8EEDA"/></linearGradient>
+      <linearGradient id="duM1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#AEBCDA"/><stop offset="1" stop-color="#DCE4EE"/></linearGradient>
+      <linearGradient id="duM2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7EA6B8"/><stop offset="1" stop-color="#B6CCD2"/></linearGradient>
+      <linearGradient id="duM3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4E8E6E"/><stop offset="1" stop-color="#6EA474"/></linearGradient>
+      <linearGradient id="duM4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5A9A6A"/><stop offset="1" stop-color="#86B66C"/></linearGradient>
+      <linearGradient id="duNevoa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".6" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <linearGradient id="duChao" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B6D486"/><stop offset=".5" stop-color="#94C266"/><stop offset="1" stop-color="#6EA64E"/></linearGradient>
+      <linearGradient id="duPlan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D4DE9A"/><stop offset="1" stop-color="#A9C874"/></linearGradient>
+      <linearGradient id="duRocha" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C4B8A2"/><stop offset=".55" stop-color="#9A8C76"/><stop offset="1" stop-color="#6E6252"/></linearGradient>
+      <linearGradient id="duRochaE" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A7E6C"/><stop offset="1" stop-color="#564C40"/></linearGradient>
+      <linearGradient id="duBloco" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B8A88E"/><stop offset="1" stop-color="#857660"/></linearGradient>
+      <radialGradient id="duQuente" cx=".5" cy=".6" r=".7"><stop offset="0" stop-color="#FFE08A"/><stop offset=".5" stop-color="#FF8A3A"/><stop offset="1" stop-color="#B8401E"/></radialGradient>
+      <linearGradient id="duMorro" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6AA866"/><stop offset="1" stop-color="#4A8452"/></linearGradient>
+      <linearGradient id="duDique" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C89A5A"/><stop offset=".5" stop-color="#E8C88A"/><stop offset="1" stop-color="#B08048"/></linearGradient>
+      <linearGradient id="duTira" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D89A"/><stop offset="1" stop-color="#C89A52"/></linearGradient>
+      <pattern id="duTrama" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M0 0 L12 12 M12 0 L0 12" stroke="#7A5226" stroke-width="1.4" opacity=".55"/><circle cx="6" cy="2" r="2.4" fill="#9AA4B4" opacity=".55"/><circle cx="1" cy="8" r="2" fill="#A89A88" opacity=".5"/></pattern>
+      <linearGradient id="duParede" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFBF0"/><stop offset="1" stop-color="#E6D8BE"/></linearGradient>
+      <linearGradient id="duTelha" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#76808E"/><stop offset="1" stop-color="#4A5262"/></linearGradient>
+      <linearGradient id="duMadeira" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A8744A"/><stop offset="1" stop-color="#6A4022"/></linearGradient>
+      <linearGradient id="duTerraArroz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C8B07A"/><stop offset="1" stop-color="#A88C58"/></linearGradient>
+      <linearGradient id="duEspelho" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#D6F0FF"/><stop offset=".5" stop-color="#8CCBF0"/><stop offset="1" stop-color="#5AA6DA"/></linearGradient>
+      <linearGradient id="duCascalho" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2D6B2"/><stop offset="1" stop-color="#C2AC80"/></linearGradient>
+      <pattern id="duSeixo" width="22" height="16" patternUnits="userSpaceOnUse"><ellipse cx="4" cy="4" rx="2.6" ry="1.6" fill="#A8946A"/><ellipse cx="15" cy="9" rx="2" ry="1.3" fill="#9AA4B4"/><ellipse cx="8" cy="13" rx="1.6" ry="1" fill="#B8A47A"/><ellipse cx="19" cy="2" rx="1.4" ry="1" fill="#F4ECD8"/></pattern>
+      <linearGradient id="duAgua" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CD2F2"/><stop offset=".45" stop-color="#4FA6DE"/><stop offset="1" stop-color="#3486C8"/></linearGradient>
+      <linearGradient id="duSerraA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9EB4CC"/><stop offset="1" stop-color="#D2DEE6"/></linearGradient>
+      <linearGradient id="duSerraB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7EA4A4"/><stop offset="1" stop-color="#B4CCC0"/></linearGradient>
+      <linearGradient id="duEstrato" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C2B294"/><stop offset=".5" stop-color="#A8987C"/><stop offset="1" stop-color="#8A7C66"/></linearGradient>
+      <linearGradient id="duBruma" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".3" stop-color="#fff" stop-opacity=".75"/><stop offset=".7" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <linearGradient id="duMolhado" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1E3A5A" stop-opacity=".35"/><stop offset=".25" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".18"/><stop offset=".75" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#1E3A5A" stop-opacity=".3"/></linearGradient>
+      <linearGradient id="duMorro2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8CC060"/><stop offset=".6" stop-color="#5E9A4A"/><stop offset="1" stop-color="#3E7A3E"/></linearGradient>
+      <linearGradient id="duBambuC" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E8C88A"/><stop offset="1" stop-color="#B08048"/></linearGradient>
+      <linearGradient id="duFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A89A84"/><stop offset=".7" stop-color="#7A6E5E"/><stop offset="1" stop-color="#5A5044"/></linearGradient>
+      <linearGradient id="duTopo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CC46E"/><stop offset="1" stop-color="#5E9A54"/></linearGradient>
+      <linearGradient id="duColza" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE45A"/><stop offset="1" stop-color="#F2C21E"/></linearGradient>
+      <radialGradient id="duSolG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF6C8"/><stop offset=".55" stop-color="#FFC83D"/><stop offset="1" stop-color="#F0A81E"/></radialGradient>
+      <linearGradient id="duFaisao" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD84A"/><stop offset="1" stop-color="#F09A1E"/></linearGradient>
+      <linearGradient id="duBufalo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E6670"/><stop offset="1" stop-color="#3E3842"/></linearGradient>
+      <radialGradient id="duVinheta" cx=".5" cy=".46" r=".78"><stop offset=".62" stop-color="#16263A" stop-opacity="0"/><stop offset="1" stop-color="#16263A" stop-opacity=".32"/></radialGradient>
+      <filter id="duGrao"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .05 0"/></filter>
+      <filter id="duSombra" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="2.4" flood-color="#1E2A14" flood-opacity=".35"/></filter>
+    </defs>
+    <rect width="800" height="300" fill="url(#duCeu)"/>
+    <g id="du-sol" class="toque" style="transform-origin:700px 62px"><circle id="du-sol-aura" cx="700" cy="62" r="56" fill="#FFE27A" opacity=".22"/><circle cx="700" cy="62" r="40" fill="#FFE27A" opacity=".28"/><circle cx="700" cy="62" r="27" fill="url(#duSolG)" stroke="#F0A81E" stroke-width="2.4"/><path d="M686 52 q8 -9 20 -9" stroke="#FFF6C8" stroke-width="4" fill="none" stroke-linecap="round"/><g id="du-sol-hint" style="display:none">${brilhoHotspot(728, 40)}</g><circle cx="700" cy="62" r="52" fill="transparent"/></g>
+    <g class="deriva" style="animation-duration:40s"><use href="#nuvem" x="470" y="26" width="84" height="40" style="color:#fff" opacity=".9"/><use href="#nuvem" x="96" y="44" width="60" height="28" style="color:#fff" opacity=".8"/></g>
+    <path d="M0 200 L0 122 C30 104 52 86 78 92 C100 98 112 70 140 64 C166 58 180 86 206 90 C236 94 250 60 280 56 C310 52 330 84 356 92 C380 98 400 76 428 70 C458 64 478 92 506 94 C536 96 556 66 588 62 C620 58 640 90 668 96 C694 100 716 72 744 70 C772 68 790 88 800 92 V200Z" fill="url(#duM1)"/>
+    <g fill="#fff" opacity=".9"><path d="M128 70 C134 64 146 62 152 66 L146 72 L140 68 L134 74Z"/><path d="M268 62 C274 56 286 54 292 58 L286 66 L280 61 L273 67Z"/><path d="M416 76 C422 70 434 68 440 72 L434 79 L428 74 L421 80Z"/><path d="M576 68 C582 62 594 60 600 64 L594 71 L588 66 L581 72Z"/><path d="M734 76 C740 70 750 70 756 73 L750 80 L744 76 L738 81Z"/></g>
+    <rect y="96" width="800" height="60" fill="url(#duNevoa)"/>
+    <path d="${serra(232, [[-10, 152], [26, 116], [62, 144], [98, 104], [140, 142], [184, 110], [226, 146], [268, 118], [314, 150], [356, 124], [400, 156], [440, 122], [482, 146], [526, 106], [570, 140], [612, 112], [656, 144], [700, 108], [744, 140], [790, 116], [810, 128]])}" fill="url(#duSerraA)"/>
+    <g fill="#8EA8BE" opacity=".55">${[[98, 108], [184, 114], [526, 110], [700, 112]].map(([x, y]) => pinho(x, y + 4, .5, '#8EA8BE', '#8EA8BE')).join('')}</g>
+    <rect y="128" width="800" height="40" fill="url(#duNevoa)" opacity=".9"/>
+    <g id="du-nuvem" class="toque"><g id="du-nuvem-in" style="transform-origin:236px 58px;transition:transform 1s"><use href="#nuvem" x="168" y="22" width="140" height="70" style="color:#8A97B4"/><use href="#nuvem" x="174" y="24" width="130" height="64" style="color:#E6ECF6"/><use href="#nuvem" x="196" y="48" width="86" height="38" style="color:#C2CCE0"/><path d="M188 48 q12 -8 26 -4" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/><g fill="#5AA0E8"><path d="M210 92 l-3 8 a3 3 0 0 0 6 0Z"/><path d="M236 96 l-3 8 a3 3 0 0 0 6 0Z"/><path d="M262 90 l-3 8 a3 3 0 0 0 6 0Z"/></g></g><g id="du-nuvem-hint" style="display:none">${brilhoHotspot(296, 36)}</g><rect x="160" y="18" width="160" height="90" fill="transparent"/></g>
+    <g id="du-serra" class="toque"><path d="${serra(250, [[-10, 186], [40, 150], [86, 178], [134, 144], [180, 176], [226, 154], [272, 180], [322, 158], [372, 186], [400, 194], [430, 182], [476, 152], [524, 178], [574, 142], [624, 174], [672, 150], [720, 178], [768, 152], [810, 170]])}" fill="url(#duSerraB)"/>
+      ${[[40, 154], [134, 148], [226, 158], [476, 156], [574, 146], [672, 154], [768, 156]].map(([x, y], i) => pinho(x + (i % 2 ? 6 : -6), y + 6, .55, '#6E9690', '#5E8680')).join('')}</g>
+    <g class="deriva" style="animation-duration:34s" pointer-events="none"><ellipse cx="160" cy="176" rx="150" ry="12" fill="url(#duBruma)" opacity=".8"/><ellipse cx="620" cy="168" rx="170" ry="11" fill="url(#duBruma)" opacity=".75"/></g>
+    <rect y="150" width="800" height="70" fill="url(#duNevoa)" opacity=".55"/>
+    <path d="M-10 272 L-10 196 C30 170 70 150 112 154 C150 158 170 176 206 172 C240 168 262 150 300 156 C334 162 360 172 380 190 C388 204 392 222 392 240 L340 252 C250 262 120 268 -10 272Z" fill="url(#duM3)" stroke="#2E5A44" stroke-width="1.4"/>
+    <path d="M408 240 C408 220 412 202 420 192 C444 170 476 160 516 164 C556 170 584 150 624 146 C668 142 700 162 736 160 C766 158 790 150 812 152 V292 C760 284 700 278 672 274 C640 262 600 252 560 246 C500 240 450 240 408 240Z" fill="url(#duM3)" stroke="#2E5A44" stroke-width="1.4"/>
+    <g opacity=".7">${Array.from({ length:26 }, (_, i) => { const x = -10 + i * 32 + R(-6, 6); if (x > 368 && x < 432) return ''; const y = (x < 400 ? 186 + Math.abs(x - 160) * .03 : 182 + Math.abs(x - 620) * .03) + R(-6, 4), tp = ['p', 'r', 'c', 'b', 'p', 'r'][i % 6];
+      return ARV(x, y, tp, R(.62, .82), ['#78A894', '#86B4A0', '#6E9E8C'][i % 3], '#5E8C7C', '#A8CEB8'); }).join('')}</g>
+    <rect y="178" width="800" height="26" fill="url(#duNevoa)" opacity=".55"/>
+    <path d="M184 252 C190 228 200 206 214 196 C250 190 300 192 344 200 L350 252Z" fill="#7CB25A" stroke="#3E6A2E" stroke-width="1.2"/>
+    <g id="du-terracos">${Array.from({ length:7 }, (_, k) => { const y = 200 + k * 7, xa = 192 + k * 4, xb = 340 - k * 1.5, sag = 4 + k * .6, verde = k % 3 === 2;
+      return `<path d="M${xa} ${y} Q${(xa + xb) / 2} ${y + sag} ${xb} ${y - 1} L${xb + 1} ${y + 6} Q${(xa + xb) / 2} ${y + sag + 7} ${xa - 2} ${y + 7}Z" fill="${verde ? '#9ED070' : 'url(#duEspelho)'}" stroke="#5E8A44" stroke-width=".8"/><path d="M${xa} ${y} Q${(xa + xb) / 2} ${y + sag} ${xb} ${y - 1}" stroke="#B8E08A" stroke-width="1.4" fill="none"/>
+        <path d="M${xa - 2} ${y + 7} Q${(xa + xb) / 2} ${y + sag + 7} ${xb + 1} ${y + 6}" stroke="#3E6A2A" stroke-width="2.6" fill="none"/>
+        ${verde ? `<path d="M${xa + 6} ${y + 3} Q${(xa + xb) / 2} ${y + sag + 3} ${xb - 6} ${y + 2}" stroke="#4E9A3A" stroke-width="1.4" stroke-dasharray="1.6 2.6" fill="none"/>` : `<path d="M${xa + 14 + k * 6} ${y + 3 + sag * .3} h${10 + k}" stroke="#fff" stroke-width="1.2" opacity=".85" stroke-linecap="round"/><path d="M${xb - 34} ${y + 3 + sag * .5} h6" stroke="#fff" stroke-width="1" opacity=".6"/>`}`; }).join('')}</g>
+    <g>${[[-6, 220, 'r'], [24, 214, 'p'], [54, 222, 'b'], [86, 216, 'm'], [118, 220, 'p'], [150, 214, 'c'], [176, 222, 'r'], [352, 236, 'p'], [446, 238, 'p'], [470, 230, 'r'], [500, 224, 'b'], [528, 228, 'c'], [556, 222, 'm'], [584, 226, 'p'], [612, 218, 'r'], [642, 228, 'b'], [670, 224, 'p'], [700, 230, 'c'], [728, 226, 'r'], [758, 232, 'm'], [790, 226, 'p']].map(([x, y, tp], i) => {
+        const cores = { r:[['#4E8E5E', '#2A5A3E', '#8CC27E'], ['#3E7E5A', '#244E3A', '#7CB27A']], p:[['#2E6E50', '#1E4A36', '#5E9A7A'], ['#3A7A5A', '#1E4A36', '#6AA680']], c:[['#2E6448', '#1E4432', '#5A8A6A'], ['#3E7452', '#1E4432', '#6A9A72']], b:[['#6AA86A', '#2E5A34', '#A8D88A'], ['#5A9A62', '#2E5A34', '#9AD08A']], m:[['#C8503A', '#7A2A1A', '#F08A5A'], ['#D8A23A', '#8A5A12', '#FFE08A']] }[tp][i % 2];
+        return ARV(x, y + 16, tp, R(.86, 1.06), cores[0], cores[1], cores[2]); }).join('')}
+      ${casa(74, 254, .42, 0)}${casa(104, 250, .38, 1)}${casa(318, 252, .4, 2)}</g>
+    <path d="M362 246 C368 220 372 198 386 178 C392 172 396 172 398 178 L396 240Z" fill="url(#duRochaE)" stroke="#3E362E" stroke-width="1.2"/>
+    <path d="M438 246 C432 220 428 200 416 180 C410 172 404 172 402 178 L404 240Z" fill="url(#duRocha)" stroke="#3E362E" stroke-width="1.2"/>
+    <path d="M374 214 l10 -4 M378 196 l8 -2 M424 210 l-10 -4 M418 194 l-8 -2" stroke="#4E463A" stroke-width="1.2" opacity=".7"/>
+    <rect y="150" width="800" height="40" fill="url(#duNevoa)" opacity=".35"/>
+    <path d="M-10 240 C120 250 300 240 400 236 C520 236 680 258 812 268 V510 H-10Z" fill="url(#duChao)"/>
+    <path d="M640 262 C700 264 760 268 812 272 V510 H648 C652 420 646 330 640 262Z" fill="url(#duPlan)"/>
+    ${colza(240, 258, 112, 36, 5)}${colza(40, 252, 80, 20, 3)}${colza(462, 258, 56, 26, 4)}
+    <g stroke="#5E9A3E" stroke-width="1.3" fill="none" stroke-linecap="round" opacity=".8">${Array.from({ length:46 }, (_, i) => { const lado = i % 3, x = lado === 2 ? R(456, 540) : R(80, 330), y = lado === 2 ? R(292, 340) : R(300, 440); return (lado < 2 && x > 290 && y < 330) ? '' : `<path d="M${f1(x)} ${f1(y)} q-1 -5 -3 -7 M${f1(x + 2)} ${f1(y)} q0 -6 1 -8 M${f1(x + 4)} ${f1(y)} q2 -4 4 -6"/>`; }).join('')}</g>
+    <g>${Array.from({ length:24 }, (_, i) => { const x = i % 4 === 3 ? R(458, 540) : R(90, 320), y = i % 4 === 3 ? R(296, 340) : R(310, 436), c = ['#FFFFFF', '#FF9AC8', '#FFE45A', '#C8A0FF'][i % 4]; return `<g fill="${c}" stroke="#8A6A8A" stroke-width=".4">${[0, 72, 144, 216, 288].map(a => `<circle cx="${f1(x + Math.cos(a / 57.3) * 2.2)}" cy="${f1(y + Math.sin(a / 57.3) * 1.6)}" r="1.5"/>`).join('')}<circle cx="${f1(x)}" cy="${f1(y)}" r="1" fill="#F0A81E" stroke="none"/></g>`; }).join('')}</g>
+    <g opacity=".85">${[[680, 272], [716, 268], [758, 272], [796, 270]].map(([x, y], i) => cipreste(x, y + 8, .6, ['#4E8A5A', '#3E7A52'][i % 2], '#2A5440')).join('')}</g>
+    <g id="du-vila" class="toque">${casa(712, 304, .82, 0)}${casa(756, 298, .74, 1)}${casa(792, 306, .8, 2)}
+      ${arvore(734, 304, .56, '#D8A23A', '#8A5A12', '#FFE08A')}${arvore(690, 308, .5, '#4E9A5A', '#2A5A34', '#9AD88A')}
+      <g id="du-vila-ok" style="opacity:0;transition:opacity .8s">${brilhoHotspot(756, 262)}</g>
+      <rect x="680" y="262" width="120" height="50" fill="transparent"/></g>
+    <g id="du-arrozais">${arrozais}</g>
+    <g id="du-bufalo" class="toque"><g id="du-buf-in" style="transform-origin:752px 478px">
+      <ellipse cx="752" cy="482" rx="30" ry="4" fill="#1E2A14" opacity=".3"/>
+      <path d="M730 470 v12 M738 472 v12 M764 472 v12 M772 470 v12" stroke="#2E2830" stroke-width="5" stroke-linecap="round"/>
+      <path d="M724 462 C724 448 740 444 756 444 C772 444 780 450 780 462 C780 472 768 476 752 476 C736 476 724 474 724 462Z" fill="url(#duBufalo)" stroke="#1E1A22" stroke-width="1.6"/>
+      <path d="M734 450 C744 446 760 446 770 449" stroke="#9A92A0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M724 458 c-4 2 -6 8 -4 12" stroke="#3E3842" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g id="du-buf-cab"><path d="M776 452 C782 446 794 448 796 456 C798 464 792 470 786 470 C780 470 776 464 776 452Z" fill="url(#duBufalo)" stroke="#1E1A22" stroke-width="1.6"/>
+      <path d="M782 450 C774 442 770 436 776 432 C778 438 784 442 788 446 M792 450 C800 444 804 438 800 434 C798 440 794 444 790 447" fill="#E8DCC4" stroke="#6E5E4A" stroke-width="1.2"/>
+      <ellipse cx="792" cy="466" rx="5" ry="3.4" fill="#5E5662"/><circle cx="785" cy="457" r="2" fill="#12121A"/><circle cx="785.6" cy="456.4" r=".7" fill="#fff"/></g></g>
+      <rect x="716" y="430" width="88" height="56" fill="transparent"/></g>
+    ${margem('c1', 3)}${margem('c2', 3)}${margem('c3', 3)}
+    ${rio('c1')}${rio('c2')}${rio('c3')}
+    <g id="du-garca" class="toque"><g class="deriva" style="animation-duration:26s"><g style="animation:flutua 3s ease-in-out infinite alternate"><svg x="560" y="190" width="54" height="27" viewBox="0 0 40 20"><use href="#garca"/></svg><svg x="604" y="206" width="40" height="20" viewBox="0 0 40 20"><use href="#garca"/></svg></g></g><rect x="556" y="186" width="96" height="46" fill="transparent"/></g>
+    <path d="M378 196 C388 176 396 160 400 150 C404 160 412 176 422 196 L416 244 H384Z" fill="#6E9A6E"/>
+    ${margem('longe', 4)}${margem('perto', 8)}${margem('fora', 12)}${margem('dentro', 8)}${margem('garg', 2)}
+    ${rio('longe')}${rio('perto')}${rio('fora')}${rio('dentro')}${rio('garg')}
+    <path d="M346 250 C352 230 364 214 382 204 C386 214 388 226 386 244 C374 250 360 252 346 250Z" fill="url(#duRochaE)" stroke="#3E362E" stroke-width="1.2"/><path d="M360 232 l12 -6 M354 244 l14 -4" stroke="#3E362E" stroke-width="1" opacity=".6"/>
+    <path d="M454 250 C448 230 436 214 418 204 C414 214 412 226 414 244 C426 250 440 252 454 250Z" fill="url(#duRocha)" stroke="#3E362E" stroke-width="1.2"/><path d="M440 232 l-12 -6 M446 244 l-14 -4" stroke="#3E362E" stroke-width="1" opacity=".6"/>
+    <path d="${copa(360, 212, 16, 9, 8, .3)}" fill="#3E7E5A" stroke="#2A5440" stroke-width="1"/><path d="${copa(440, 212, 16, 9, 8, .3)}" fill="#4E8E5E" stroke="#2A5440" stroke-width="1"/>
+    <path id="du-fora-toque" class="toque" d="${poli('fora', 1, 1)}" fill="transparent"/>
+    <g id="du-peixe" style="opacity:0"><path d="M-12 0 C-6 -7 6 -7 12 0 C6 7 -6 7 -12 0Z M-12 0 L-19 -6 L-17 0 L-19 6Z" fill="#E8A040" stroke="#8A4A12" stroke-width="1.2"/><path d="M-4 -5 q4 -3 8 0" stroke="#FFE0A0" stroke-width="1.4" fill="none"/><circle cx="6" cy="-1" r="1.3" fill="#12121A"/></g>
+    <g id="du-jangada" class="toque"><g id="du-jang-pos"><g style="animation:flutua 2.6s ease-in-out infinite alternate">
+      <ellipse cx="350" cy="356" rx="24" ry="4" fill="#1E4A7A" opacity=".35"/>
+      <path d="M330 350 L370 348 L372 356 L332 358Z" fill="url(#duBambuC)" stroke="#5E3E18" stroke-width="1.2" stroke-linejoin="round"/><path d="M331 352 L371 350 M331.6 354.4 L371.6 352.4" stroke="#7A5226" stroke-width=".8"/><path d="M332 350 L333 358 M369 348 L371 356" stroke="#5E3E18" stroke-width="1.6"/>
+      <path d="M344 349 L362 320" stroke="#6E4428" stroke-width="2" stroke-linecap="round"/>
+      <g id="du-vara" style="transform-box:fill-box;transform-origin:30% 30%"><path d="M352 330 L330 366" stroke="#8A6040" stroke-width="1.8" stroke-linecap="round"/></g>
+      ${pessoa(352, 349, '#C99064', '#1A1414', '#5E8A5A', '#3E4A5E', .62, '', '<path d="M6 -28 C2 -24 -2 -22 -4 -20" stroke="#5E8A5A" stroke-width="4" fill="none" stroke-linecap="round"/>')}
+      <g transform="translate(362 352)"><path d="M0 0 C2 -4 8 -4 10 0Z" fill="#B88456" stroke="#5E3E18" stroke-width=".8"/><path d="M1 -1 h8" stroke="#5E3E18" stroke-width=".5"/></g></g></g>
+      <rect x="322" y="314" width="56" height="50" fill="transparent"/></g>
+    <g id="du-vertedouro"><path d="M388 396 C402 392 424 390 440 392 C444 400 448 410 452 420 C432 420 408 418 390 416Z" fill="#A8A498" stroke="#5E5A50" stroke-width="1.4"/>
+      <g fill="#C8C4B6" stroke="#6E6A5E" stroke-width=".8">${Array.from({ length:12 }, (_, i) => `<ellipse cx="${394 + (i % 6) * 9 + (i > 5 ? 4 : 0)}" cy="${400 + (i > 5 ? 9 : 0)}" rx="4" ry="2.6"/>`).join('')}</g></g>
+    <g id="du-verte-agua" style="opacity:0;transition:opacity 1.4s">${rio('verte')}</g>
+    <g id="du-dique-vagas" style="display:none">${DIQUE.map((d, i) => `<path class="du-vaga" data-i="${i}" d="${d}" fill="#fff" fill-opacity=".38" stroke="#fff" stroke-width="2.6" stroke-dasharray="7 5"/>`).join('')}</g>
+    <g id="du-dique">${DIQUE.map((d, i) => `<g class="du-seg" data-i="${i}" style="opacity:0;transition:opacity .6s">${textoDique([232, 284, 340][i], [284, 340, 394][i], i)}<path d="${d}" fill="none" stroke="#3E2A10" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="${brilhoBorda([236, 284, 340][i], [284, 340, 394][i], 'fora', 1, 4)}" stroke="#2A3E52" stroke-width="3" fill="none" opacity=".35"/><path d="${brilhoBorda([236, 284, 340][i], [284, 340, 394][i], 'fora', 1, 3)}" stroke="#fff" stroke-width="1.3" fill="none" opacity=".7" stroke-dasharray="10 5"/>
+        <path d="${brilhoBorda([236, 284, 340][i], [284, 340, 394][i], 'dentro', -1, -3)}" stroke="#fff" stroke-width="1.2" fill="none" opacity=".6" stroke-dasharray="7 6"/></g>`).join('')}
+      <path id="du-dique-luz" d="M401 222 C404 250 406 300 410 386" stroke="#FFF2C8" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-dasharray="14 10" opacity=".4" style="opacity:0;transition:opacity .6s"/>
+      <g id="du-espuma-ponta" style="opacity:0;transition:opacity 1s" pointer-events="none"><g class="du-esp-in" style="transform-origin:400px 222px">
+        <path d="M384 226 C388 214 396 208 400 207 C404 208 412 214 416 226 C410 220 404 217 400 217 C396 217 390 220 384 226Z" fill="#F4FBFF" opacity=".9"/>
+        ${[[388, 228, 4], [412, 228, 4], [384, 236, 3], [416, 236, 3], [393, 220, 2.6], [407, 220, 2.6], [382, 244, 2.4], [418, 244, 2.4]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity=".85"/>`).join('')}
+        <path d="M380 232 q-4 8 -6 16 M420 232 q4 8 6 16" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/></g></g>
+      <g id="du-boca" style="opacity:0;transition:opacity .6s"><circle cx="401" cy="232" r="2.2" fill="#2A1E12"/><circle cx="401.6" cy="231.4" r=".7" fill="#fff"/></g></g>
+    <g pointer-events="none"><ellipse cx="660" cy="258" rx="150" ry="14" fill="url(#duBruma)" opacity=".9"/></g>
+    <g id="du-morro">
+      <path d="M496 408 C500 384 508 366 518 352 L528 342 L536 330 C548 316 560 308 572 298 L588 288 C604 276 622 266 644 260 C672 254 700 254 726 260 C746 264 760 274 772 286 L752 300 C734 312 712 318 696 328 C682 338 668 350 652 356 L640 360 L640 412 L556 412 L556 360 C540 372 520 392 508 410Z" fill="url(#duMorro2)" stroke="#23482A" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M772 286 L752 300 C734 312 712 318 696 328 C682 338 668 350 652 356 L640 360 L640 340 C664 330 690 310 712 296 C732 284 752 280 772 286Z" fill="#2E5A34" opacity=".3"/>
+      <path d="M540 326 C566 300 600 280 640 268 C672 260 708 258 740 266" stroke="#C8E8A0" stroke-width="2.4" fill="none" opacity=".6" stroke-linecap="round"/>
+      ${[[600, 318, 16, 7], [660, 300, 13, 6], [712, 290, 10, 5], [560, 338, 10, 5]].map(([x, y, rx, ry]) => `<path d="M${x - rx} ${y + ry} C${x - rx * .6} ${y - ry} ${x + rx * .4} ${y - ry * 1.2} ${x + rx} ${y + ry * .6}Z" fill="url(#duEstrato)" stroke="#3E362E" stroke-width="1"/><path d="M${x - rx * .6} ${y + ry * .2} h${rx * 1.1}" stroke="#6E6252" stroke-width=".8"/>`).join('')}
+      <path d="M496 408 C506 386 520 370 536 362 L556 356 L556 412 L508 412Z" fill="url(#duEstrato)" stroke="#3E362E" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M502 400 C512 386 526 376 542 372 M508 392 C520 380 534 372 552 368" stroke="#6E6252" stroke-width="1.1" fill="none" opacity=".6"/>
+      <path d="M640 360 L652 356 C668 350 682 338 696 328 C700 344 692 366 680 382 L664 398 L640 412Z" fill="url(#duRochaE)" stroke="#3E362E" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M646 372 l18 -12 M648 388 l22 -16 M652 402 l18 -14" stroke="#3E362E" stroke-width="1" opacity=".5"/>
+      <path d="M556 360 L566 352 L578 356 L590 346 L604 352 L618 344 L630 352 L640 350 L640 412 C614 409 580 409 556 412Z" fill="url(#duFace)" stroke="#3E362E" stroke-width="1.6" stroke-linejoin="round"/>
+      ${[[366, '#B8A88E'], [378, '#9A8C76'], [390, '#B0A086'], [400, '#8E8270']].map(([y, cor]) => `<path d="M556 ${y} C576 ${y - 3} 600 ${y + 2} 620 ${y - 2} C628 ${y - 3} 636 ${y - 1} 640 ${y}" stroke="${cor}" stroke-width="5" fill="none" opacity=".55"/><path d="M556 ${y + 2.6} C576 ${y - .4} 600 ${y + 4.6} 620 ${y + .6} C628 ${y - .4} 636 ${y + 1.6} 640 ${y + 2.6}" stroke="#4E463A" stroke-width=".9" fill="none" opacity=".6"/>`).join('')}
+      <path d="M572 358 l-2 10 l3 8 l-2 12 M606 352 l2 12 l-3 10 l3 14 M628 356 l-2 14 l2 10" stroke="#3E362E" stroke-width="1" fill="none" opacity=".55"/>
+      ${[[568, 357, 6], [596, 350, 7], [624, 349, 6], [584, 377, 4], [614, 389, 4.4], [562, 395, 3.4]].map(([x, y, r]) => `<path d="${copa(x, y, r, r * .5, 7, .4)}" fill="#6E9A4E" stroke="#3E6A2E" stroke-width=".8"/>`).join('')}
+      <path d="M556 412 C580 409 614 409 640 412 L640 419 C614 415 580 415 556 419Z" fill="#1E2A3A" opacity=".38"/>
+      ${[[520, 344, .62, 'p'], [548, 322, .74, 'p'], [574, 304, .8, 'r'], [664, 278, .82, 'p'], [694, 276, .74, 'b'], [722, 274, .72, 'p'], [748, 286, .64, 'c'], [676, 318, .72, 'p'], [704, 306, .66, 'r'], [536, 356, .5, 'b']].map(([x, y, s2, tp], i) => ARV(x, y, tp, s2, tp === 'p' ? '#2E6E50' : tp === 'c' ? '#2E6448' : ['#4E9A5A', '#6AAE62'][i % 2], '#1E4A36', '#9AD08A')).join('')}
+    </g>
+    <g id="du-lidui">
+      <ellipse cx="600" cy="497" rx="58" ry="6" fill="#1E2A14" opacity=".3"/>
+      <path d="M550 494 C546 474 548 456 556 444 L566 436 L578 440 L590 431 L604 436 L620 429 L634 437 L644 446 C652 462 652 480 648 496 C622 506 574 504 550 494Z" fill="url(#duEstrato)" stroke="#3E362E" stroke-width="1.6" stroke-linejoin="round"/>
+      ${[452, 464, 476, 488].map((y, k) => `<path d="M${552 - k} ${y} C572 ${y - 3} 596 ${y + 3} 620 ${y - 2} C632 ${y - 4} 642 ${y - 1} ${648 + k * .5} ${y + 1}" stroke="${k % 2 ? '#8A7C66' : '#C8B89A'}" stroke-width="4" fill="none" opacity=".5"/><path d="M${552 - k} ${y + 2.4} C572 ${y - .6} 596 ${y + 5.4} 620 ${y + .4} C632 ${y - 1.6} 642 ${y + 1.4} ${648 + k * .5} ${y + 3.4}" stroke="#4E463A" stroke-width=".8" fill="none" opacity=".55"/>`).join('')}
+      <path d="M572 444 l2 12 l-3 12 l2 14 M612 438 l-2 14 l3 12 M636 446 l-2 16" stroke="#3E362E" stroke-width="1" fill="none" opacity=".55"/>
+      <path d="M552 452 C548 466 548 480 552 492" stroke="#E8DCC4" stroke-width="2" fill="none" opacity=".5" stroke-linecap="round"/>
+      ${[[562, 444, 5], [596, 436, 6], [630, 440, 5], [646, 466, 4], [556, 470, 3.6]].map(([x, y, r]) => `<path d="${copa(x, y, r, r * .5, 7, .4)}" fill="#6E9A4E" stroke="#3E6A2E" stroke-width=".8"/>`).join('')}
+      ${pinho(562, 452, .46, '#2E6E50', '#1E4A36')}${pinho(640, 456, .5, '#3A7A5A', '#1E4A36')}${pinho(600, 444, .36, '#2E6448', '#1E4A36')}
+      <g class="deriva" style="animation-duration:18s" pointer-events="none"><ellipse cx="600" cy="490" rx="74" ry="8" fill="url(#duBruma)" opacity=".75"/></g>
+    </g>
+    <g id="du-rocha" class="toque">
+      ${CAMADAS.map((d, i) => `<g class="du-bloco" data-i="${i}"><path d="${d}" fill="url(#duBloco)" stroke="#3E362E" stroke-width="1.6" stroke-linejoin="round"/><path d="M558 ${[364, 394, 422][i]} C580 ${[361, 391, 419][i]} 610 ${[366, 396, 424][i]} 638 ${[362, 392, 420][i]} M558 ${[374, 403, 430][i]} C584 ${[371, 400, 427][i]} 612 ${[376, 405, 432][i]} 638 ${[372, 401, 428][i]}" stroke="#6E6252" stroke-width="1.1" fill="none" opacity=".55"/>${i === 0 ? `<path d="${copa(576, 349, 6, 3, 7, .4)}" fill="#6E9A4E" stroke="#3E6A2E" stroke-width=".8"/><path d="${copa(614, 348, 7, 3.4, 7, .4)}" fill="#6E9A4E" stroke="#3E6A2E" stroke-width=".8"/>` : ''}<path class="du-calor" d="${d}" fill="url(#duQuente)" style="opacity:0;transition:opacity 1s"/>
+        <path d="M562 ${[354, 390, 416][i]} C584 ${[348, 387, 414][i]} 610 ${[348, 386, 413][i]} 634 ${[354, 389, 415][i]}" stroke="#E8DCC4" stroke-width="1.8" fill="none" opacity=".6" stroke-linecap="round"/>
+        <path class="du-racha" d="M${570 + i * 4} ${[360, 390, 417][i]} l8 7 l-4 6 l9 6 M${604 - i * 3} ${[358, 389, 416][i]} l-5 9 l7 5 l-3 8 M${624} ${[364, 392, 420][i]} l6 6 l-6 7" stroke="#2A221A" stroke-width="1.8" fill="none" stroke-linejoin="round" style="opacity:0;transition:opacity .3s"/></g>`).join('')}
+      <g id="du-fogo" style="display:none">${chama(598, 384)}</g>
+      <g id="du-rocha-hint" style="display:none">${brilhoHotspot(622, 350)}</g>
+      <rect x="550" y="340" width="96" height="102" fill="transparent"/></g>
+    <g id="du-trab1" class="toque">
+      <g transform="translate(528 410)"><path d="M-12 0 L12 -5 M-12 -5 L12 0 M-10 -10 L14 -7" stroke="#6E4428" stroke-width="5" stroke-linecap="round"/><path d="M-12 0 L12 -5 M-12 -5 L12 0 M-10 -10 L14 -7" stroke="#C08A5A" stroke-width="2.6" stroke-linecap="round"/><path d="M-12 -2.4 a1.6 2.4 0 1 0 .1 0" fill="#E8C49A"/></g>
+      ${pessoa(492, 404, '#E2AE84', '#1A1414', '#3E6AA8', '#4A4038', 1.5,
+        '<path d="M-7 -30 C-11 -26 -12 -20 -10 -15" stroke="#3E6AA8" stroke-width="4.4" fill="none" stroke-linecap="round"/><circle cx="-10" cy="-14.6" r="2.2" fill="#E2AE84" stroke="#5A3420" stroke-width=".7"/>',
+        '<path d="M7 -30 C11 -34 13 -40 14 -44" stroke="#3E6AA8" stroke-width="4.4" fill="none" stroke-linecap="round"/><circle cx="14.4" cy="-45" r="2.4" fill="#E2AE84" stroke="#5A3420" stroke-width=".7"/><path d="M12 -40 L18 -60" stroke="#6E4428" stroke-width="2.6" stroke-linecap="round"/><path d="M12 -40 L18 -60" stroke="#C08A5A" stroke-width="1.2" stroke-linecap="round"/><path d="M16.4 -56 l3.4 1 l-.8 3 l-3.4 -1Z M17.2 -59 l3.4 1" fill="#B88456" stroke="#5A3420" stroke-width=".6"/><g class="du-tocha"><path d="M18.6 -60 C14 -64 16 -71 19.6 -76 C20.4 -70 25 -68 22.6 -61Z" fill="#FF8A2A" stroke="#C8401E" stroke-width="1"/><path d="M19.2 -62 C17.8 -65 19 -69 20 -70.4 C20.8 -67 22 -66 21.2 -62Z" fill="#FFE27A"/></g>')}
+      <g id="du-trab1-hint" style="display:none">${brilhoHotspot(470, 330)}</g><rect x="470" y="318" width="62" height="96" fill="transparent"/></g>
+    <g id="du-trab2" class="toque">
+      ${pessoa(632, 344, '#B67E54', '#2A1E14', '#D8603A', '#3E4E6A', 1.4,
+        '<path d="M-7 -30 C-11 -28 -14 -26 -16 -23" stroke="#D8603A" stroke-width="4.4" fill="none" stroke-linecap="round"/>',
+        '<path d="M7 -30 C2 -28 -6 -26 -12 -24" stroke="#D8603A" stroke-width="4.4" fill="none" stroke-linecap="round"/><g class="du-balde" style="transform-box:fill-box;transform-origin:70% 20%"><path d="M-27 -30 L-25 -16 H-11 L-9 -30Z" fill="url(#duMadeira)" stroke="#3E2414" stroke-width="1.2" stroke-linejoin="round"/><path d="M-26.4 -26 H-9.6 M-25.6 -20 H-10.4" stroke="#5A5A64" stroke-width="1.4"/><path d="M-22 -29 V-17 M-15 -29 V-17" stroke="#4A2E14" stroke-width=".6" opacity=".6"/><ellipse cx="-18" cy="-30" rx="9" ry="2.6" fill="#6CC0EE" stroke="#3E2414" stroke-width="1"/><path d="M-22 -30.4 q3 -1 6 0" stroke="#fff" stroke-width=".9" fill="none"/><path d="M-27 -30 C-25 -40 -11 -40 -9 -30" stroke="#5A5A64" stroke-width="1.3" fill="none"/></g><circle cx="-13" cy="-23.6" r="2.3" fill="#B67E54" stroke="#5A3420" stroke-width=".7"/><circle cx="-17" cy="-22.4" r="2.2" fill="#B67E54" stroke="#5A3420" stroke-width=".7"/>')}
+      <g id="du-trab2-hint" style="display:none">${brilhoHotspot(650, 270)}</g><rect x="604" y="262" width="52" height="86" fill="transparent"/></g>
+    <g id="du-crianca" class="toque"><g id="du-bici" transform="translate(700 336)"><g id="du-bici-in" transform="scale(1.5)">
+      <ellipse cx="0" cy="6.4" rx="16" ry="2" fill="#1E2A14" opacity=".25"/>
+      <circle cx="-9" cy="0" r="6" fill="none" stroke="#2E2E3A" stroke-width="2"/><circle cx="9" cy="0" r="6" fill="none" stroke="#2E2E3A" stroke-width="2"/><path d="M-9 -5 V5 M-14 0 H-4 M9 -5 V5 M4 0 H14" stroke="#8A8A9A" stroke-width=".5"/>
+      <path d="M-9 0 L-2 -9 L7 -9 L9 0 M-2 -9 L0 0 L7 -9 M-4 -12 h5 M7 -9 l2 -5 h4" stroke="#E8403A" stroke-width="1.8" fill="none" stroke-linejoin="round"/><path d="M-12 -4 h6 l-1 3 h-4Z" fill="#3E7AC8" stroke="#1E3A6A" stroke-width=".5"/>
+      <path d="M0 0 L-2 -8" stroke="#2E4A8A" stroke-width="3" stroke-linecap="round"/><path d="M-1.6 -.4 h3" stroke="#fff" stroke-width="1.4"/>
+      <path d="M-8 -18 C-10 -14 -9 -10 -6 -9 L-3 -10 L-4 -18Z" fill="#3EA86A" stroke="#1E5A3A" stroke-width=".7"/>
+      <path d="M-3 -10 C-4 -16 -1 -20 2 -20 C6 -20 6 -14 5 -10Z" fill="#FFC83D" stroke="#8A5A0E" stroke-width="1"/><path d="M-1 -18 q2 2 4 0" stroke="#fff" stroke-width=".7" fill="none" opacity=".7"/>
+      <path d="M3 -16 L11 -13" stroke="#C99064" stroke-width="2.2" stroke-linecap="round"/><circle cx="2.4" cy="-24" r="4.4" fill="#C99064" stroke="#4A2E1A" stroke-width=".9"/><path d="M-2.2 -24.4 C-2.6 -30 6.6 -30.6 7 -24.8 C4 -27 0 -27 -2.2 -24.4Z" fill="#1E1614"/><ellipse cx="4.4" cy="-23.8" rx=".7" ry=".9" fill="#12121A"/><circle cx="4.6" cy="-24.1" r=".3" fill="#fff"/><path d="M3.4 -21.4 q1.4 1 2.6 0" stroke="#6E2A1E" stroke-width=".6" fill="none"/><ellipse cx="5.6" cy="-22.4" rx="1" ry=".6" fill="#FF8A7A" opacity=".55"/></g></g>
+      <rect x="672" y="290" width="56" height="54" fill="transparent"/></g>
+    <g id="du-pedregal"><ellipse cx="242" cy="470" rx="78" ry="30" fill="url(#duCascalho)" stroke="#9A865A" stroke-width="1.6"/>
+      <g fill="#BCA678">${Array.from({ length:26 }, () => `<ellipse cx="${R(172, 312).toFixed(0)}" cy="${R(450, 494).toFixed(0)}" rx="${R(2, 4).toFixed(1)}" ry="${R(1.4, 2.6).toFixed(1)}"/>`).join('')}</g></g>
+    <g id="du-cesto-fig" class="toque" data-fig="cestopedra"><svg x="128" y="456" width="76" height="54" viewBox="0 0 140 100"><use href="#f-cestopedra"/></svg>${brilhoHotspot(196, 466)}</g>
+    <g id="du-cestos">${CESTOS.map((p, i) => cesto(p.x, p.y, i)).join('')}</g>
+    <g id="du-pedras">${PEDRAS.map((p, i) => `<g class="du-pedra toque" data-i="${i}" transform="translate(${p.x} ${p.y})" style="cursor:grab"><ellipse cx="0" cy="${(p.r * .7).toFixed(1)}" rx="${p.r + 2}" ry="3" fill="#3E3420" opacity=".3"/><ellipse cx="0" cy="0" rx="${p.r}" ry="${(p.r * .82).toFixed(1)}" fill="${p.c}" stroke="#4A4E5A" stroke-width="1.6"/><path d="M${-p.r * .5} ${-p.r * .3} q${p.r * .4} ${-p.r * .45} ${p.r * .9} ${-p.r * .25}" stroke="#fff" stroke-width="2" fill="none" opacity=".6" stroke-linecap="round"/><circle r="${p.r + 12}" fill="transparent"/></g>`).join('')}</g>
+    <g id="du-mao" style="display:none"><path d="M276 438 C330 396 390 414 420 440" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="6 9"/><path d="M424 446 l-14 -2 l7 -11Z" fill="#fff"/></g>
+    <g id="du-faisao" class="toque"><g id="du-fai-in" style="transform-origin:290px 352px">
+      <ellipse cx="290" cy="354" rx="22" ry="3" fill="#1E2A14" opacity=".28"/>
+      <path d="M276 344 C262 342 246 346 234 352 C248 348 262 348 274 350Z" fill="#C86A2A" stroke="#7A3A12" stroke-width="1"/><path d="M274 342 C258 336 244 336 232 340 C246 340 258 342 272 346Z" fill="#E8A040" stroke="#7A3A12" stroke-width="1"/>
+      <path d="M286 352 v-6 M294 352 v-6" stroke="#A8743E" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M272 340 C272 330 284 326 296 330 C304 334 304 344 296 348 C288 352 276 350 272 340Z" fill="#E5392C" stroke="#7A1410" stroke-width="1.4"/>
+      <path d="M278 334 C284 330 292 330 296 332 C292 336 284 338 278 334Z" fill="#2E6AD6" stroke="#12358A" stroke-width=".9"/>
+      <path d="M294 332 C296 324 300 318 306 316 C310 316 312 320 310 324 C306 324 302 328 300 334Z" fill="#E5392C" stroke="#7A1410" stroke-width="1.2"/>
+      <path d="M300 320 C296 314 298 308 304 306 C306 310 308 312 308 316Z" fill="url(#duFaisao)" stroke="#A8620E" stroke-width="1"/>
+      <path d="M298 322 C300 318 304 316 306 318 C304 322 302 326 300 330Z" fill="#F0A81E" stroke="#8A4A08" stroke-width=".8"/>
+      <path d="M310 320 l5 1 l-5 1.6Z" fill="#E8D08A"/><circle cx="307" cy="319.4" r="1.4" fill="#12121A"/><circle cx="307.4" cy="319" r=".5" fill="#fff"/></g>
+      <rect x="228" y="300" width="92" height="58" fill="transparent"/></g>
+    <g id="du-arvpv">
+      <path d="M170 330 C172 300 166 276 172 250" stroke="#5E3E26" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M170 330 C172 300 166 276 172 250" stroke="#8A6040" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M170 286 C186 280 206 278 226 282" stroke="#5E3E26" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M170 286 C186 280 206 278 226 282" stroke="#8A6040" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="${copa(172, 236, 52, 30, 11, .24)}" fill="#3E8A5A" stroke="#245A3A" stroke-width="1.6"/><path d="${copa(160, 228, 28, 16, 9, .3)}" fill="#7CC27A" opacity=".55"/>
+      <path d="${copa(212, 256, 22, 12, 8, .3)}" fill="#4E9A62" stroke="#245A3A" stroke-width="1.2"/></g>
+    <g id="du-pv" class="toque" data-fig="pandavermelho"><g id="du-pv-in" style="transform-origin:206px 280px"><svg x="176" y="248" width="56" height="47" viewBox="0 0 130 110"><use href="#f-pandavermelho"/></svg></g>${brilhoHotspot(230, 254)}</g>
+    <g id="du-brotos" class="toque"><g id="du-brotos-in" style="transform-origin:190px 444px">
+      ${[[182, 444, 1], [194, 446, .8], [204, 444, .66]].map(([x, y, k]) => `<g transform="translate(${x} ${y}) scale(${k})"><path d="M-6 0 C-7 -10 -3 -20 0 -26 C3 -20 7 -10 6 0Z" fill="#E6C48A" stroke="#6E4418" stroke-width="1.2" stroke-linejoin="round"/><path d="M-5 -4 C-2 -8 3 -8 5 -5 M-4 -12 C-1 -15 2 -15 4 -12 M-2 -19 C0 -21 1 -21 2 -19" stroke="#6E4418" stroke-width="1" fill="none"/><path d="M-3 -4 C-3 -12 -1 -18 0 -22" stroke="#FFF0D0" stroke-width="1.2" fill="none" opacity=".8"/><path d="M0 -26 c-1 -4 1 -7 3 -8" stroke="#6ACB5A" stroke-width="2" fill="none" stroke-linecap="round"/></g>`).join('')}</g>
+      <rect x="172" y="410" width="40" height="40" fill="transparent"/></g>
+    <g id="du-lin" class="toque" data-fig="panda"><ellipse cx="108" cy="464" rx="50" ry="7" fill="#1E2A14" opacity=".28"/><g id="du-lin-in" style="transform-origin:108px 466px"><svg x="44" y="334" width="130" height="130" viewBox="0 0 120 120"><use href="#f-panda"/></svg></g>${brilhoHotspot(158, 352)}</g>
+    <g id="du-bambus" class="toque" data-fig="bambuchina">${[[14, 500, 330, '#9AD06A', '#4E8A2E'], [34, 500, 300, '#5EB46A', '#2E7A3E'], [-4, 500, 360, '#7CC8A0', '#2E8A6A'], [56, 500, 250, '#A8D870', '#5A8A2A']].map(([x, y, h, cor, esc], i) => `<g class="balanca" style="transform-origin:${x}px ${y}px;animation-duration:${(5 + i).toFixed(0)}s;animation-delay:${-i}s"><path d="M${x} ${y} L${x + 6} ${y - h}" stroke="${esc}" stroke-width="9" stroke-linecap="round"/><path d="M${x} ${y} L${x + 6} ${y - h}" stroke="${cor}" stroke-width="6" stroke-linecap="round"/>${Array.from({ length:Math.floor(h / 40) }, (_, j) => `<path d="M${f1(x - 5 + (j + 1) * 40 / h * 6)} ${y - (j + 1) * 40} h11" stroke="${esc}" stroke-width="2" stroke-linecap="round"/>`).join('')}${Array.from({ length:5 }, (_, j) => { const yy = y - h + j * 22 + 6, xx = x + 6 - j * 22 / h * 6, lado = j % 2 ? 1 : -1; return `<path d="M${f1(xx)} ${yy} q${lado * 14} -4 ${lado * 30} 6 q${-lado * 16} 2 ${-lado * 30} -6Z M${f1(xx)} ${yy + 4} q${lado * 10} 6 ${lado * 22} 16 q${-lado * 12} -4 ${-lado * 22} -16Z" fill="${cor}" stroke="${esc}" stroke-width="1.1" stroke-linejoin="round"/>`; }).join('')}</g>`).join('')}${brilhoHotspot(48, 240)}</g>
+    <g pointer-events="none">${[[240, 498], [330, 500], [520, 500], [610, 502], [780, 500], [700, 504]].map(([x, y], i) => `<g class="balanca" style="transform-origin:${x}px ${y}px;animation-delay:${(-i * .7).toFixed(1)}s"><path d="M${x} ${y} q-6 -16 -4 -30 M${x + 6} ${y} q2 -18 8 -32 M${x + 12} ${y} q6 -12 14 -20 M${x - 6} ${y} q-8 -10 -14 -18" stroke="#3E7A2A" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M${x} ${y} q-6 -16 -4 -30 M${x + 6} ${y} q2 -18 8 -32" stroke="#8ACB5A" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>`).join('')}</g>
+    <rect width="800" height="500" fill="url(#duVinheta)" pointer-events="none"/><rect width="800" height="500" filter="url(#duGrao)" pointer-events="none"/>
+  </svg>`;
+  const c = criarCena(palco, svg), s = c.svg;
+  /* ---------- água correndo ---------- */
+  const rioEl = k => s.querySelector(`.du-rio[data-k="${k}"]`);
+  s.querySelectorAll('.du-onda').forEach((p, i) => p.animate([{ opacity:.85 }, { opacity:.15 }, { opacity:.85 }], { duration:1200, iterations:Infinity, delay:-(i % 4) * 300 }));
+  s.querySelectorAll('.du-onda2').forEach((p, i) => p.animate([{ opacity:.15 }, { opacity:.85 }, { opacity:.15 }], { duration:1200, iterations:Infinity, delay:-(i % 4) * 300 }));
+  s.querySelectorAll('.du-espuma').forEach(p => p.animate([{ strokeDashoffset:0 }, { strokeDashoffset:-38 }], { duration:2400, iterations:Infinity }));
+  el(s, '.du-esp-in').animate([{ transform:'scale(1)' }, { transform:'scale(1.08,1.04)' }, { transform:'scale(1)' }], { duration:900, iterations:Infinity });
+  s.querySelectorAll('.du-corre').forEach((p, i) => p.animate([{ strokeDashoffset:0 }, { strokeDashoffset:-46 }], { duration:1300 + (i % 3) * 200, iterations:Infinity }));
+  const redesenha = k => { const g = rioEl(k), d = poli(k, fac[k], prog[k]); g.querySelector('.du-agua').setAttribute('d', d); g.querySelector('.du-lama').setAttribute('d', d); g.querySelector('.du-clara').setAttribute('d', poli(k, fac[k] * .2, prog[k])); g.querySelector('.du-funda').setAttribute('d', poli(k, fac[k] * .58, prog[k])); g.querySelector('.du-espuma').setAttribute('d', d); };
+  const tween = (ms, fn, fim) => { const t0 = performance.now(); (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / ms); fn(k * k * (3 - 2 * k)); if (k < 1) requestAnimationFrame(q); else fim && fim(); })(t0); };
+  const encher = (k, ms) => tween(ms, e => { prog[k] = e; redesenha(k); }, () => { rioEl(k).querySelectorAll('.du-corre').forEach(c2 => c2.style.opacity = .75); rioEl(k).querySelector('.du-ondas').style.opacity = 1; });
+  const largura = (k, f, lama) => { const f0 = fac[k]; rioEl(k).querySelector('.du-lama').style.opacity = lama || 0; tween(1800, e => { fac[k] = f0 + (f - f0) * e; redesenha(k); }); };
+  /* partículas que descem os rios: brilhos de água e grãos de areia */
+  const fluxo = [], espumas = [], cacos = []; let ultimo = 0;
+  const nasce = (tipo) => fluxo.push({ k:'longe', d:0, v:sorte(1.1, 1.7), o:sorte(-.35, .35), tipo, f:sorte(0, 6) });
+  const proximo = p => {
+    if (p.k === 'longe') { p.k = 'perto'; p.d = 0; return true; }
+    if (p.k === 'perto') { const pDentro = !interno ? 0 : p.tipo === 'areia' ? .18 : estacao === 'cheia' ? .4 : estacao === 'seca' ? .6 : .5; p.k = Math.random() < pDentro ? 'dentro' : 'fora'; p.d = 0; return true; }
+    if (p.k === 'dentro' && gargalo) { p.k = 'garg'; p.d = 0; return true; }
+    if (p.k === 'garg') { p.k = ['c1', 'c2', 'c3'][Math.floor(Math.random() * 3)]; p.d = 0; return true; }
+    if (p.k === 'verte') { p.k = 'fora'; p.d = dPerto('fora', 368, 410); return true; }
+    return false; };
+  const D_VERTE = dPerto('dentro', 444, 396);
+  c.desenho(ctx => {
+    const t = performance.now();
+    const taxa = estacao === 'cheia' ? 60 : estacao === 'seca' ? 220 : 130;
+    if (t - ultimo > taxa && fluxo.length < 170) { ultimo = t; nasce('agua'); if (estacao === 'cheia' && Math.random() < .8) nasce('areia'); }
+    if (interno && Math.random() < .5) espumas.push({ x:400 + sorte(-6, 6), y:220, vx:sorte(-1, 1) * (estacao === 'cheia' ? 1.6 : 1), vy:sorte(.6, 1.4), t:0, r:sorte(1.2, 2.6) });
+    if (gargalo && prog.garg >= 1 && Math.random() < .55) { const q = noPonto('garg', sorte(0, 60)); espumas.push({ x:q.x, y:q.y + sorte(-7, 7), vx:sorte(1.6, 2.6), vy:sorte(-.2, .2), t:0, r:sorte(1.2, 2.4) }); }
+    for (let i = cacos.length - 1; i >= 0; i--) { const k = cacos[i]; if (k.y < k.chao) { k.vy += .25; k.x += k.vx; k.y += k.vy; k.a += .2; } else { k.y = k.chao; k.t = (k.t || 0) + 1; if (k.t > 60) { cacos.splice(i, 1); continue; } }
+      ctx.save(); ctx.globalAlpha = k.t ? 1 - k.t / 60 : 1; ctx.translate(k.x, k.y); ctx.rotate(k.a); ctx.fillStyle = k.cor; ctx.strokeStyle = '#3E362E'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-k.r, 0); ctx.lineTo(-k.r * .3, -k.r * .9); ctx.lineTo(k.r, -k.r * .4); ctx.lineTo(k.r * .6, k.r * .7); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
+    for (let i = espumas.length - 1; i >= 0; i--) { const e = espumas[i]; e.t++; e.x += e.vx; e.y += e.vy; if (e.t > 34) { espumas.splice(i, 1); continue; } ctx.globalAlpha = .9 * (1 - e.t / 34); ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, 7); ctx.fill(); }
+    for (let i = fluxo.length - 1; i >= 0; i--) {
+      const p = fluxo[i], L = AM[p.k][AM[p.k].length - 1].L;
+      p.d += p.v * (estacao === 'cheia' ? 1.5 : 1) * (p.k.length === 2 ? .7 : 1);
+      if (p.k === 'dentro' && estacao === 'cheia' && !p.pulou && p.d >= D_VERTE) { p.pulou = true; if (p.tipo === 'areia' || Math.random() < .4) { p.k = 'verte'; p.d = 0; } }
+      if (p.d >= L && !proximo(p)) { fluxo.splice(i, 1); continue; }
+      const q = noPonto(p.k, p.d), w = larg(p.k, p.d) * fac[p.k] * .8, ox = -q.ty * p.o * w, oy = q.tx * p.o * w;
+      if (p.tipo === 'agua') { ctx.globalAlpha = .75; ctx.strokeStyle = '#F4FCFF'; ctx.lineWidth = p.k.length === 2 ? 1.4 : 2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(q.x + ox - q.tx * 4, q.y + oy - q.ty * 4); ctx.lineTo(q.x + ox + q.tx * 4, q.y + oy + q.ty * 4); ctx.stroke(); }
+      else { ctx.globalAlpha = .95; ctx.fillStyle = '#B8864A'; ctx.strokeStyle = '#6E4A1E'; ctx.lineWidth = .8; ctx.beginPath(); ctx.arc(q.x + ox, q.y + oy + Math.sin(t / 200 + p.f), 2.2, 0, 7); ctx.fill(); ctx.stroke(); }
+    }
+    ctx.globalAlpha = 1;
+  });
+  /* ---------- 1. Gargalo do Jarro: fogo esquenta, água fria racha a rocha ---------- */
+  const fogo = el(s, '#du-fogo'), fogoIn = el(s, '.du-fogo-in');
+  fogoIn.animate([{ transform:'scale(1,1)' }, { transform:'scale(1.08,.9)' }, { transform:'scale(.94,1.1)' }, { transform:'scale(1,1)' }], { duration:500, iterations:Infinity });
+  s.querySelectorAll('.du-tocha').forEach(tc => tc.animate([{ opacity:1 }, { opacity:.7 }, { opacity:1 }], { duration:400, iterations:Infinity }));
+  const dicas = () => { const r = fase === 'rocha'; el(s, '#du-trab1-hint').style.display = r && !quente ? '' : 'none'; el(s, '#du-trab2-hint').style.display = r && quente ? '' : 'none'; el(s, '#du-rocha-hint').style.display = 'none'; };
+  function acender(){
+    if (fase !== 'rocha' || ocupado) return;
+    if (quente) { toca('clique'); api.diz('A rocha já está quente! Toque no balde de água fria.'); return; }
+    ocupado = true; toca('vapor'); const b = s.querySelectorAll('.du-bloco')[camada], cc = CENTRO[camada];
+    fogo.setAttribute('transform', `translate(0 ${cc.y - 384 + 12})`); fogo.style.display = '';
+    for (let i = 0; i < 6; i++) c.add({ tipo:'brilho', t:-i * 4, x:cc.x + sorte(-26, 26), y:cc.y + sorte(-10, 6), cor:'#FFB347' });
+    depois(500, () => b.querySelector('.du-calor').style.opacity = .85);
+    depois(1500, () => { quente = true; ocupado = false; fogo.style.display = 'none'; dicas(); api.diz(camada === 0 ? 'A rocha ficou bem quente! Agora toque no balde e jogue água fria.' : 'Rocha quente! Toque no balde.'); });
+  }
+  function esfriar(){
+    if (fase !== 'rocha' || ocupado) return;
+    if (!quente) { toca('clique'); api.diz('Primeiro esquente a rocha: toque no fogo!'); return; }
+    ocupado = true; const b = s.querySelectorAll('.du-bloco')[camada], cc = CENTRO[camada];
+    el(s, '.du-balde').animate([{ transform:'rotate(0)' }, { transform:'rotate(-50deg)' }, { transform:'rotate(0)' }], { duration:700 });
+    toca('splash'); for (let i = 0; i < 18; i++) setTimeout(() => vivo && c.add({ tipo:'chuva', x:604 + sorte(-4, 4), y:304, vx:sorte(-1.4, .2), vy:sorte(3, 5), chao:cc.y + sorte(-4, 6), cor:'#5AB0F0' }), i * 30);
+    depois(500, () => { toca('vapor'); for (let i = 0; i < 16; i++) c.add({ tipo:'vapor', x0:cc.x + sorte(-28, 28), y0:cc.y, x1:cc.x + sorte(-40, 40), y1:cc.y - sorte(50, 90), dur:sorte(40, 70), f:sorte(0, 6), r:sorte(3, 6), x:0, y:0 }); b.querySelector('.du-calor').style.opacity = 0; b.querySelector('.du-racha').style.opacity = 1; });
+    depois(1300, () => { toca('pop'); b.animate([{ transform:'translateY(0)', opacity:1 }, { transform:'translateY(14px)', opacity:0 }], { duration:600, fill:'forwards' });
+      for (let i = 0; i < 12; i++) cacos.push({ x:cc.x + sorte(-30, 30), y:cc.y + sorte(-8, 8), vx:sorte(-1.6, 1.6), vy:sorte(-3.4, -.6), chao:cc.y + sorte(16, 34), r:sorte(2, 4.4), a:sorte(0, 6), cor:['#9A8C76', '#B8A88E', '#7A6E5E'][i % 3] });
+      camada++; quente = false; api.hud(`<span class="chip">Rocha: ${camada}/3</span>`);
+      depois(700, () => { ocupado = false; dicas();
+        if (camada === 1) api.diz('Crac! A rocha quente racha com a água fria. Toque no fogo de novo!');
+        if (camada === 2) api.diz('As pessoas daqui levaram anos para abrir este caminho na montanha. Toque no fogo!');
+        if (camada === 3) { toca('vitoria'); el(s, '#du-rocha').style.pointerEvents = 'none'; gargalo = true; api.diz('Abriu! Este corte na montanha se chama Gargalo do Jarro. Ele é estreito de propósito.'); depois(5000, comecaCestos); } }); });
+  }
+  el(s, '#du-trab1').addEventListener('click', e => { e.stopPropagation(); if (fase === 'rocha') acender(); else { toca('pop'); api.diz('Fogo para esquentar e água fria para rachar: assim a rocha foi aberta, sem máquinas!'); } });
+  el(s, '#du-trab2').addEventListener('click', e => { e.stopPropagation(); if (fase === 'rocha') esfriar(); else { toca('pop'); api.diz(fase === 'fim' ? 'A água do rio rega nossas plantações há muitas gerações!' : 'O rio de dentro vai levar água para a planície!'); } });
+  el(s, '#du-rocha').addEventListener('click', e => { e.stopPropagation(); if (quente) esfriar(); else acender(); });
+  /* ---------- 2. Cestos de bambu com pedras formam a Boca de Peixe ---------- */
+  const pedras = [...s.querySelectorAll('.du-pedra')], pos = PEDRAS.map(p => ({ x:p.x, y:p.y, foi:false }));
+  const cheio = [0, 0, 0], pronto = [false, false, false]; let alvoCesto = 0;
+  const mao = el(s, '#du-mao');
+  function comecaCestos(){
+    fase = 'cestos'; dicas(); el(s, '#du-dique-vagas').style.display = ''; mao.style.display = '';
+    mao.animate([{ opacity:.2 }, { opacity:1 }, { opacity:.2 }], { duration:1600, iterations:Infinity });
+    s.querySelectorAll('.du-cesto-hint')[0].style.display = '';
+    api.hud('<span class="chip">Cestos: 0/3</span>');
+    api.diz('Agora vamos dividir o rio. Arraste as pedras para dentro dos cestos de bambu!');
+  }
+  let arr = null;
+  pedras.forEach((g, i) => g.addEventListener('pointerdown', e => {
+    if (pos[i].foi || ocupado) return; e.stopPropagation();
+    if (fase !== 'cestos') { toca('clique'); api.diz(fase === 'rocha' ? 'São pedras redondas do rio. Logo vamos usar!' : 'Pedras redondas do rio.'); return; }
+    const p = c.ponto(e); arr = { i, dx:p.x - pos[i].x, dy:p.y - pos[i].y, x0:p.x, y0:p.y, moveu:false };
+    s.setPointerCapture(e.pointerId); g.style.cursor = 'grabbing'; mao.style.display = 'none'; toca('clique');
+  }));
+  s.addEventListener('pointermove', e => {
+    if (!arr) return; const p = c.ponto(e);
+    if (Math.hypot(p.x - arr.x0, p.y - arr.y0) > 8) arr.moveu = true;
+    pos[arr.i].x = Math.max(16, Math.min(784, p.x - arr.dx)); pos[arr.i].y = Math.max(200, Math.min(494, p.y - arr.dy));
+    pedras[arr.i].setAttribute('transform', `translate(${f1(pos[arr.i].x)} ${f1(pos[arr.i].y)})`);
+  });
+  s.addEventListener('pointerup', () => {
+    if (!arr) return; const { i, moveu } = arr; arr = null; pedras[i].style.cursor = 'grab';
+    let k = -1, dm = 1e9; CESTOS.forEach((b, j) => { const dd = Math.hypot(pos[i].x - b.x, pos[i].y - b.y); if (cheio[j] < 2 && dd < dm) { dm = dd; k = j; } });
+    if (!moveu) k = cheio[alvoCesto] < 2 ? alvoCesto : cheio.findIndex(n => n < 2);
+    else if (dm > 70) { voa(i, PEDRAS[i].x, PEDRAS[i].y, 600, 1, () => {}); toca('glub'); api.diz('Leve a pedra até um cesto de bambu!'); return; }
+    guarda(i, k);
+  });
+  function voa(i, x1, y1, ms, esc, fim){
+    const x0 = pos[i].x, y0 = pos[i].y, t0 = performance.now(); ocupado = true;
+    (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / ms), e = k * k * (3 - 2 * k); pos[i].x = x0 + (x1 - x0) * e; pos[i].y = y0 + (y1 - y0) * e - Math.sin(k * Math.PI) * 50;
+      pedras[i].setAttribute('transform', `translate(${f1(pos[i].x)} ${f1(pos[i].y)}) scale(${(1 + (esc - 1) * e).toFixed(2)})`);
+      if (k < 1) requestAnimationFrame(q); else { ocupado = false; fim && fim(); } })(t0);
+  }
+  function guarda(i, k){
+    if (k < 0) return; pos[i].foi = true; cheio[k]++; const b = CESTOS[k];
+    voa(i, b.x - 8, b.y - 4, 800, .55, () => {
+      pedras[i].style.display = 'none'; toca('pop'); c.brilhos(b.x, b.y - 10, 4, '#FFE27A');
+      s.querySelectorAll('.du-cesto')[k].querySelectorAll('.du-cp')[cheio[k] - 1].style.opacity = 1;
+      el(s.querySelectorAll('.du-cesto')[k], '.du-cesto-in').animate([{ transform:'scale(1)' }, { transform:'scale(1.08,.92)' }, { transform:'scale(1)' }], { duration:400 });
+      if (cheio[k] === 2) rola(k); else api.diz('Mais uma pedra neste cesto!');
+    });
+  }
+  function rola(k){
+    s.querySelectorAll('.du-cesto-hint').forEach(h => h.style.display = 'none');
+    const n = pronto.filter(Boolean).length; pronto[k] = true; alvoCesto = cheio.findIndex(m => m < 2);
+    if (alvoCesto >= 0) s.querySelectorAll('.du-cesto-hint')[alvoCesto].style.display = '';
+    const g = s.querySelectorAll('.du-cesto')[k], b = CESTOS[k], v = VAGA[n];
+    toca('ok');
+    g.style.transformOrigin = `${b.x}px ${b.y}px`; g.style.transformBox = 'view-box';
+    const an = g.animate([{ transform:'translate(0,0) rotate(0) scale(1)', opacity:1 }, { transform:`translate(${(v.x - b.x) * .5}px, ${(v.y - b.y) * .5 - 50}px) rotate(${-v.a / 2}deg) scale(.8)`, opacity:1 }, { transform:`translate(${v.x - b.x}px, ${v.y - b.y}px) rotate(${-v.a}deg) scale(.6)`, opacity:0 }], { duration:1300, easing:'ease-in-out', fill:'forwards' });
+    an.onfinish = () => { if (!vivo) return; toca('splash');
+      s.querySelectorAll('.du-seg')[n].style.opacity = 1; s.querySelectorAll('.du-vaga')[n].style.display = 'none';
+      for (let i = 0; i < 6; i++) c.add({ tipo:'respingo', x:v.x + sorte(-18, 18), y:v.y + sorte(-14, 14), t:i * 2, cor:'#E6F6FF' });
+      api.hud(`<span class="chip">Cestos: ${n + 1}/3</span>`);
+      if (n === 0) api.diz('Um cesto cheio de pedras é pesado e firme. A água passa entre as pedras sem derrubar o cesto.');
+      if (n === 1) api.diz('Os cestos estão formando um dique comprido, com a ponta virada para o rio.');
+      if (n === 2) dividir(); };
+  }
+  function dividir(){
+    fase = 'divide'; el(s, '#du-dique-luz').style.opacity = 1; el(s, '#du-boca').style.opacity = 1; el(s, '#du-espuma-ponta').style.opacity = 1; toca('vitoria');
+    api.diz('Parece a boca de um peixe! A Boca de Peixe divide o rio em dois: o rio de fora e o rio de dentro.');
+    depois(1800, () => { toca('chuva'); interno = true; encher('dentro', 2400); });
+    depois(4300, () => { encher('garg', 900); });
+    depois(5300, () => { encher('c1', 1600); encher('c2', 1400); encher('c3', 1300); api.diz('A água do rio de dentro passa pelo Gargalo do Jarro e chega aos canais da planície.'); });
+    depois(10500, comecaEstacoes);
+  }
+  /* ---------- 3. Estações: cheia e seca ---------- */
+  function comecaEstacoes(){
+    fase = 'estacoes'; el(s, '#du-nuvem-hint').style.display = '';
+    api.hud('<span class="chip">Estações: 0/2</span>');
+    api.diz('Toque na nuvem de chuva para chegar a época das cheias!');
+  }
+  const conta = () => api.hud(`<span class="chip">Estações: ${(feitas.cheia ? 1 : 0) + (feitas.seca ? 1 : 0)}/2</span>`);
+  function cheia(){
+    if (ocupado) return; ocupado = true; estacao = 'cheia'; feitas.cheia = true; conta(); el(s, '#du-nuvem-hint').style.display = 'none';
+    toca('chuva'); el(s, '#du-nuvem-in').style.transform = 'scale(1.18)'; c.chover(110, 700, 70, 230, 110, '#5A9AE0');
+    largura('longe', 1.3, .45); largura('perto', 1.3, .45); largura('fora', 1.3, .5); largura('dentro', 1.1, .25); largura('garg', 1, .15);
+    el(s, '#du-verte-agua').style.opacity = 1; el(s, '#du-sol').style.opacity = .55;
+    api.diz('Na cheia, o rio fica enorme e cheio de areia. A maior parte da água e quase toda a areia vão pelo rio de fora.');
+    depois(5600, () => { el(s, '#du-vila-ok').style.opacity = 1; c.brilhos(740, 270, 6, '#FFE27A'); toca('ok');
+      api.diz('A água que sobra no rio de dentro pula pelo vertedouro e volta para o rio de fora. A vila fica segura!'); });
+    depois(11000, () => { ocupado = false; el(s, '#du-nuvem-in').style.transform = '';
+      if (!feitas.seca) { el(s, '#du-sol-hint').style.display = ''; api.diz('Agora toque no sol para chegar a época seca!'); } else final(); });
+  }
+  function seca(){
+    if (ocupado) return; ocupado = true; estacao = 'seca'; feitas.seca = true; conta(); el(s, '#du-sol-hint').style.display = 'none';
+    toca('vapor'); el(s, '#du-sol').style.opacity = 1; el(s, '#du-sol').animate([{ transform:'scale(1)' }, { transform:'scale(1.12)' }, { transform:'scale(1)' }], { duration:900 });
+    for (let i = fluxo.length - 1; i >= 0; i--) if (fluxo[i].tipo === 'areia') fluxo.splice(i, 1);
+    largura('longe', .75, 0); largura('perto', .75, 0); largura('fora', .6, 0); largura('dentro', 1, 0); largura('garg', 1, 0);
+    el(s, '#du-verte-agua').style.opacity = 0; el(s, '#du-vila-ok').style.opacity = 0;
+    api.diz('Na seca, o rio fica baixinho. Agora a maior parte da água vai pelo rio de dentro, para as plantações.');
+    const campos = [...s.querySelectorAll('.du-arroz')];
+    campos.forEach((g, i) => depois(1500 + i * 70, () => g.querySelector('.du-arroz-agua').style.opacity = .95));
+    depois(1500 + campos.length * 70 + 600, () => { toca('planta'); campos.forEach((g, i) => depois(i * 60, () => { g.querySelector('.du-arroz-verde').style.opacity = 1; if (i % 4 === 0) c.brilhos(700 + (i * 37) % 100, 330 + (i * 23) % 150, 1, '#FFFFFF'); })); api.diz('Os arrozais se enchem de água e o arroz cresce verdinho!'); });
+    depois(9000, () => { ocupado = false; if (!feitas.cheia) { el(s, '#du-nuvem-hint').style.display = ''; api.diz('Agora toque na nuvem para chegar a época das cheias!'); } else final(); });
+  }
+  function final(){
+    if (fase === 'fim') return; fase = 'fim'; toca('vitoria');
+    api.diz('Dujiangyan tem mais de 2.200 anos e funciona até hoje! O povo de Sichuan repartiu o rio sem represa, com pedras, bambu e muita sabedoria.');
+    depois(6400, api.fim);
+  }
+  el(s, '#du-nuvem').addEventListener('click', e => { e.stopPropagation();
+    if (fase === 'estacoes' || fase === 'fim') { cheia(); return; }
+    toca('clique'); api.diz('Lá no alto das montanhas chove e a neve derrete. Toda essa água desce pelo rio Min.'); });
+  el(s, '#du-sol').addEventListener('click', e => { e.stopPropagation();
+    if (fase === 'estacoes' || fase === 'fim') { seca(); return; }
+    toca('ok'); c.brilhos(700, 62, 5, '#FFE27A'); api.diz('Sichuan tem verão de muita chuva e inverno mais seco.'); });
+  /* ---------- toques extras ---------- */
+  let linOcupada = false;
+  el(s, '#du-lin').addEventListener('click', () => { toca('pop');
+    if (!linOcupada) { linOcupada = true; el(s, '#du-lin-in').animate([{ transform:'translateY(0) scale(1,1)' }, { transform:'translateY(4px) scale(1.06,.94)' }, { transform:'translateY(-10px) scale(.96,1.04)' }, { transform:'translateY(0) scale(1,1)' }], { duration:800 }); depois(800, () => linOcupada = false); }
+    api.diz(fase === 'rocha' ? 'Sou a Lin! Toque no fogo e depois no balde para abrir a rocha.' : fase === 'cestos' ? 'Arraste as pedras para os cestos, pode ser por cima do rio!' : 'Eu passo quase o dia todo comendo bambu. Aqui nas montanhas de Sichuan é a minha casa!'); });
+  let pvOcupado = false;
+  el(s, '#du-pv').addEventListener('click', () => { if (pvOcupado) return; pvOcupado = true; toca('pop');
+    el(s, '#du-pv-in').animate([{ transform:'translateY(0)' }, { transform:'translateY(-8px) rotate(-6deg)' }, { transform:'translateY(0) rotate(4deg)' }, { transform:'translateY(0) rotate(0)' }], { duration:900 });
+    api.diz('Um panda-vermelho! Ele é do tamanho de um gato e se enrola na cauda peluda para se esquentar.'); depois(1000, () => pvOcupado = false); });
+  el(s, '#du-bambus').addEventListener('click', () => { toca('clique'); [0, 1, 2].forEach(i => c.add({ tipo:'petala', x:20 + i * 16, y:200 + i * 20, vy:sorte(.8, 1.4), f:sorte(0, 6), chao:470, cor:'#8ACB5A', borda:'#3E7A2A' }));
+    api.diz('O bambu é a planta que cresce mais rápido no mundo! E dele as pessoas daqui fizeram os cestos do dique.'); });
+  el(s, '#du-cesto-fig').addEventListener('click', () => { toca('clique'); api.diz('Um cesto comprido de bambu cheio de pedras. Era assim que se construíam os diques do rio.'); });
+  let faiOcupado = false;
+  el(s, '#du-faisao').addEventListener('click', e => { e.stopPropagation(); if (faiOcupado) return; faiOcupado = true;
+    [1500, 1900, 1700].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .12, 'square', .03, f * .8), i * 140));
+    el(s, '#du-fai-in').animate([{ transform:'translateY(0)' }, { transform:'translateY(-16px)' }, { transform:'translateY(0)' }, { transform:'translateY(-8px)' }, { transform:'translateY(0)' }], { duration:900 });
+    api.diz('O faisão-dourado vive nas florestas das montanhas da China. Que penas coloridas!'); depois(1000, () => faiOcupado = false); });
+  let bufOcupado = false;
+  el(s, '#du-bufalo').addEventListener('click', e => { e.stopPropagation(); if (bufOcupado) return; bufOcupado = true;
+    somOn && tom(130, 0, .8, 'sawtooth', .05, 95);
+    el(s, '#du-buf-cab').animate([{ transform:'rotate(0)' }, { transform:'rotate(8deg)' }, { transform:'rotate(-4deg)' }, { transform:'rotate(0)' }], { duration:900, easing:'ease-in-out' });
+    api.diz('O búfalo-d’água gosta de lama e de água fresquinha, bem perto dos arrozais.'); depois(1000, () => bufOcupado = false); });
+  el(s, '#du-buf-cab').style.transformBox = 'fill-box'; el(s, '#du-buf-cab').style.transformOrigin = '0% 30%';
+  let biciX = 0, biciOcupada = false;
+  el(s, '#du-crianca').addEventListener('click', e => { e.stopPropagation(); if (biciOcupada) return; biciOcupada = true;
+    [1800, 2200].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .15, 'sine', .06), i * 160));
+    const x0 = biciX, x1 = biciX === 0 ? 76 : 0, t0 = performance.now(), vira = x1 < x0;
+    (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / 1800), e2 = k * k * (3 - 2 * k); biciX = x0 + (x1 - x0) * e2;
+      el(s, '#du-bici').setAttribute('transform', `translate(${f1(700 + biciX)} ${f1(336 - biciX * .06)})`); el(s, '#du-bici-in').setAttribute('transform', vira ? 'scale(-1.5 1.5)' : 'scale(1.5)');
+      if (k < 1) requestAnimationFrame(q); else biciOcupada = false; })(t0);
+    api.diz(fase === 'fim' ? 'A água do rio chega até a nossa vila. Aqui tem arroz, verduras e peixe!' : 'Oi! Eu moro na planície de Chengdu e vou de bicicleta para a escola.'); });
+  el(s, '#du-garca').addEventListener('click', e => { e.stopPropagation(); [900, 700].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .18, 'triangle', .05, f * .6), i * 200)); api.diz('Garças! Elas procuram peixinhos e sapos nos arrozais.'); });
+  el(s, '#du-vila').addEventListener('click', e => { e.stopPropagation(); toca('clique'); api.diz('Na planície de Chengdu vivem milhões de pessoas. A água delas vem deste rio.'); });
+  let peixeOcupado = false;
+  el(s, '#du-fora-toque').addEventListener('click', e => { e.stopPropagation(); const p = c.ponto(e); toca('splash');
+    for (let i = 0; i < 3; i++) c.add({ tipo:'respingo', x:p.x, y:p.y, t:i * 3, cor:'#E6F6FF' });
+    if (peixeOcupado) return; peixeOcupado = true; const px = el(s, '#du-peixe');
+    px.animate([{ transform:`translate(${p.x - 14}px, ${p.y}px) rotate(-60deg)`, opacity:1 }, { transform:`translate(${p.x}px, ${p.y - 34}px) rotate(0deg)`, opacity:1 }, { transform:`translate(${p.x + 14}px, ${p.y}px) rotate(60deg)`, opacity:1 }, { transform:`translate(${p.x + 14}px, ${p.y}px) rotate(60deg)`, opacity:0 }], { duration:900, easing:'ease-in-out' });
+    depois(820, () => { for (let i = 0; i < 3; i++) c.add({ tipo:'respingo', x:p.x + 14, y:p.y, t:i * 3, cor:'#E6F6FF' }); });
+    api.diz(fase === 'estacoes' || fase === 'fim' ? 'Uma carpa! O rio não foi fechado por uma represa, então os peixes podem subir e descer o rio.' : 'Uma carpa pulou! O rio Min desce das montanhas bem rápido.'); depois(1000, () => peixeOcupado = false); });
+  el(s, '#du-dique').addEventListener('click', e => { if (fase === 'rocha' || fase === 'cestos') return; e.stopPropagation(); toca('clique'); api.diz('A Boca de Peixe! A ponta divide o rio sem fechar o caminho da água.'); });
+  el(s, '#du-vertedouro').addEventListener('click', e => { e.stopPropagation(); toca('clique'); api.diz('Este é o vertedouro: uma parte baixinha do dique, por onde a água que sobra volta para o rio de fora.'); });
+  let brotoOcupado = false, mordidas = 0;
+  el(s, '#du-brotos').addEventListener('click', e => { e.stopPropagation(); if (brotoOcupado) return; brotoOcupado = true; mordidas++;
+    [0, 1, 2].forEach(i => setTimeout(() => { if (!vivo) return; somOn && tom(260 + i * 30, 0, .07, 'square', .04, 180); el(s, '#du-lin-in').animate([{ transform:'scale(1,1)' }, { transform:'scale(1.04,.96)' }, { transform:'scale(1,1)' }], { duration:260 }); c.add({ tipo:'petala', x:150 + sorte(-8, 8), y:396, vy:sorte(.6, 1.2), f:sorte(0, 6), chao:460, cor:'#E6C48A', borda:'#6E4418' }); }, i * 320));
+    el(s, '#du-brotos-in').style.transition = 'transform .9s'; el(s, '#du-brotos-in').style.transform = 'scaleY(.35)';
+    api.diz(mordidas === 1 ? 'Nhac, nhac! Broto de bambu é macio e gostoso. Uma panda come mais de 12 quilos de bambu por dia!' : 'Nhac! O bambu cresce de novo bem rápido.');
+    depois(3600, () => { el(s, '#du-brotos-in').style.transform = ''; brotoOcupado = false; }); });
+  let jangOcupada = false;
+  el(s, '#du-jangada').addEventListener('click', e => { e.stopPropagation(); if (jangOcupada) return; jangOcupada = true; toca('glub');
+    el(s, '#du-vara').animate([{ transform:'rotate(0)' }, { transform:'rotate(14deg)' }, { transform:'rotate(0)' }], { duration:900, iterations:2 });
+    el(s, '#du-jang-pos').animate([{ transform:'translate(0,0)' }, { transform:'translate(-6px,46px)' }, { transform:'translate(0,0)' }], { duration:3600, easing:'ease-in-out' });
+    [0, 900, 1800].forEach(ms => depois(ms, () => { for (let i = 0; i < 2; i++) c.add({ tipo:'respingo', x:338 + sorte(-6, 6), y:362 + ms / 40, t:i * 3, cor:'#E6F6FF' }); }));
+    api.diz('Uma jangada de bambu! O pescador empurra a vara no fundo do rio para ela andar.'); depois(3700, () => jangOcupada = false); });
+  let brumaOcupada = false;
+  el(s, '#du-serra').addEventListener('click', e => { e.stopPropagation(); if (brumaOcupada) return; brumaOcupada = true; toca('vapor');
+    for (let i = 0; i < 26; i++) { const y = sorte(150, 196), x0 = sorte(-40, 300); c.add({ tipo:'vapor', x0, y0:y, x1:x0 + sorte(300, 460), y1:y + sorte(-8, 8), dur:sorte(140, 200), f:sorte(0, 6), r:sorte(6, 11), x:0, y:0 }); }
+    api.diz('As montanhas de Sichuan vivem cobertas de neblina. O ar daqui é úmido e chove bastante no verão.'); depois(3200, () => brumaOcupada = false); });
+  /* início */
+  dicas(); api.hud('<span class="chip">Rocha: 0/3</span>');
+  api.diz('Oi, eu sou a Lin, uma panda-gigante! Há mais de 2.200 anos, o povo daqui abriu a montanha para a água passar. Toque no fogo para esquentar a rocha!');
+  return () => { vivo = false; timers.forEach(clearTimeout); c.parar(); };
+}
+/* ================= JOGO 15: Terraços de Bali, a água repartida do subak ================= */
+function jogoSubak(palco, api){
+  semente = 115;
+  let vivo = true, fase = 'repartir', ocupado = false, plantadas = 0, linhas = 0, comidos = 0;
+  const timers = [], depois = (ms, fn) => { const t = setTimeout(() => vivo && fn(), ms); timers.push(t); return t; };
+  const f1 = n => n.toFixed(1);
+  /* ---------- terraços: 6 faixas curvas que descem o morro; 3 grupos (alto, meio, baixo) ---------- */
+  const TY = [252, 284, 320, 360, 406, 454], TG = [.5, .6, .72, .84, .96, 1.08, 1.2], TW = [7, 8, 10, 11, 13, 14], TX0 = [372, 330, 238, 168, 84, -10];
+  const FORMA = x => 13 * Math.sin(x / 105 + .2) + 5 * Math.sin(x / 41 + 1.3) + 2.4 * Math.sin(x / 17 + .6);
+  const T = (i, x) => (i < 6 ? TY[i] : 514) + TG[i] * FORMA(x) + (x - 400) * .03;
+  const F = (i, x) => T(i + 1, x) - TW[i];
+  const MEIO = (i, x, k) => T(i, x) + (F(i, x) - T(i, x)) * (k == null ? .6 : k);
+  const XS = i => { const a = []; for (let x = TX0[i] + 8; x < 810; x += 10) a.push(x); a.push(812); return a; };
+  const pts = (i, fn, xs, dy) => xs.map(x => `${f1(x)} ${f1(fn(i, x) + (dy || 0))}`).join(' L');
+  const faixaD = i => { const xs = XS(i), x0 = xs[0]; return `M${pts(i, T, xs)} L${pts(i, F, xs.slice().reverse())} C${x0 - 14} ${f1(F(i, x0))} ${x0 - 14} ${f1(T(i, x0))} ${x0} ${f1(T(i, x0))}Z`; };
+  const paredeD = i => { const xs = XS(i), x0 = xs[0]; return `M${pts(i, F, xs)} L${pts(i + 1, T, xs.slice().reverse(), 1)} Q${x0 - 10} ${f1(T(i + 1, x0) + 1)} ${x0 - 4} ${f1(F(i, x0))}Z`; };
+  const bordaD = i => { const xs = XS(i); return `M${xs[0] - 6} ${f1(F(i, xs[0]) - 2)} L${pts(i, F, xs)}`; };
+  const GRUPO = [0, 0, 1, 1, 2, 2];          /* faixa -> grupo: 0 alto, 1 meio, 2 baixo */
+  const CAI = [612, 0, 520, 0, 404, 0];      /* bica de uma faixa para a de baixo dentro do grupo */
+  /* ---------- caixa de repartir (tembuku) ---------- */
+  const BX0 = 240, BX1 = 360, BY0 = 214, BY1 = 246, PASSO = (BX1 - BX0) / 6;
+  const SAI = [272, 300, 328];               /* saídas da rampa: baixo, meio, alto */
+  const JUSTO = [2, 4];
+  let tab = [1, 2];                          /* posição das tábuas em sextos */
+  const parte = () => [tab[0] / 6, (tab[1] - tab[0]) / 6, (6 - tab[1]) / 6];   /* [baixo, meio, alto] */
+  const CANAL = [
+    'M272 266 C240 300 140 340 92 410',     /* baixo */
+    'M300 266 C296 286 262 300 246 326',    /* meio */
+    'M328 266 Q346 262 378 260'             /* alto */
+  ];
+  /* ---------- obstáculos (não plantar atrás deles) ---------- */
+  const AGRI = [
+    { x:648, f:0, s:.74, pele:'#9A6440', camisa:'#2E7BB6', ce:'#12456E', calca:'#2A2E3E', vira:-1, sarong:false, item:'enxada', lenco:'#FFC83D' },
+    { x:458, f:2, s:.9, pele:'#7A4A2C', camisa:'#E8B23A', ce:'#8A5E10', calca:'#3E2A1E', vira:1, sarong:true, pano:'#B8324A', item:'cesto' },
+    { x:262, f:4, s:1.06, pele:'#B07A52', camisa:'#E5603C', ce:'#8E2E14', calca:'#24304A', vira:1, sarong:false, item:'bandeira', lenco:'#2E9A8A' }
+  ];
+  const GARCA = { x:676, f:3 }, SAPO = { x:560, f:4 }, ESPANTA = { x:548, f:1 };
+  const livre = (i, x) => !AGRI.some(a => a.f === i && Math.abs(a.x - x) < 26) && !(GARCA.f === i && Math.abs(GARCA.x - x) < 20) && !(ESPANTA.f === i && Math.abs(ESPANTA.x - x) < 18) && !(i === 5 && x > 660) && !(i === 5 && x < 130);
+  const SLOTS = [0, 1, 2, 3, 4, 5].map(i => { const a = []; for (let x = Math.max(TX0[i] + 24, 16); x < 784; x += 31) if (livre(i, x)) a.push({ x, y:MEIO(i, x), ok:false }); return a; });
+  const ESC = [.5, .58, .68, .78, .9, 1.02];
+  /* ---------- caramujos ---------- */
+  const CARAM = [[520, 0], [430, 1], [610, 2], [330, 3], [560, 3], [200, 4], [470, 4], [360, 5]].map(([x, i]) => ({ x, y:MEIO(i, x, .7), i, foi:false }));
+  /* ---------- desenhos ---------- */
+  const muda = (s) => `<g class="su-m"><path d="M0 0 q-3 -5 -6 -8 M0 0 q-1 -6 -1 -11 M0 0 q2 -6 5 -9 M0 0 q4 -3 7 -5" stroke="#2E7A1E" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M0 0 q-3 -5 -6 -8 M0 0 q-1 -6 -1 -11 M0 0 q2 -6 5 -9" stroke="#9AE04A" stroke-width="1.2" fill="none" stroke-linecap="round"/></g>`;
+  const pe = () => { const fol = 'M0 0 Q-8 -12 -14 -20 M0 0 Q-3 -16 -5 -28 M0 0 Q2 -18 3 -30 M0 0 Q6 -14 12 -22 M0 0 Q9 -8 16 -12';
+    return `<g class="su-g" style="opacity:0;transform:scale(.4);transition:transform 2.2s ease-out, opacity .8s"><path d="${fol}" stroke="#2E6A1A" stroke-width="3.6" fill="none" stroke-linecap="round"/><path d="${fol}" stroke="#6CC23A" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M0 0 Q-2 -14 -4 -24" stroke="#C8F07A" stroke-width=".9" fill="none" stroke-linecap="round"/></g>
+    <g class="su-r" style="opacity:0;transition:opacity 1.6s"><path d="${fol}" stroke="#8A6A1A" stroke-width="3.6" fill="none" stroke-linecap="round"/><path d="${fol}" stroke="#E2C04A" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-3 -26 Q-8 -32 -14 -26 M3 -28 Q10 -33 15 -24" stroke="#A8862A" stroke-width="1.4" fill="none"/><g fill="#F6CC3E" stroke="#A8761A" stroke-width=".6">${[[-6, -30], [-10, -29], [-13, -26.5], [6, -31], [10, -30], [13.5, -27], [-8, -31.6], [8, -32.4]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="2.2" ry="1.3" transform="rotate(${x < 0 ? -30 : 30} ${x} ${y})"/>`).join('')}</g></g>
+    <g class="su-t" style="opacity:0;transition:opacity 1.2s"><path d="M-3 0 l-1 -5 M0 0 v-6 M3 0 l1 -5 M-1.6 0 l-.4 -4 M1.6 0 l.4 -4" stroke="#9A7A3A" stroke-width="1.8" stroke-linecap="round"/><path d="M0 0 v-6 M3 0 l1 -5" stroke="#E2C88A" stroke-width=".7" stroke-linecap="round"/></g>`; };
+  const planta = (sl, i, k) => `<g class="su-pl" data-f="${i}" data-k="${k}" transform="translate(${f1(sl.x)} ${f1(sl.y)}) scale(${ESC[i]})"><g class="su-pl-in" style="transform:scale(0);transition:transform .5s cubic-bezier(.3,1.6,.5,1)"><ellipse cx="0" cy="0" rx="7" ry="1.6" fill="#1E5A7A" opacity=".25"/>${muda()}${pe()}</g></g>`;
+  const agricultor = (a, k) => { const sk = a.pele, esc = '#3E2214';
+    const pernas = a.sarong ? `<path d="M-3.6 -3 v-4 M3.6 -3 v-4" stroke="${sk}" stroke-width="3.8" stroke-linecap="round"/><path d="M-10 -32 C-11.4 -22 -11.6 -13 -10.4 -6 H10.4 C11.6 -13 11.4 -22 10 -32Z" fill="${a.pano}" stroke="#6E1424" stroke-width="1.2"/><path d="M-10.6 -24 H10.8 M-11.2 -10 H11.2" stroke="#FFD8A0" stroke-width="1.4" opacity=".85"/><g fill="none" stroke="#FFD8A0" stroke-width=".9" opacity=".9"><path d="M-9 -17 l3 -3 l3 3 l3 -3 l3 3 l3 -3 l3 3"/></g><path d="M3 -32 L5 -6" stroke="#6E1424" stroke-width=".9" opacity=".6"/><path d="M-12 -32 H12 V-29 H-12Z" fill="#FFC83D" stroke="#9A6A0E" stroke-width=".8"/>`
+      : `<path d="M-4.6 -31 L-5.2 -7 M4.6 -31 L5.2 -7" stroke="${a.calca}" stroke-width="7.4" stroke-linecap="round"/><path d="M-5.2 -10.4 v-1 M5.2 -10.4 v-1" stroke="#7A86A8" stroke-width="8" stroke-linecap="round" opacity=".55"/><path d="M-5.2 -6 v-2 M5.2 -6 v-2" stroke="${sk}" stroke-width="4" stroke-linecap="round"/><path d="M0 -31 V-22" stroke="#12121A" stroke-width=".8" opacity=".4"/>`;
+    const item = a.item === 'enxada' ? `<path d="M-13 -26 L-17 -66" stroke="#6E4422" stroke-width="2.6" stroke-linecap="round"/><path d="M-13 -26 L-17 -66" stroke="#C8925A" stroke-width="1" stroke-linecap="round"/><path d="M-19.6 -66 L-9.6 -67.6 L-9 -61 L-18 -59.8Z" fill="#9AA4B4" stroke="#4E5668" stroke-width="1"/>`
+      : a.item === 'cesto' ? `<g transform="translate(-15 -27)"><path d="M-8 -6 C-8 4 8 4 8 -6Z" fill="#D8A860" stroke="#7A5222" stroke-width="1.1"/><path d="M-8 -6 C-4 -9 4 -9 8 -6" stroke="#7A5222" stroke-width="1.6" fill="none"/><path d="M-6 -3 h12 M-5 0 h10 M-4 -6 v8 M0 -6 v9 M4 -6 v8" stroke="#A8783A" stroke-width=".7"/><path d="M-4 -8 q-1 -5 2 -6 M2 -8 q2 -5 4 -4" stroke="#6CC23A" stroke-width="1.6" fill="none" stroke-linecap="round"/></g>`
+      : `<path d="M-13 -26 L-17 -104" stroke="#8A7A3A" stroke-width="2.2" stroke-linecap="round"/><path d="M-13 -26 L-17 -104 M-13.4 -40 h1.6 M-14 -56 h1.6 M-14.6 -70 h1.6 M-15.6 -88 h1.6" stroke="#D8C878" stroke-width=".9"/><g class="balanca" style="transform-origin:-17px -104px"><path d="M-17 -104 C-8 -106 -2 -102 4 -104 C0 -100 0 -96 4 -92 C-2 -90 -8 -94 -17 -92Z" fill="#FFFFFF" stroke="#8A8A9A" stroke-width="1"/></g>`;
+    return `<g id="su-agri-${k}" class="su-agri toque" transform="translate(${a.x} ${f1(F(a.f, a.x) + 2)}) scale(${a.s * a.vira} ${a.s})">
+      <ellipse cx="0" cy="-1" rx="17" ry="3.4" fill="#1E3A2A" opacity=".3"/>
+      ${pernas}
+      <path d="M-9 -4 h6.4 M2.6 -4 h6.4" stroke="${esc}" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M-12 -30 C-13.6 -42 -11 -51 0 -52 C11 -51 13.6 -42 12 -30Z" fill="${a.camisa}" stroke="${a.ce}" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M-4 -51 L0 -45 L4 -51" fill="#FFF6E6" stroke="${a.ce}" stroke-width="1" stroke-linejoin="round"/>
+      <path d="M0 -45 V-31" stroke="${a.ce}" stroke-width=".9" opacity=".7"/><g fill="#FFF6E6" stroke="${a.ce}" stroke-width=".5"><circle cx="0" cy="-41" r=".9"/><circle cx="0" cy="-36" r=".9"/></g>
+      <path d="M4 -42 h5 v4 h-5Z" fill="none" stroke="${a.ce}" stroke-width=".9" opacity=".8"/>
+      <path d="M-7 -48 q-3 7 -2 15" stroke="#fff" stroke-width="1.8" fill="none" opacity=".3" stroke-linecap="round"/>
+      ${a.lenco ? `<path d="M-6 -51 C-3 -47 3 -47 6 -51 L5 -53 C2 -50 -2 -50 -5 -53Z" fill="${a.lenco}" stroke="#12235A" stroke-width=".7"/><path d="M4 -49 l2 7 l2 -1 l-2 -6" fill="${a.lenco}" stroke="#12235A" stroke-width=".6"/>` : ''}
+      ${item}
+      <path d="M-10.4 -48 C-14.4 -42 -14.6 -35 -13.4 -28" stroke="${a.camisa}" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M-10.4 -48 C-14.4 -42 -14.6 -35 -13.4 -28" stroke="${a.ce}" stroke-width="6" fill="none" stroke-linecap="round" opacity=".22"/><path d="M-14.6 -36 h3" stroke="${a.ce}" stroke-width="2" stroke-linecap="round" opacity=".6"/><circle cx="-13.2" cy="-26.4" r="2.8" fill="${sk}" stroke="${esc}" stroke-width=".7"/>
+      <g class="su-braco" style="transform-origin:10px -48px"><path d="M10.4 -48 C14.4 -42 14.6 -35 13.4 -28" stroke="${a.camisa}" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M12.6 -36 h3" stroke="${a.ce}" stroke-width="2" stroke-linecap="round" opacity=".6"/><circle cx="13.2" cy="-26.4" r="2.8" fill="${sk}" stroke="${esc}" stroke-width=".7"/></g>
+      <path d="M-2.6 -52 v-4 h5.2 v4" fill="${sk}" stroke="${esc}" stroke-width=".7"/>
+      <ellipse cx="-8.4" cy="-60" rx="1.9" ry="2.6" fill="${sk}" stroke="${esc}" stroke-width=".7"/><ellipse cx="8.4" cy="-60" rx="1.9" ry="2.6" fill="${sk}" stroke="${esc}" stroke-width=".7"/>
+      <ellipse cx="0" cy="-60" rx="8.2" ry="8.8" fill="${sk}" stroke="${esc}" stroke-width="1.1"/>
+      <path d="M-8 -62 C-7.6 -68 7.6 -68 8 -62 C5 -65 -5 -65 -8 -62Z" fill="#1E140E"/>
+      <path d="M-4.6 -63.4 q1.6 -1 3 0 M1.6 -63.4 q1.6 -1 3 0" stroke="#1E140E" stroke-width=".9" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-3" cy="-60.4" rx="1.3" ry="1.7" fill="#1A120C"/><ellipse cx="3" cy="-60.4" rx="1.3" ry="1.7" fill="#1A120C"/><circle cx="-2.6" cy="-61" r=".5" fill="#fff"/><circle cx="3.4" cy="-61" r=".5" fill="#fff"/>
+      <path d="M0 -59.6 q.8 1.6 -.4 2" stroke="${esc}" stroke-width=".7" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M-3 -55.6 q3 2.6 6 0" stroke="#7A2A14" stroke-width="1.1" fill="#FFF4EE" stroke-linecap="round"/>
+      <ellipse cx="-5" cy="-57" rx="1.8" ry="1.1" fill="#E2786A" opacity=".45"/><ellipse cx="5" cy="-57" rx="1.8" ry="1.1" fill="#E2786A" opacity=".45"/>
+      <ellipse cx="0" cy="-65.6" rx="17" ry="3" fill="#2A1A0A" opacity=".22"/>
+      <path d="M-8 -64 C-8 -58 -7 -54 -6 -52 M8 -64 C8 -58 7 -54 6 -52" stroke="#6E4A1E" stroke-width=".6" fill="none" opacity=".7"/>
+      <path d="M-22 -66.6 L0 -82 L22 -66.6 Q0 -62.8 -22 -66.6Z" fill="url(#suPalha)" stroke="#8A6424" stroke-width="1.3" stroke-linejoin="round"/>
+      <path d="M0 -82 L-15 -67 M0 -82 L-7.6 -65 M0 -82 L0 -64.4 M0 -82 L7.6 -65 M0 -82 L15 -67" stroke="#B88E3E" stroke-width=".7" opacity=".8"/>
+      <path d="M-16.4 -68.8 Q0 -66.2 16.4 -68.8 M-10 -73.4 Q0 -71.6 10 -73.4 M-4.6 -77.6 Q0 -76.6 4.6 -77.6" stroke="#A87E2E" stroke-width=".7" fill="none" opacity=".75"/>
+      <path d="M-2.4 -79.6 L-12.4 -70" stroke="#FFF4C8" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
+      <path d="M-22 -66.6 Q0 -62.8 22 -66.6" stroke="#6E4A14" stroke-width="1.2" fill="none"/>
+      <rect x="-24" y="-86" width="48" height="86" fill="transparent"/></g>`; };
+  const crianca = (x, y, s, pele, roupa, cabelo, braco) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="0" rx="8" ry="2" fill="#1E3A2A" opacity=".3"/><path d="M-3 -1 v-9 M3 -1 v-9" stroke="#2E3A6A" stroke-width="3.6" stroke-linecap="round"/><path d="M-7 -10 C-7 -21 7 -21 7 -10Z" fill="${roupa}" stroke="#12235A" stroke-width="1.1"/><path d="M-6 -17 l-4 5" stroke="${pele}" stroke-width="2.8" stroke-linecap="round"/>${braco ? `<path d="M6 -17 l6 -8" stroke="${pele}" stroke-width="2.8" stroke-linecap="round"/>` : `<path d="M6 -17 l4 5" stroke="${pele}" stroke-width="2.8" stroke-linecap="round"/>`}<circle cx="0" cy="-25" r="5.6" fill="${pele}" stroke="#3E2214" stroke-width="1"/><path d="M-5.6 -26 C-5.6 -32.4 5.6 -32.4 5.6 -26 C3.6 -29 -3 -29.4 -5.6 -26Z" fill="${cabelo}"/><circle cx="-2" cy="-25" r=".9" fill="#12121A"/><circle cx="2" cy="-25" r=".9" fill="#12121A"/><path d="M-1.8 -22.2 q1.8 1.4 3.6 0" stroke="#7A2A10" stroke-width=".9" fill="none"/></g>`;
+  const patoJogo = (cor, esc) => `<ellipse cx="0" cy="0" rx="9" ry="2.2" fill="#1E3A4A" opacity=".3"/><path d="M-2.6 0 v-3 M2.6 0 v-3" stroke="#E0782A" stroke-width="1.6" stroke-linecap="round"/><path d="M-5 -1 h4 M1 -1 h4" stroke="#E0782A" stroke-width="1.8" stroke-linecap="round"/><path d="M-6 -6 C-9 -5 -10 -3 -11 -1 C-8 -2 -6 -3 -5 -4Z" fill="${cor}" stroke="${esc}" stroke-width=".9"/><path d="M-1.6 -26 C-1.6 -20 -6.6 -14 -6.6 -8 C-6.6 -3 -3 -1.4 0 -1.4 C4 -1.4 6.4 -4 6 -9 C5.6 -15 3.4 -20 3.4 -26Z" fill="${cor}" stroke="${esc}" stroke-width="1.1"/><path d="M2 -24 C3.6 -18 5 -14 5 -9 C5 -5 3 -3 1 -3 C2 -8 2 -16 1 -22Z" fill="#FFFDF6" opacity=".9"/><path d="M-5.6 -12 C-3 -14 0 -12 0 -8 C0 -5 -2 -3 -4.6 -3.6 C-6 -6 -6 -9 -5.6 -12Z" fill="${esc}" opacity=".35"/><ellipse cx=".8" cy="-28" rx="4.4" ry="3.8" fill="${cor}" stroke="${esc}" stroke-width="1.1"/><path d="M4.6 -29 C7 -29.4 9.6 -29 10.6 -28 C10 -26.6 7.6 -26.4 4.8 -26.8Z" fill="#D6CE5A" stroke="#6A6A24" stroke-width=".7"/><circle cx="2" cy="-29" r="1.1" fill="#1A120C"/><circle cx="2.4" cy="-29.4" r=".4" fill="#fff"/>`;
+  const garca = () => `<ellipse cx="0" cy="0" rx="14" ry="2.6" fill="#1E5A7A" opacity=".3"/><path d="M-2 0 L-1 -18 M3 0 L2 -18" stroke="#2A2A34" stroke-width="1.8" stroke-linecap="round"/><path d="M-12 -24 C-14 -30 -6 -36 4 -34 C12 -32 14 -26 10 -21 C4 -16 -8 -17 -12 -24Z" fill="url(#suGarca)" stroke="#7A88A4" stroke-width="1.3"/><path d="M-12 -24 C-18 -22 -22 -20 -24 -17 C-18 -18 -14 -20 -10 -21Z" fill="#E6ECF4" stroke="#7A88A4" stroke-width="1"/><path d="M6 -33 C10 -38 6 -44 8 -50 C9 -54 13 -55 15 -53" stroke="#7A88A4" stroke-width="5.4" fill="none" stroke-linecap="round"/><path d="M6 -33 C10 -38 6 -44 8 -50 C9 -54 13 -55 15 -53" stroke="#FFFFFF" stroke-width="3.6" fill="none" stroke-linecap="round"/><ellipse cx="13.6" cy="-54" rx="4.4" ry="3.6" fill="#fff" stroke="#7A88A4" stroke-width="1.1"/><path d="M17 -55 L28 -52.6 L17 -52Z" fill="#F2C23A" stroke="#A8761A" stroke-width=".7" stroke-linejoin="round"/><circle cx="14.6" cy="-55" r="1.2" fill="#1A1A22"/><circle cx="15" cy="-55.4" r=".4" fill="#fff"/><path d="M-6 -30 q8 -4 14 -2" stroke="#fff" stroke-width="1.6" fill="none" opacity=".9"/>`;
+  const sapo = () => `<ellipse cx="0" cy="0" rx="9" ry="2" fill="#1E3A2A" opacity=".3"/><path d="M-8 -1 C-10 -6 -6 -10 0 -10 C6 -10 10 -6 8 -1Z" fill="url(#suSapo)" stroke="#1E5A1E" stroke-width="1.1"/><path d="M-8 -1 q-4 1 -6 -1 M8 -1 q4 1 6 -1" stroke="#1E5A1E" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="-3.6" cy="-10" r="2.8" fill="#8AD05A" stroke="#1E5A1E" stroke-width=".9"/><circle cx="3.6" cy="-10" r="2.8" fill="#8AD05A" stroke="#1E5A1E" stroke-width=".9"/><circle cx="-3.4" cy="-10.2" r="1.5" fill="#12121A"/><circle cx="3.8" cy="-10.2" r="1.5" fill="#12121A"/><circle cx="-2.9" cy="-10.8" r=".5" fill="#fff"/><circle cx="4.3" cy="-10.8" r=".5" fill="#fff"/><path d="M-3 -5 q3 2 6 0" stroke="#1E5A1E" stroke-width=".9" fill="none"/><path d="M-5 -8 q3 -2 6 -1" stroke="#D6F6A0" stroke-width="1" fill="none" opacity=".8"/>`;
+  const caramujo = (c, k) => `<g class="su-car toque" data-i="${k}" transform="translate(${f1(c.x)} ${f1(c.y)}) scale(${(ESC[c.i] * 1.1).toFixed(2)})" style="display:none"><g class="su-car-in"><ellipse cx="0" cy="0" rx="9" ry="2" fill="#2A1A0A" opacity=".3"/><path d="M-9 0 C-9 -3 -4 -4 2 -3.4 C6 -3 9 -2 10 0Z" fill="#D8C48A" stroke="#7A6230" stroke-width=".9"/><path d="M7 -2 l3 -5 M8.6 -1.6 l4 -4" stroke="#7A6230" stroke-width=".9" stroke-linecap="round"/><circle cx="10" cy="-7" r=".9" fill="#3A2A14"/><circle cx="12.6" cy="-5.6" r=".9" fill="#3A2A14"/><circle cx="-1" cy="-7" r="6.6" fill="url(#suConcha)" stroke="#7A3A2A" stroke-width="1.1"/><path d="M-1 -7 m-4 0 a4 4 0 1 1 4 4 a2.6 2.6 0 1 1 -2.4 -2.8" stroke="#7A3A2A" stroke-width=".9" fill="none"/><path d="M-5 -10 q2 -2 5 -2" stroke="#FFE6D6" stroke-width="1" fill="none" opacity=".8"/></g><circle cx="0" cy="-5" r="18" fill="transparent"/></g>`;
+  const coqueiro = (x, y, h, inc, s) => { const tx = x + inc, ty = y - h;
+    const fr = [[-1, -.3, 1], [-.8, .5, .9], [-.4, -.95, .85], [.3, -1, .8], [.85, -.4, 1], [1, .45, .95], [.1, .9, .7]].map(([dx, dy, L]) => { const ex = tx + dx * 46 * s * L, ey = ty + dy * 26 * s * L + 10 * s * Math.abs(dx); const mx = tx + dx * 22 * s * L, my = ty + dy * 18 * s * L - 10 * s;
+      let fol = ''; for (let k = 1; k < 9; k++) { const t = k / 9, u = 1 - t, px = u * u * tx + 2 * u * t * mx + t * t * ex, py = u * u * ty + 2 * u * t * my + t * t * ey; fol += `M${f1(px)} ${f1(py)} l${f1(-dy * 9 * s * (1 - t * .5) + dx * 3)} ${f1(dx * 9 * s * (1 - t * .5) + 6 * s)} M${f1(px)} ${f1(py)} l${f1(dy * 9 * s * (1 - t * .5) + dx * 3)} ${f1(-dx * 9 * s * (1 - t * .5) + 6 * s)} `; }
+      return `<path d="${fol}" stroke="#2E6A22" stroke-width="${f1(3.4 * s)}" stroke-linecap="round" fill="none"/><path d="${fol}" stroke="#5EB040" stroke-width="${f1(1.8 * s)}" stroke-linecap="round" fill="none"/><path d="M${tx} ${ty} Q${f1(mx)} ${f1(my)} ${f1(ex)} ${f1(ey)}" stroke="#3E7A22" stroke-width="${f1(1.6 * s)}" fill="none"/>`; }).join('');
+    const anel = Array.from({ length:Math.floor(h / 9) }, (_, k) => { const t = k / Math.floor(h / 9), xx = x + inc * t * t, yy = y - h * t; return `M${f1(xx - 3.4 * s)} ${f1(yy)} q${f1(3.4 * s)} 2 ${f1(6.8 * s)} 0`; }).join(' ');
+    return `<g><path d="M${x} ${y} Q${x + inc * .1} ${f1(y - h * .5)} ${tx} ${ty}" stroke="#4E3420" stroke-width="${f1(8 * s)}" fill="none" stroke-linecap="round"/><path d="M${x} ${y} Q${x + inc * .1} ${f1(y - h * .5)} ${tx} ${ty}" stroke="url(#suTronco)" stroke-width="${f1(5.6 * s)}" fill="none" stroke-linecap="round"/><path d="${anel}" stroke="#5E4028" stroke-width="${f1(1 * s)}" fill="none" opacity=".6"/>${fr}<g fill="#8A5A2A" stroke="#4E3014" stroke-width=".6"><circle cx="${tx - 3 * s}" cy="${ty + 4 * s}" r="${f1(3.2 * s)}"/><circle cx="${tx + 3 * s}" cy="${ty + 4.6 * s}" r="${f1(3.2 * s)}"/><circle cx="${tx}" cy="${ty + 7 * s}" r="${f1(3 * s)}"/></g></g>`; };
+  const bananeira = (x, y, s) => { const fol = [[-1, -.6], [-.5, -1.1], [.4, -1.1], [1, -.5], [.9, .1]].map(([dx, dy], k) => { const ex = x + dx * 34 * s, ey = y - 46 * s + dy * 22 * s, mx = x + dx * 14 * s, my = y - 56 * s;
+    return `<path d="M${x} ${f1(y - 40 * s)} Q${f1(mx)} ${f1(my)} ${f1(ex)} ${f1(ey)} Q${f1(mx + dy * 8 * s)} ${f1(my + 18 * s)} ${x} ${f1(y - 38 * s)}Z" fill="${k % 2 ? 'url(#suBanana2)' : 'url(#suBanana)'}" stroke="#2E6A1E" stroke-width="1.1" stroke-linejoin="round"/><path d="M${x} ${f1(y - 40 * s)} Q${f1(mx)} ${f1(my + 4 * s)} ${f1(ex)} ${f1(ey)}" stroke="#E6F6B0" stroke-width=".8" fill="none" opacity=".7"/>`; }).join('');
+    return `<g class="balanca" style="transform-origin:${x}px ${y}px;animation-duration:${R(4, 6).toFixed(1)}s"><path d="M${x - 3 * s} ${y} C${x - 3 * s} ${y - 20 * s} ${x - 2 * s} ${y - 34 * s} ${x} ${y - 42 * s} L${x + 3 * s} ${y - 40 * s} C${x + 4 * s} ${y - 30 * s} ${x + 4 * s} ${y - 16 * s} ${x + 4 * s} ${y}Z" fill="#7AA03A" stroke="#3E6A1E" stroke-width="1"/>${fol}</g>`; };
+  const arvore = (x, y, rx, ry, c0, c1, luz, tronco) => `<g>${tronco ? `<path d="M${x} ${y + ry * .6} V${f1(y + ry + 18)}" stroke="#4E3420" stroke-width="5" stroke-linecap="round"/>` : ''}<path d="${copa(x, y, rx, ry, 9, .26)}" fill="${c0}" stroke="${c1}" stroke-width="1.4"/><path d="${copa(x - rx * .25, y - ry * .3, rx * .55, ry * .45, 7, .3)}" fill="${luz}" opacity=".55"/><g fill="${luz}" opacity=".5">${Array.from({ length:4 }, () => `<circle cx="${f1(x + R(-rx * .6, rx * .5))}" cy="${f1(y + R(-ry * .6, ry * .2))}" r="${f1(R(1.4, 3))}"/>`).join('')}</g></g>`;
+  const samambaia = (x, y, s) => `<g>${[-60, -25, 5, 35, 70].map(a => { const r = a * Math.PI / 180, ex = x + Math.sin(r) * 30 * s, ey = y - 20 * s - Math.cos(r) * 18 * s; let f = ''; for (let k = 1; k < 7; k++) { const t = k / 7, px = x + (ex - x) * t, py = y - 26 * s * Math.sin(t * 2.6) * .7 + (ey - y) * t; f += `M${f1(px)} ${f1(py)} l${f1(-3 * s)} ${f1(-4 * s * (1 - t))} M${f1(px)} ${f1(py)} l${f1(3 * s)} ${f1(-4 * s * (1 - t))} `; } return `<path d="M${x} ${y - 30 * s} Q${f1((x + ex) / 2)} ${f1(y - 40 * s)} ${f1(ex)} ${f1(ey)}" stroke="#2E6A3A" stroke-width="1.4" fill="none"/>`; }).join('')}${[-60, -25, 5, 35, 70].map(a => { const r = a * Math.PI / 180, ex = x + Math.sin(r) * 30 * s, ey = y - 20 * s - Math.cos(r) * 18 * s; return `<path d="M${x} ${y - 30 * s} Q${f1((x + ex) / 2)} ${f1(y - 40 * s)} ${f1(ex)} ${f1(ey)}" stroke="#6ABA5A" stroke-width="${f1(4.4 * s)}" fill="none" stroke-dasharray="${f1(2 * s)} ${f1(1.4 * s)}" opacity=".95"/>`; }).join('')}<path d="M${x} ${y} V${y - 30 * s}" stroke="#5E3E22" stroke-width="${f1(4 * s)}" stroke-linecap="round"/></g>`;
+  const sentado = (x, y, s, pele, camisa, calca, vira, cabelo) => `<g transform="translate(${x} ${y}) scale(${s * vira} ${s})"><path d="M0 -1 H10 L11 9" stroke="${calca}" stroke-width="5.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 10 h4" stroke="${pele}" stroke-width="2.6" stroke-linecap="round"/><path d="M-5 0 C-6 -8 -5 -16 0 -17 C5 -16 6 -8 5 0Z" fill="${camisa}" stroke="#12235A" stroke-width="1"/><path d="M3 -13 C7 -10 9 -6 9 -2" stroke="${camisa}" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="9.4" cy="-1.4" r="2" fill="${pele}" stroke="#3E2214" stroke-width=".6"/><circle cx="0" cy="-22" r="5.4" fill="${pele}" stroke="#3E2214" stroke-width="1"/><path d="M-5.4 -22.6 C-5.6 -28 4 -29.4 5.4 -24 C2 -26 -2 -25.4 -3.6 -21Z" fill="${cabelo || '#1E140E'}"/><circle cx="2.4" cy="-22.4" r=".85" fill="#12121A"/><path d="M1.6 -19.4 q1.6 1 3 -.2" stroke="#3E2214" stroke-width=".8" fill="none" stroke-linecap="round"/><ellipse cx="3.6" cy="-20.6" rx="1.3" ry=".8" fill="#E2786A" opacity=".45"/></g>`;
+  const bale = (x, y) => { const pal = Array.from({ length:30 }, (_, k) => { const t = k / 29, xa = x - 58 + 116 * t, xb = x - 36 + 72 * t; return `M${f1(xa)} ${y - 46} L${f1(xb)} ${y - 70}`; }).join('');
+    return `<g id="su-bale" class="toque"><ellipse cx="${x}" cy="${y + 16}" rx="64" ry="7" fill="#1E3A1A" opacity=".25"/>
+    <g stroke="#5E3A1A" stroke-width="4.4" stroke-linecap="round"><path d="M${x - 46} ${y - 46} V${y + 14} M${x + 46} ${y - 46} V${y + 14}"/></g><g stroke="#A8743E" stroke-width="2" stroke-linecap="round"><path d="M${x - 46} ${y - 46} V${y + 14} M${x + 46} ${y - 46} V${y + 14}"/></g>
+    <path d="M${x - 54} ${y} H${x + 54} V${y + 7} H${x - 54}Z" fill="url(#suMadeira)" stroke="#4E2A10" stroke-width="1.3"/><path d="M${x - 52} ${y + 1.6} H${x + 52}" stroke="#F2C890" stroke-width="1" opacity=".6"/>
+    ${sentado(x - 22, y, 1, '#8A5A3A', '#3FA864', '#2A2E3E', 1)}${sentado(x + 22, y, 1, '#A86E48', '#E5603C', '#24304A', -1, '#2A1A10')}${sentado(x + 2, y + 1, .9, '#6E4228', '#2E7BB6', '#3E2A1E', 1)}
+    <path d="M${x - 2} ${y - 2} h6 v-3 h-6Z" fill="#E6DCC8" stroke="#6E5A3A" stroke-width=".7"/>
+    <path d="M${x - 62} ${y - 44} L${x + 62} ${y - 44} L${x + 38} ${y - 72} L${x - 38} ${y - 72}Z" fill="url(#suPalha)" stroke="#7A5A22" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="${pal}" stroke="#A8823A" stroke-width=".8" opacity=".7"/>
+    <path d="M${x - 62} ${y - 44} ${Array.from({ length:31 }, (_, k) => `L${f1(x - 62 + k * 4.13)} ${y - 41 + (k % 2) * 2.4}`).join(' ')} L${x + 62} ${y - 44}Z" fill="#C8A050" stroke="#7A5A22" stroke-width=".8"/>
+    <path d="M${x - 40} ${y - 72} H${x + 40}" stroke="#6E4A1A" stroke-width="3.4" stroke-linecap="round"/><path d="M${x - 30} ${y - 66} L${x - 50} ${y - 48}" stroke="#FFF2C8" stroke-width="1.6" opacity=".6" stroke-linecap="round"/>
+    <rect x="${x - 64}" y="${y - 74}" width="128" height="92" fill="transparent"/></g>`; };
+  const moto = (x, y) => `<g transform="translate(${x} ${y})"><ellipse cx="0" cy="1" rx="18" ry="2.6" fill="#1E3A1A" opacity=".3"/><circle cx="-11" cy="-5" r="5.4" fill="#2A2A34"/><circle cx="11" cy="-5" r="5.4" fill="#2A2A34"/><circle cx="-11" cy="-5" r="2.2" fill="#B8BCC8"/><circle cx="11" cy="-5" r="2.2" fill="#B8BCC8"/><path d="M-15 -8 C-14 -14 -6 -14 -2 -12 L6 -12 C9 -16 13 -16 16 -10 L15 -6 L-4 -6 C-8 -10 -12 -9 -15 -8Z" fill="#E5392C" stroke="#7A1410" stroke-width="1" stroke-linejoin="round"/><path d="M-12 -16 L-15 -26 M-18 -26 h6" stroke="#2A2A34" stroke-width="1.8" stroke-linecap="round"/><path d="M2 -15 h10 q2 0 2 2 h-13Z" fill="#2A2A34"/><path d="M-12 -12 q4 -2 8 -1" stroke="#FFB0A0" stroke-width="1" fill="none"/><circle cx="-16" cy="-12" r="1.6" fill="#FFF2B0" stroke="#7A1410" stroke-width=".5"/></g>`;
+  const inhame = (x, y, s, rot) => `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${s})"><path d="M0 0 C-2 -16 -2 -28 0 -40" stroke="#4E8A2A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M0 -40 C-24 -40 -34 -62 -20 -78 C-14 -84 -6 -80 -2 -72 C2 -82 12 -86 18 -78 C30 -62 22 -42 0 -40Z" fill="url(#suInhame)" stroke="#1E5A1E" stroke-width="1.6" stroke-linejoin="round"/><path d="M0 -40 L-2 -72 M-1 -50 L-16 -64 M-1 -58 L-14 -74 M0 -50 L14 -64 M0 -58 L12 -74" stroke="#B8E890" stroke-width="1.2" fill="none" opacity=".75"/><path d="M-18 -70 q4 -8 10 -8" stroke="#E6FFC8" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/></g>`;
+  const espantalho = () => { const tubos = [-14, -6, 2, 10].map((x, k) => `<g class="su-tubo" style="transform-origin:${x}px -58px"><path d="M${x} -58 v6" stroke="#5E4A2A" stroke-width=".8"/><rect x="${x - 2.4}" y="-52" width="4.8" height="${12 + k % 2 * 4}" rx="2" fill="url(#suBambu)" stroke="#6E5A1E" stroke-width=".9"/><path d="M${x - 2.4} ${-46 + k % 2 * 2} h4.8" stroke="#6E5A1E" stroke-width=".7"/></g>`).join('');
+    return `<ellipse cx="0" cy="0" rx="10" ry="2.4" fill="#1E3A2A" opacity=".3"/><path d="M0 0 V-74" stroke="#6E5A1E" stroke-width="4" stroke-linecap="round"/><path d="M0 0 V-74" stroke="url(#suBambu)" stroke-width="2.6" stroke-linecap="round"/><path d="M-1.6 -20 h3.2 M-1.6 -44 h3.2" stroke="#6E5A1E" stroke-width="1.2"/><path d="M-20 -60 Q0 -63 16 -60" stroke="#6E5A1E" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M-20 -60 Q0 -63 16 -60" stroke="#E6D27A" stroke-width="1" fill="none"/>${tubos}<g class="balanca" style="transform-origin:0 -74px"><path d="M0 -74 C8 -78 14 -72 22 -76 C18 -70 22 -66 18 -62 C12 -64 6 -68 0 -66Z" fill="#E5392C" stroke="#7A1410" stroke-width="1"/><path d="M4 -71 q6 -2 12 -1" stroke="#FFB0A0" stroke-width="1" fill="none"/></g><path d="M16 -60 Q40 -50 70 -40" stroke="#E6DCC8" stroke-width=".8" fill="none" stroke-dasharray="3 2"/><rect x="-24" y="-82" width="48" height="84" fill="transparent"/>`; };
+  const nuvemAgua = (x, y, rx, ry) => `<path d="${copa(x, y, rx, ry, 9, .3)}" fill="#FFFFFF" opacity=".5"/><path d="${copa(x + rx * .5, y + ry * .2, rx * .55, ry * .7, 7, .3)}" fill="#FFFFFF" opacity=".35"/>`;
+  const rachas = i => { let d = ''; const xs = XS(i); for (let k = 0; k < xs.length / 2.2; k++) { const x = R(TX0[i] + 20, 790), y = MEIO(i, x, R(.2, .8)); d += `M${f1(x)} ${f1(y)} l${f1(R(-10, 10))} ${f1(R(-3, 3))} l${f1(R(-8, 8))} ${f1(R(-3, 3))} M${f1(x)} ${f1(y)} l${f1(R(-6, 6))} ${f1(R(2, 5))}`; } return d; };
+  const brilhosAgua = i => { let d = ''; for (let k = 0; k < 4; k++) { const x = R(TX0[i] + 30, 700), w = R(30, 90); d += `M${f1(x)} ${f1(MEIO(i, x, R(.3, .8)))} q${f1(w / 2)} -2 ${f1(w)} 0 `; } return d; };
+  const nuvens = (x, y, s, op) => `<g opacity="${op}" transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 q4 -14 20 -12 q8 -14 26 -6 q14 -6 22 6 q12 0 12 12 Z" fill="#fff"/><path d="M6 0 q12 -4 24 -1 q14 -3 28 0 q12 -2 22 1" stroke="#D6E6F4" stroke-width="2" fill="none"/></g>`;
+  /* ---------- faixas ---------- */
+  const faixasSvg = [0, 1, 2, 3, 4, 5].map(i => {
+    const d = faixaD(i), xs = XS(i);
+    let extra = '';
+    AGRI.forEach((a, k) => { if (a.f === i) extra += agricultor(a, k); });
+    if (GARCA.f === i) extra += `<g id="su-garca" class="toque" transform="translate(${GARCA.x} ${f1(MEIO(i, GARCA.x, .7))}) scale(.95)"><g id="su-garca-in">${garca()}</g><rect x="-26" y="-60" width="56" height="62" fill="transparent"/></g>`;
+    if (ESPANTA.f === i) extra += `<g id="su-espanta" class="toque" transform="translate(${ESPANTA.x} ${f1(F(i, ESPANTA.x) + 1)}) scale(.82)">${espantalho()}</g>`;
+    if (SAPO.f === i) extra += `<g id="su-sapo" class="toque" transform="translate(${SAPO.x} ${f1(F(i, SAPO.x) + 1)})"><g id="su-sapo-in">${sapo()}</g><rect x="-14" y="-16" width="28" height="18" fill="transparent"/></g>`;
+    const cai = CAI[i] ? `<g class="su-cai" data-f="${i}" style="opacity:0;transition:opacity .8s"><path d="M${CAI[i] - 5} ${f1(F(i, CAI[i]) - 2)} q5 -2 10 0 l1 ${f1(T(i + 1, CAI[i]) - F(i, CAI[i]) + 4)} q-6 3 -12 0Z" fill="#7CC8F0" stroke="#2E7AB6" stroke-width="1"/><path class="su-fluxo" d="M${CAI[i]} ${f1(F(i, CAI[i]) - 2)} v${f1(T(i + 1, CAI[i]) - F(i, CAI[i]) + 6)}" stroke="#E6F8FF" stroke-width="1.6" stroke-dasharray="3 4" fill="none"/></g>` : '';
+    return `<g class="su-faixa" data-i="${i}">
+      <path d="${d}" fill="url(#suSeco)" stroke="#8A6236" stroke-width="1.2"/>
+      <path class="su-rachas" d="${rachas(i)}" stroke="#8A5E30" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".7" style="transition:opacity 1s"/>
+      <path class="su-lama" d="${d}" fill="url(#suLama)" style="opacity:0;transition:opacity 1.6s"/>
+      <g class="su-agua" style="opacity:0"><path d="${d}" fill="url(#suEspelho)"/><g clip-path="url(#suClip${i})"><path d="M${pts(i, T, xs, 1)}" stroke="#2E6E8E" stroke-width="7" fill="none" opacity=".2"/>${[0, 1].map(j => { const x = 300 + ((i * 173 + j * 260) % 470), y = MEIO(i, x, .5); return nuvemAgua(x, y, 30 + j * 10 + i * 3, 3.6 + i * .7); }).join("")}${i > 0 ? `<path d="M${f1(700 - i * 40)} ${f1(MEIO(i, 700 - i * 40, .25))} q24 -3 48 0" stroke="#4E9AD0" stroke-width="2" fill="none" opacity=".35"/>` : ''}</g></g>
+      <path class="su-reflexo" d="${brilhosAgua(i)}" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" style="opacity:0"/>
+      <path d="M${pts(i, T, xs, 1.6)}" stroke="#3E6A22" stroke-width="1.4" fill="none" opacity=".45"/>
+      <path class="su-alvo" d="${d}" fill="transparent" data-pts="${SLOTS[i].map(o => `${Math.round(o.x)},${Math.round(o.y)}`).join(';')}"/>
+      <g class="su-plantas">${SLOTS[i].map((sl, k) => planta(sl, i, k)).join('')}</g>
+      <g class="su-dica" style="display:none">${brilhoHotspot(Math.max(TX0[i] + 60, 70) + 40, MEIO(i, Math.max(TX0[i] + 60, 70) + 40) - 6)}</g>
+      ${extra}
+      <path d="${paredeD(i)}" fill="url(#suParede)" stroke="#5E3E22" stroke-width="1"/>
+      <path d="${paredeD(i)}" fill="url(#suTerraTx)" opacity=".55"/>
+      <path d="M${pts(i, F, XS(i), TW[i] * .55)}" stroke="#5E3E22" stroke-width=".9" fill="none" opacity=".35" stroke-dasharray="14 8"/>
+      <path d="M${pts(i, F, XS(i), 2.4)}" stroke="#5E9A2E" stroke-width="3.4" fill="none" opacity=".9"/>
+      ${capimBorda(i)}
+      ${cai}
+      <path d="${bordaD(i)}" stroke="#3E8A22" stroke-width="4.4" fill="none" stroke-linecap="round"/>
+      <path d="${bordaD(i)}" stroke="#A8E06A" stroke-width="1.4" fill="none" stroke-linecap="round" transform="translate(0 -1.2)"/>
+      ${[.3, .22, .14, .07, 0, 0][i] ? `<path d="${d} ${paredeD(i)}" fill="#E8F2FA" opacity="${[.3, .22, .14, .07][i]}" pointer-events="none"/>` : ''}
+    </g>`; }).join('');
+  /* ---------- floresta ---------- */
+  semente = 131;
+  const fundoMata = Array.from({ length:12 }, (_, k) => arvore(-10 + k * 30 + R(-6, 6), 150 + R(-6, 6) + Math.abs(k - 5) * 3, R(18, 24), R(13, 17), ['#4E8A7A', '#5E9A82', '#46806E'][k % 3], '#2E5A52', '#9AD0B4')).join('');
+  const meioMata = Array.from({ length:11 }, (_, k) => arvore(-6 + k * 32 + R(-6, 6), 180 + R(-5, 5), R(20, 26), R(14, 18), ['#1E6A4A', '#3E8A3A', '#2E7A5A', '#5EA03A', '#24705E'][k % 5], '#14402A', ['#6EC07A', '#8ED05A', '#5EB89A', '#B8E06A', '#6ACAA0'][k % 5])).join('');
+  const svg = `<svg viewBox="0 0 800 500" role="img" aria-label="Terraços de arroz em Bali, com vulcão, floresta, canais de água, agricultores, patos e o estorninho-de-bali">
+    <defs>
+      <linearGradient id="suCeu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4CA8E6"/><stop offset=".5" stop-color="#A6DAF4"/><stop offset=".85" stop-color="#FFE8C8"/><stop offset="1" stop-color="#FFE0B8"/></linearGradient>
+      <radialGradient id="suSol" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF8D0"/><stop offset=".6" stop-color="#FFD447"/><stop offset="1" stop-color="#F6A81E"/></radialGradient>
+      <linearGradient id="suVulcao" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B4C2E6"/><stop offset="1" stop-color="#8496C8"/></linearGradient>
+      <linearGradient id="suVulcao2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C8D2EE"/><stop offset="1" stop-color="#B0BEE2"/></linearGradient>
+      <linearGradient id="suNevoa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF6E8" stop-opacity="0"/><stop offset="1" stop-color="#FFF6E8" stop-opacity=".75"/></linearGradient>
+      <linearGradient id="suMorro" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ACC5A"/><stop offset="1" stop-color="#5E9A34"/></linearGradient>
+      <linearGradient id="suMorroLonge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A8CC88"/><stop offset="1" stop-color="#7EAE62"/></linearGradient>
+      <linearGradient id="suMata" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2E7A5A"/><stop offset="1" stop-color="#1A5A3A"/></linearGradient>
+      <linearGradient id="suSeco" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2C08A"/><stop offset="1" stop-color="#BE925A"/></linearGradient>
+      <linearGradient id="suLama" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A7A52"/><stop offset="1" stop-color="#6E5236"/></linearGradient>
+      <linearGradient id="suEspelho" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF0D8"/><stop offset=".35" stop-color="#C8EEFA"/><stop offset="1" stop-color="#6EC0EA"/></linearGradient>
+      <linearGradient id="suParede" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B08458"/><stop offset=".55" stop-color="#8E6640"/><stop offset="1" stop-color="#6A4A2C"/></linearGradient>
+      <pattern id="suTerraTx" width="16" height="9" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="#C89E70"/><circle cx="11" cy="6" r=".8" fill="#5E3E22"/><path d="M6 8 q2 -1 4 0" stroke="#5E3E22" stroke-width=".6" fill="none"/></pattern>
+      <linearGradient id="suBambu" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#C8B050"/><stop offset=".5" stop-color="#F2E08A"/><stop offset="1" stop-color="#A8903A"/></linearGradient>
+      <linearGradient id="suCortina" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C8F0FF"/><stop offset=".5" stop-color="#6EC0F0"/><stop offset="1" stop-color="#9ADCFA"/></linearGradient>
+      <radialGradient id="suPoco" cx=".5" cy=".7" r=".7"><stop offset="0" stop-color="#5EB8E6"/><stop offset="1" stop-color="#2A6E9A"/></radialGradient>
+      <linearGradient id="suNevoaV" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".3" stop-color="#fff" stop-opacity=".75"/><stop offset=".7" stop-color="#fff" stop-opacity=".75"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <pattern id="suCapimTx" width="12" height="10" patternUnits="userSpaceOnUse"><path d="M2 10 l1 -5 M6 10 l-1 -6 M9 10 l1.4 -4" stroke="#A8E06A" stroke-width="1" fill="none"/></pattern>
+      <linearGradient id="suPedra" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C6BEB2"/><stop offset="1" stop-color="#857C70"/></linearGradient>
+      <linearGradient id="suPedraEsc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A9286"/><stop offset="1" stop-color="#5E564C"/></linearGradient>
+      <linearGradient id="suMadeira" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A5428"/><stop offset=".4" stop-color="#D2965A"/><stop offset="1" stop-color="#8A5428"/></linearGradient>
+      <linearGradient id="suAguaC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ADCF6"/><stop offset="1" stop-color="#3E9AD6"/></linearGradient>
+      <linearGradient id="suPalha" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE6A0"/><stop offset=".5" stop-color="#E8C46A"/><stop offset="1" stop-color="#B88A3A"/></linearGradient>
+      <linearGradient id="suTronco" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A6A4A"/><stop offset=".5" stop-color="#C8A27A"/><stop offset="1" stop-color="#7A5A3A"/></linearGradient>
+      <linearGradient id="suBanana" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A8E05A"/><stop offset="1" stop-color="#4E9A2A"/></linearGradient>
+      <radialGradient id="suInhame" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#8CD05A"/><stop offset="1" stop-color="#2E7A2E"/></radialGradient>
+      <linearGradient id="suBanana2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8CCB4A"/><stop offset="1" stop-color="#3E8A2A"/></linearGradient>
+      <linearGradient id="suGarca" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#D6DEEA"/></linearGradient>
+      <radialGradient id="suSapo" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#B8F07A"/><stop offset="1" stop-color="#4E9A2A"/></radialGradient>
+      <radialGradient id="suConcha" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#F2B898"/><stop offset=".6" stop-color="#C8785A"/><stop offset="1" stop-color="#8A4A34"/></radialGradient>
+      <linearGradient id="suTelhado" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C8A060"/><stop offset="1" stop-color="#8A6430"/></linearGradient>
+      <linearGradient id="suPipa" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E5392C"/><stop offset=".5" stop-color="#FFC83D"/><stop offset="1" stop-color="#E5392C"/></linearGradient>
+      <radialGradient id="suVinheta" cx=".5" cy=".45" r=".78"><stop offset=".62" stop-color="#14301A" stop-opacity="0"/><stop offset="1" stop-color="#14301A" stop-opacity=".32"/></radialGradient>
+      <filter id="suGrao"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .05 0"/></filter>
+      ${[0, 1, 2, 3, 4, 5].map(i => `<clipPath id="suClip${i}"><path d="${faixaD(i)}"/></clipPath>`).join("")}
+      <filter id="suDesfoque"><feGaussianBlur stdDeviation="1.2"/></filter>
+    </defs>
+    <rect width="800" height="500" fill="url(#suCeu)"/>
+    <g id="su-sol"><circle cx="690" cy="66" r="58" fill="#FFF2B0" opacity=".3"/><circle cx="690" cy="66" r="40" fill="#FFF2B0" opacity=".35"/><circle cx="690" cy="66" r="27" fill="url(#suSol)" stroke="#F0A81E" stroke-width="2"/><path d="M676 56 q8 -9 20 -9" stroke="#FFFBE0" stroke-width="3.4" fill="none" stroke-linecap="round"/></g>
+    <g class="deriva">${nuvens(420, 54, 1, .9)}${nuvens(560, 130, .7, .75)}</g>
+    <path d="M560 236 L640 132 Q660 112 680 132 L800 222 V240Z" fill="url(#suVulcao2)" opacity=".85"/>
+    <path d="M-40 236 L168 70 Q186 54 200 50 Q220 44 240 50 Q258 56 274 70 L520 236Z" fill="url(#suVulcao)" stroke="#7486B8" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M200 50 Q220 44 240 50 L246 60 Q236 56 228 62 Q220 56 212 62 Q204 56 194 60Z" fill="#E6ECFA" opacity=".9"/>
+    <path d="M240 50 Q258 56 274 70 L520 236 H380 C340 170 290 100 240 50Z" fill="#5E70A8" opacity=".22"/>
+    <path d="M150 90 L118 140 M190 70 L170 120 M262 70 L300 128 M286 84 L340 140" stroke="#7E90C0" stroke-width="1.4" opacity=".6" fill="none"/>
+    ${nuvens(110, 98, .9, .8)}
+    <g class="deriva" style="animation-duration:46s"><path d="M60 128 C110 112 190 120 250 114 C300 110 350 122 400 118 C360 136 280 132 220 138 C160 144 100 140 60 128Z" fill="url(#suNevoaV)" opacity=".8"/></g>
+    <g class="deriva" style="animation-duration:60s;animation-delay:-20s"><path d="M150 82 C190 72 240 76 290 70 C320 68 340 74 360 80 C320 90 260 88 220 92 C190 94 160 90 150 82Z" fill="url(#suNevoaV)" opacity=".7"/></g>
+    <rect y="150" width="800" height="90" fill="url(#suNevoa)"/>
+    <path d="M440 240 C520 214 600 208 680 214 C730 218 770 222 810 216 V300 H440Z" fill="url(#suMorroLonge)"/>
+    <g opacity=".85">${coqueiro(520, 236, 52, 6, .55)}${coqueiro(560, 230, 60, -8, .6)}${coqueiro(612, 228, 46, 4, .5)}</g>
+    <g transform="translate(588 226)"><path d="M-14 0 V-12 H14 V0Z" fill="#C89A6A" stroke="#6E4628" stroke-width="1"/><path d="M-20 -11 Q0 -30 20 -11Z" fill="url(#suTelhado)" stroke="#6E4A1E" stroke-width="1.2"/><path d="M-14 -16 Q0 -26 14 -16" stroke="#E6C88A" stroke-width="1" fill="none"/><rect x="-4" y="-9" width="8" height="9" fill="#5E3A1A"/></g>
+    <g id="su-pipa" class="toque"><path id="su-linha" d="M744 214 Q700 180 612 112" stroke="#F6F0E0" stroke-width="1" fill="none" opacity=".9"/><g id="su-pipa-in" style="transform-origin:612px 112px"><g transform="translate(612 112) rotate(-14)"><path d="M-26 0 C-14 -14 14 -14 24 0 C14 12 -14 12 -26 0Z" fill="url(#suPipa)" stroke="#8A1A10" stroke-width="1.4"/><path d="M24 0 L40 -12 L36 0 L40 12Z" fill="#2E7BB6" stroke="#12456E" stroke-width="1.2" stroke-linejoin="round"/><path d="M-14 -9 L-6 -22 L2 -10Z M-14 9 L-6 22 L2 10Z" fill="#FFFFFF" stroke="#8A1A10" stroke-width="1.1"/><circle cx="-14" cy="-2" r="4" fill="#fff" stroke="#12121A" stroke-width="1"/><circle cx="-13" cy="-2" r="2" fill="#12121A"/><path d="M-4 -6 v12 M6 -7 v14 M15 -5 v10" stroke="#8A1A10" stroke-width="1" opacity=".6"/></g><path id="su-rabo" d="M650 106 q16 10 30 4 q14 -6 28 4 q12 8 24 2" stroke="#E5392C" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+      ${crianca(744, 236, .9, '#8A5A3A', '#FFC83D', '#1E140E', true)}${crianca(764, 238, .82, '#A86E48', '#3FA864', '#2A1A10', false)}<rect x="600" y="80" width="90" height="60" fill="transparent"/><rect x="730" y="200" width="46" height="42" fill="transparent"/></g>
+    <path d="M-10 236 L-10 130 C20 120 60 118 100 124 C150 112 210 120 260 140 C300 160 330 190 350 236Z" fill="url(#suMata)"/>
+    <g id="su-floresta" class="toque">${fundoMata}${meioMata}
+      ${arvore(40, 206, 26, 20, '#2E8A4A', '#14402A', '#8ED05A', true)}${arvore(128, 204, 24, 18, '#C84A3A', '#6E1E14', '#FF9A7A', true)}${arvore(300, 214, 22, 16, '#3E8A6A', '#14402A', '#8AD0AA', true)}
+      ${coqueiro(20, 220, 84, -6, .66)}${coqueiro(176, 214, 74, 8, .6)}${coqueiro(270, 222, 62, -10, .55)}${coqueiro(96, 224, 70, 10, .62)}
+      ${arvore(214, 196, 18, 14, '#7AB83E', '#3E6A1E', '#D8F07A', false)}${arvore(330, 222, 16, 12, '#A8C83A', '#5E7A1E', '#EEF8A0', false)}${arvore(150, 214, 15, 11, '#24705E', '#0E3A2E', '#6ACAA0', false)}
+      ${bananeira(58, 238, .8)}${bananeira(236, 238, .75)}${bananeira(316, 244, .7)}${samambaia(14, 228, 1)}${samambaia(250, 226, .9)}${samambaia(120, 236, .8)}
+      <rect x="0" y="110" width="340" height="100" fill="transparent"/></g>
+    <path d="M-10 230 C40 222 120 222 180 226 C240 230 300 236 350 240 C390 244 420 250 450 248 L450 500 H-10Z" fill="url(#suMorro)"/>
+    <g fill="#B8E07A" opacity=".55">${Array.from({ length:30 }, () => { const x = R(0, 360), y = R(244, 470); return `<path d="M${f1(x)} ${f1(y)} l1 -5 M${f1(x + 3)} ${f1(y)} l-1 -4" stroke="#4E8A2A" stroke-width="1.2"/>`; }).join('')}</g>
+    <g id="su-fonte" class="toque"><ellipse cx="72" cy="226" rx="46" ry="11" fill="#3E7A4A"/><ellipse cx="72" cy="226" rx="42" ry="9" fill="url(#suAguaC)" stroke="#2E7AB6" stroke-width="1.2"/><path d="M42 224 q10 -3 20 0 M76 228 q8 -2 16 0" stroke="#E6F8FF" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+      <g fill="#8A8A7A" stroke="#4E4A40" stroke-width="1">${[[30, 226, 7, 5], [112, 228, 8, 5], [62, 234, 6, 3.4], [92, 235, 7, 3.6]].map(([x, y, rx, ry]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}"/>`).join('')}</g>
+      <path id="su-nasc" d="M60 216 q-2 -6 2 -10 q4 4 2 10" fill="#BFE8FF" stroke="#2E7AB6" stroke-width=".8" opacity=".9"/></g>
+    <path d="M114 228 C130 226 150 224 168 224" stroke="#6E6660" stroke-width="13" fill="none" stroke-linecap="round"/><path d="M114 228 C130 226 150 224 168 224" stroke="url(#suPedra)" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <path class="su-agua-canal" d="M114 227 C130 225 150 223 168 223" stroke="#4EA8E6" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path class="su-fluxo" d="M114 227 C130 225 150 223 168 223" stroke="#E6F8FF" stroke-width="1.6" fill="none" stroke-dasharray="5 7"/>
+    <path d="M228 226 C238 224 248 222 258 222" stroke="#6E6660" stroke-width="13" fill="none" stroke-linecap="round"/><path d="M228 226 C238 224 248 222 258 222" stroke="url(#suPedra)" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <path class="su-agua-canal" d="M228 225 C238 223 248 221 258 221" stroke="#4EA8E6" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path class="su-fluxo" d="M228 225 C238 223 248 221 258 221" stroke="#E6F8FF" stroke-width="1.6" fill="none" stroke-dasharray="5 7"/>
+    <g id="su-tunel" class="toque"><path d="M156 238 C152 214 166 188 194 182 C218 178 236 196 240 220 C242 230 240 236 238 240Z" fill="url(#suPedraEsc)" stroke="#3E3830" stroke-width="1.6"/>
+      <path d="M160 214 C170 198 188 190 206 190" stroke="#C6BEB2" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>
+      <path d="M176 200 l8 4 M206 196 l6 6 M220 214 l-6 4 M184 220 l6 -2" stroke="#4E463C" stroke-width="1.2" opacity=".7"/>
+      <path d="M158 196 C170 182 196 176 214 182 C226 186 236 196 238 206 C224 198 200 192 182 194 C172 195 164 196 158 196Z" fill="#5EA83A" stroke="#2E6A22" stroke-width="1.2"/>
+      ${capimPath(160, 236, 190, '#3E8A2A')}
+      <path d="M160 232 V222 A8 8 0 0 1 176 222 V232Z" fill="#1E1A16" stroke="#3E3830" stroke-width="1.2"/><path d="M162 230 V223 A6 6 0 0 1 174 223 V230" stroke="#6E665C" stroke-width="1" fill="none"/>
+      <path d="M222 232 V222 A8 8 0 0 1 238 222 V232Z" fill="#1E1A16" stroke="#3E3830" stroke-width="1.2"/>
+      <path d="M164 230 h8 M226 230 h8" stroke="#4EA8E6" stroke-width="3" stroke-linecap="round"/>
+      <rect x="150" y="180" width="96" height="60" fill="transparent"/></g>
+    ${CANAL.map((d, k) => `<path d="${d}" stroke="#5E564C" stroke-width="14" fill="none" stroke-linecap="round"/><path d="${d}" stroke="url(#suPedra)" stroke-width="11" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#7E766C" stroke-width="6" fill="none" stroke-linecap="round" opacity=".5"/><path id="su-canal-${k}" d="${d}" stroke="#4EA8E6" stroke-width="3" fill="none" stroke-linecap="round" style="transition:stroke-width .6s"/><path class="su-fluxo su-fluxo-${k}" d="${d}" stroke="#E6F8FF" stroke-width="1.4" fill="none" stroke-dasharray="5 8"/>`).join('')}
+    ${CANAL.map((d, k) => `<path class="su-canal-alvo toque" data-k="${k}" d="${d}" stroke="transparent" stroke-width="20" fill="none" stroke-linecap="round"/>`).join('')}
+    ${bananeira(130, 296, .9)}${bale(62, 330)}${moto(150, 334)}${bananeira(206, 300, .7)}
+    <g fill="#FF8AB8" stroke="#9A2E5E" stroke-width=".6">${[[118, 360], [128, 366], [40, 362], [20, 370], [210, 340]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.4"/>`).join("")}</g><g fill="#FFD447" stroke="#9A7A0E" stroke-width=".6">${[[110, 368], [30, 354], [200, 348]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2"/>`).join("")}</g>
+    <g id="su-caixa">
+      <path d="M232 252 L368 252 L342 272 L258 272Z" fill="url(#suPedra)" stroke="#5E564C" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M244 258 L356 258 M252 265 L348 265" stroke="#7E766C" stroke-width=".9" opacity=".6"/>
+      <g id="su-fios">${[0, 1, 2].map(k => `<path id="su-fio-${k}" d="M300 254 L${SAI[k]} 270" stroke="#5EB4EC" stroke-width="4" fill="none" stroke-linecap="round" style="transition:stroke-width .5s"/>`).join('')}</g>
+      <path d="M222 228 C232 210 368 210 378 228Z" fill="#6E665C" stroke="#3E3830" stroke-width="1.4"/>
+      <path d="M229 228 C238 214 362 214 371 228Z" fill="url(#suPoco)"/>
+      <path d="M256 220 q14 -2 28 0 M304 218 q16 -2 32 0 M270 224 q20 -2 40 0 M322 224 q14 -2 28 0" stroke="#D6F2FF" stroke-width="1.2" fill="none" opacity=".75"/>
+      <g fill="#8A8276" stroke="#4E463C" stroke-width=".9">${[[230, 220, 7, 4], [248, 214, 8, 4], [354, 214, 8, 4], [372, 221, 6, 4], [300, 210, 9, 3.4]].map(([x, y, rx, ry]) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}"/>`).join('')}</g>
+      <path d="M228 226 H372 L370 256 H230Z" fill="url(#suPedraEsc)" stroke="#3E3830" stroke-width="1.6" stroke-linejoin="round"/>
+      <g stroke="#3E3830" stroke-width="1" fill="none" opacity=".75"><path d="M229 236 H371 M230 246 H370"/>${[244, 268, 292, 316, 340, 362].map((x, k) => `<path d="M${x - (k % 2) * 10} 226 v10 M${x + 2} 236 v10 M${x - 8} 246 v10"/>`).join('')}</g>
+      <g fill="#C6BEB2" opacity=".35">${[[236, 228], [260, 238], [300, 228], [330, 248], [352, 238]].map(([x, y]) => `<rect x="${x}" y="${y + 1}" width="14" height="2" rx="1"/>`).join('')}</g>
+      <path d="M232 254 q10 -6 20 -2 q8 -4 14 2Z M332 255 q10 -7 22 -3 q8 -2 14 3Z" fill="#5E9A3A" stroke="#2E6A22" stroke-width=".8"/>
+      <path d="M224 224 H376 V229.6 H224Z" fill="#BEB6AA" stroke="#4E463C" stroke-width="1.2"/><path d="M226 225.4 H374" stroke="#EEE8DE" stroke-width="1" opacity=".8"/>
+      <g stroke="#4E463C" stroke-width="1" fill="none">${[1, 2, 3, 4, 5].map(k => `<path d="M${f1(BX0 + k * PASSO - 2.4)} 224 l2.4 3 l2.4 -3"/>`).join('')}</g>
+      <g id="su-jorros">${[0, 1, 2].map(k => `<g><path id="su-jorro-${k}" d="M${BX0} 224 h10 v32 h-10Z" fill="url(#suCortina)" stroke="#2E7AB6" stroke-width=".8" opacity=".95"/><path id="su-jflow-${k}" class="su-fluxo" d="M${BX0 + 3} 226 v28" stroke="#FFFFFF" stroke-width="1.4" stroke-dasharray="4 5" fill="none" opacity=".9"/><ellipse id="su-espuma-${k}" cx="${BX0 + 5}" cy="256" rx="6" ry="2.4" fill="#F2FBFF" opacity=".9"/></g>`).join('')}</g>
+      <g id="su-tabuas">${[0, 1].map(k => `<g id="su-tabua-${k}" class="su-tabua toque" data-i="${k}" style="cursor:grab"><g class="su-tabua-pos"><path d="M-4.6 200 h9.2 v58 h-9.2Z" fill="url(#suMadeira)" stroke="#4E2A10" stroke-width="1.4"/><path d="M-1.6 203 V255" stroke="#F2C890" stroke-width="1" opacity=".8"/><path d="M-4.6 214 h9.2 M-4.6 218 h9.2" stroke="#C8A86A" stroke-width="1.6"/><path d="M-4.6 214 l9.2 4 M-4.6 218 l9.2 -4" stroke="#7A5A2A" stroke-width=".7"/><path d="M-5.6 200 l5.6 -6 l5.6 6Z" fill="#A86A34" stroke="#4E2A10" stroke-width="1.2" stroke-linejoin="round"/><g class="su-tabua-dica">${brilhoHotspot(0, 184)}</g><rect x="-18" y="180" width="36" height="84" fill="transparent"/></g></g>`).join('')}</g>
+    </g>
+    <g id="su-puti" class="toque" data-fig="estorninho"><g id="su-puti-in" style="transform-origin:200px 182px"><svg x="160" y="134" width="82" height="75" viewBox="0 0 120 110"><use href="#f-estorninho"/></svg></g>${brilhoHotspot(236, 140)}</g>
+    <g id="su-chiqueiro" class="toque">
+      <path d="M0 414 C20 406 56 404 82 408 L82 420 C56 416 20 418 0 426Z" fill="#7A9A3E" stroke="#3E5A1E" stroke-width="1"/>
+      <g id="su-bando-casa">${[[14, 408, '#F2DDB0', '#8A6234'], [30, 410, '#E8C48A', '#7A5228'], [46, 408, '#FFFDF6', '#8A8478'], [62, 411, '#E8C48A', '#7A5228'], [22, 416, '#FFFDF6', '#8A8478'], [40, 417, '#F2DDB0', '#8A6234'], [56, 418, '#F2DDB0', '#8A6234']].map(([x, y, c, e], k) => `<g transform="translate(${x} ${y}) scale(.68)"><g style="animation:flutua ${(1.6 + k * .23).toFixed(2)}s ease-in-out infinite alternate">${patoJogo(c, e)}</g></g>`).join('')}</g>
+      <g stroke="#6E4A22" stroke-width="3.4" stroke-linecap="round">${[2, 14, 26, 38, 50, 62, 74, 84].map((x, k) => `<path d="M${x} ${422 - k * .4} V${394 - k * .3}"/>`).join('')}</g>
+      <g stroke="#C8A06A" stroke-width="2" stroke-linecap="round">${[2, 14, 26, 38, 50, 62, 74, 84].map((x, k) => `<path d="M${x - .6} ${421 - k * .4} V${395 - k * .3}"/>`).join('')}</g>
+      <path d="M0 400 C30 396 60 396 88 398 M0 412 C30 408 60 408 88 410" stroke="#8A6A3A" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M0 400 C30 396 60 396 88 398 M0 412 C30 408 60 408 88 410" stroke="#F2D8A8" stroke-width="1" fill="none"/>
+      <rect x="0" y="380" width="90" height="46" fill="transparent"/>
+    </g>
+    ${faixasSvg}
+    <g id="su-sobra" style="opacity:0;transition:opacity .8s">${[500, 690].map(x => `<path d="M${x - 11} ${f1(F(1, x) - 3)} q11 -4 22 0 l3 ${f1(T(2, x) - F(1, x) + 5)} q-14 4 -28 0Z" fill="#7CC8F0" stroke="#2E7AB6" stroke-width="1.2" opacity=".95"/><path d="M${x - 6} ${f1(F(1, x))} v${f1(T(2, x) - F(1, x))} M${x + 5} ${f1(F(1, x))} v${f1(T(2, x) - F(1, x))}" stroke="#E6F8FF" stroke-width="1.4" opacity=".8"/><path class="su-fluxo" d="M${x} ${f1(F(1, x) - 2)} v${f1(T(2, x) - F(1, x) + 6)}" stroke="#E6F8FF" stroke-width="1.6" stroke-dasharray="3 4"/>`).join('')}</g>
+    <g id="su-feixes" style="opacity:0;transition:opacity 1.4s">${[[540, 1], [300, 3], [640, 4], [180, 5], [500, 5]].map(([x, i]) => { const y = F(i, x) + 1; return `<g transform="translate(${x} ${f1(y)}) scale(${ESC[i]})"><ellipse cx="0" cy="0" rx="10" ry="2.4" fill="#2A1A0A" opacity=".3"/><path d="M-6 0 L-8 -22 L-2 -28 L2 -28 L8 -22 L6 0Z" fill="#E2B84A" stroke="#8A6214" stroke-width="1.2" stroke-linejoin="round"/><path d="M-6 -12 H6" stroke="#6E4A1E" stroke-width="2.4"/><path d="M-4 -26 q-6 -4 -10 2 M4 -26 q6 -4 10 2 M0 -28 q0 -6 -4 -8" stroke="#C89A2A" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M-3 -2 l-1 -18" stroke="#FFF0A8" stroke-width="1" opacity=".8"/></g>`; }).join('')}</g>
+    <g id="su-carams">${CARAM.map((c, k) => caramujo(c, k)).join('')}</g>
+    <g id="su-patos" style="display:none"></g>
+    <g id="su-patofig" class="toque" data-fig="patocorredor"><g transform="translate(114 476)"><g id="su-patofig-in"><g transform="scale(.95)">${patoJogo('#F2DDB0', '#8A6234')}</g></g></g><rect x="96" y="440" width="36" height="40" fill="transparent"/>${brilhoHotspot(128, 444)}</g>
+    <g>${bananeira(708, 498, 1.1)}</g>
+    <g id="su-espiga" class="toque" data-fig="espigaarroz"><g class="balanca" style="transform-origin:722px 500px"><svg x="676" y="404" width="80" height="104" viewBox="0 0 100 130"><use href="#f-espigaarroz"/></svg></g>${brilhoHotspot(700, 418)}</g>
+    <g>${coqueiro(782, 504, 330, -34, 1.15)}</g>
+    <g id="su-tokay" class="toque" data-fig="tokay"><g transform="translate(772 352) rotate(-78)"><g id="su-tokay-in"><svg x="-34" y="-24" width="68" height="44" viewBox="0 0 140 90"><use href="#f-tokay"/></svg></g></g>${brilhoHotspot(790, 318)}<rect x="752" y="314" width="42" height="74" fill="transparent"/></g>
+    <g>${inhame(-8, 504, .8, -46)}${inhame(22, 510, 1.15, -16)}${inhame(64, 512, .85, 16)}${inhame(44, 516, .65, -2)}</g>
+    <rect width="800" height="500" fill="url(#suVinheta)" pointer-events="none"/><rect width="800" height="500" filter="url(#suGrao)" pointer-events="none"/>
+  </svg>`;
+  function capimBorda(i){ let d = ''; for (let x = TX0[i] + 8; x < 800; x += R(7, 13)) { const y = F(i, x) - 1, h = R(3, 6) * (.7 + i * .08); d += `M${f1(x)} ${f1(y)} q${f1(R(-1, 1))} ${f1(-h / 2)} ${f1(R(-2.4, 2.4))} ${f1(-h)} `; } return `<path d="${d}" stroke="#3E8A22" stroke-width="1.3" fill="none" stroke-linecap="round"/>`; }
+  function capimPath(x0, x1, y, cor){ let d = ''; for (let k = 0; k < 10; k++) { const x = R(x0, x1), h = R(4, 8); d += `M${f1(x)} ${y} q${f1(R(-1.5, 1.5))} ${f1(-h / 2)} ${f1(R(-2.5, 2.5))} ${f1(-h)} `; } return `<path d="${d}" stroke="${cor}" stroke-width="1.2" fill="none" stroke-linecap="round"/>`; }
+  const c = criarCena(palco, svg), s = c.svg;
+  /* água correndo nos canais */
+  s.querySelectorAll('.su-fluxo').forEach((p, k) => p.animate([{ strokeDashoffset:0 }, { strokeDashoffset:-26 }], { duration:900 + (k % 3) * 120, iterations:Infinity }));
+  const faixas = [...s.querySelectorAll('.su-faixa')];
+  const nivel = [0, 0, 0], alvoN = [0, 0, 0];
+  let secar = 1;   /* fase 3: a água do campo baixa para virar lama */
+  function pintaFaixas(){
+    faixas.forEach((g, i) => {
+      const L = nivel[GRUPO[i]], k = i % 2 === 0 ? Math.min(1, L * 2) : Math.max(0, L * 2 - 1), a = k * secar;
+      g.querySelector('.su-agua').style.opacity = a.toFixed(3);
+      g.querySelector('.su-reflexo').style.opacity = (a * .7).toFixed(3);
+      g.querySelector('.su-rachas').style.opacity = Math.max(0, .7 - k * 1.6).toFixed(2);
+      const cai = g.querySelector('.su-cai'); if (cai) cai.style.opacity = L > .52 && secar > .9 ? 1 : 0;
+    });
+  }
+  /* ---------- fase 1: repartir a água ---------- */
+  const tabG = [0, 1].map(k => el(s, `#su-tabua-${k}`));
+  const xTab = p => BX0 + p * PASSO, canalW = [3, 3, 3];
+  let tabX = tab.map(xTab);
+  function desenhaCaixa(){
+    const sh = parte(), bordas = [BX0, tabX[0], tabX[1], BX1];
+    tabG.forEach((g, k) => g.setAttribute('transform', `translate(${f1(tabX[k])} 0)`));
+    [0, 1, 2].forEach(k => {
+      const a = bordas[k] + (k ? 4 : 0), b = bordas[k + 1] - (k < 2 ? 4 : 0), w = Math.max(2, b - a);
+      el(s, `#su-jorro-${k}`).setAttribute('d', `M${f1(a)} 225 C${f1(a + 1)} 236 ${f1(a + 2)} 246 ${f1(a + 1)} 256 H${f1(b - 1)} C${f1(b - 2)} 246 ${f1(b - 1)} 236 ${f1(b)} 225Z`);
+      const nf = Math.max(1, Math.round(w / 9)); el(s, `#su-jflow-${k}`).setAttribute('d', Array.from({ length:nf }, (_, q) => `M${f1(a + (q + .5) * w / nf)} 227 v27`).join(' '));
+      const es = el(s, `#su-espuma-${k}`); es.setAttribute('cx', f1(a + w / 2)); es.setAttribute('rx', f1(w / 2 + 3));
+      const fio = el(s, `#su-fio-${k}`); fio.setAttribute('d', `M${f1(a + w / 2)} 257 Q${f1((a + w / 2 + SAI[k]) / 2)} 266 ${SAI[k]} 271`);
+    });
+    const live = [(tabX[0] - BX0) / (BX1 - BX0), (tabX[1] - tabX[0]) / (BX1 - BX0), (BX1 - tabX[1]) / (BX1 - BX0)];
+    [0, 1, 2].forEach(k => { el(s, `#su-fio-${k}`).setAttribute('stroke-width', f1(2 + live[k] * 18)); canalW[k] = 1.6 + live[k] * 13; el(s, `#su-canal-${k}`).setAttribute('stroke-width', f1(canalW[k])); });
+    sh.forEach((v, k) => { alvoN[2 - k] = Math.min(1, v * 3); });
+  }
+  desenhaCaixa();
+  let arr = null;
+  tabG.forEach(g => g.addEventListener('pointerdown', e => {
+    if (fase !== 'repartir' || ocupado) return; e.stopPropagation();
+    const p = c.ponto(e), k = Math.abs(p.x - tabX[0]) <= Math.abs(p.x - tabX[1]) ? 0 : 1; arr = { k, dx:p.x - tabX[k], x0:p.x, moveu:false }; s.setPointerCapture(e.pointerId); tabG[k].style.cursor = 'grabbing'; toca('clique');
+    s.querySelectorAll('.su-tabua-dica').forEach(h => h.style.display = 'none');
+  }));
+  s.addEventListener('pointermove', e => {
+    if (!arr) return; const p = c.ponto(e); if (Math.abs(p.x - arr.x0) > 5) arr.moveu = true;
+    const k = arr.k, min = k ? BX0 + 2 * PASSO : BX0 + PASSO, max = k ? BX1 - PASSO : BX1 - 2 * PASSO;
+    tabX[k] = Math.max(min, Math.min(max, p.x - arr.dx));
+    if (k === 0 && tabX[1] < tabX[0] + PASSO) tabX[1] = tabX[0] + PASSO;
+    if (k === 1 && tabX[0] > tabX[1] - PASSO) tabX[0] = tabX[1] - PASSO;
+    const novo = tabX.map(v => Math.round((v - BX0) / PASSO)); if (novo[0] !== tab[0] || novo[1] !== tab[1]) { tab = novo; toca('clique'); }
+    desenhaCaixa();
+  });
+  s.addEventListener('pointerup', () => {
+    if (!arr) return; const { k, moveu } = arr; arr = null; tabG[k].style.cursor = 'grab';
+    if (!moveu) { const alvo = JUSTO[k]; if (tab[k] !== alvo) { tab[k] += Math.sign(alvo - tab[k]); if (k === 0 && tab[1] <= tab[0]) tab[1] = tab[0] + 1; if (k === 1 && tab[0] >= tab[1]) tab[0] = tab[1] - 1; } }
+    tabX = tab.map(xTab); desenhaCaixa(); toca('splash');
+    confere();
+  });
+  function confere(){
+    const sh = parte();
+    if (tab[0] === JUSTO[0] && tab[1] === JUSTO[1]) { fase = 'enchendo'; api.hud('<span class="chip">Água repartida: 3/3</span>'); api.diz('Isso! Três partes iguais. Agora a água chega a todos os terraços, do mais alto ao mais baixo.'); return; }
+    const ok = sh.filter(v => Math.abs(v - 1 / 3) < .01).length;
+    api.hud(`<span class="chip">Água repartida: ${ok}/3</span>`);
+    if (sh[2] > .34) api.diz('O campo lá de cima ainda pega água demais. Os de baixo ficam com sede!');
+    else if (sh[0] > .34) api.diz('Agora é o campo de baixo que pega demais. Tem que ser igual para todos!');
+    else api.diz('Quase! Deixe os três pedaços de água do mesmo tamanho.');
+  }
+  /* ---------- fase 2: plantar as mudas ---------- */
+  const plantas = [...s.querySelectorAll('.su-pl')];
+  const porFaixa = [0, 1, 2, 3, 4, 5].map(i => plantas.filter(p => +p.dataset.f === i));
+  const feitas = [0, 0, 0, 0, 0, 0], linhaOk = [false, false, false, false, false, false];
+  function comecaPlantio(){
+    fase = 'plantio'; faixas.forEach(g => g.querySelector('.su-dica').style.display = '');
+    api.hud('<span class="chip">Terraços plantados: 0/6</span>');
+    api.diz('Os campos estão alagados, prontos para o arroz. Plante as mudas: passe o dedo ou toque em cada terraço!');
+  }
+  function planta1(i, k, atraso){
+    const sl = SLOTS[i][k]; if (sl.ok) return; sl.ok = true; feitas[i]++; plantadas++;
+    const g = porFaixa[i][k].querySelector('.su-pl-in');
+    depois(atraso || 0, () => { g.style.transform = 'scale(1)'; if (k % 3 === 0) c.add({ tipo:'respingo', x:sl.x, y:sl.y, t:0, cor:'#E6F8FF' }); });
+    if (!linhaOk[i] && feitas[i] >= SLOTS[i].length * .8) {
+      linhaOk[i] = true; linhas++; faixas[i].querySelector('.su-dica').style.display = 'none';
+      SLOTS[i].forEach((o, kk) => { if (!o.ok) planta1(i, kk, 300 + kk * 30); });
+      depois(400, () => { toca('planta'); c.brilhos(MEIO(i, 560), MEIO(i, 560) - 10, 5, '#C8F07A'); });
+      api.hud(`<span class="chip">Terraços plantados: ${linhas}/6</span>`);
+      if (linhas === 1) api.diz('O arroz gosta de crescer com os pés na água.');
+      if (linhas === 3) api.diz('Cada mudinha vai virar um pé cheio de grãos.');
+      if (linhas === 6) { fase = 'crescer'; depois(1600, cresce); }
+    }
+  }
+  let plantando = false, ultimoP = null, ondaDita = false;
+  const plantaPerto = (x, y) => { SLOTS.forEach((lst, i) => lst.forEach((sl, k) => { if (!sl.ok && Math.abs(sl.x - x) < 20 && Math.abs(sl.y - y) < 14) { planta1(i, k); if (Math.random() < .3) toca('pop'); } })); };
+  faixas.forEach((g, i) => g.querySelector('.su-alvo').addEventListener('pointerdown', e => {
+    if (fase !== 'plantio') { const p = c.ponto(e), L = nivel[GRUPO[i]], ag = (i % 2 === 0 ? Math.min(1, L * 2) : Math.max(0, L * 2 - 1)) * secar;
+      if (ag > .3) { for (let q = 0; q < 3; q++) c.add({ tipo:'respingo', x:p.x, y:p.y, t:q * 4, cor:'#FFFFFF' }); somOn && tom(880 + sorte(0, 300), 0, .18, 'sine', .05, 520); if (!ondaDita) { ondaDita = true; api.diz('Plic! A água parada do terraço é um espelho: dá para ver o céu e as nuvens.'); } }
+      else if (fase === 'repartir') { toca('clique'); api.diz('Este terraço está secando, a terra até rachou! Falta a parte de água dele.'); }
+      return; }
+    e.stopPropagation(); const p = c.ponto(e); plantando = true; ultimoP = { x0:p.x, y0:p.y, i, moveu:false }; s.setPointerCapture(e.pointerId); plantaPerto(p.x, p.y);
+  }));
+  s.addEventListener('pointermove', e => { if (!plantando) return; const p = c.ponto(e); if (Math.hypot(p.x - ultimoP.x0, p.y - ultimoP.y0) > 10) ultimoP.moveu = true; plantaPerto(p.x, p.y); });
+  s.addEventListener('pointerup', () => { if (!plantando) return; plantando = false; if (!ultimoP.moveu) { const i = ultimoP.i; toca('planta'); SLOTS[i].forEach((o, k) => { if (!o.ok) planta1(i, k, Math.abs(o.x - ultimoP.x0) * 2); }); } });
+  function cresce(){
+    api.hud('<span class="chip">O arroz está crescendo...</span>');
+    api.diz('A água do subak chega a todos os terraços, e o arroz cresce verdinho.');
+    plantas.forEach((p, k) => depois(k * 8, () => { p.querySelector('.su-m').style.opacity = 0; const g = p.querySelector('.su-g'); g.style.opacity = 1; g.style.transform = 'scale(1)'; }));
+    depois(4800, () => {
+      toca('ok'); api.hud('<span class="chip">O arroz amadureceu</span>'); api.diz('Depois de alguns meses, o arroz fica dourado e pesado de grãos.');
+      plantas.forEach((p, k) => depois(k * 6, () => { p.querySelector('.su-g').style.opacity = 0; p.querySelector('.su-r').style.opacity = 1; }));
+    });
+    depois(10200, () => {
+      api.hud('<span class="chip">Colheita!</span>'); toca('planta'); api.diz('Hora da colheita! Os vizinhos colhem juntos e depois deixam a água do campo baixar.');
+      plantas.forEach((p, k) => depois(k * 6, () => { p.querySelector('.su-r').style.opacity = 0; p.querySelector('.su-t').style.opacity = 1; }));
+      el(s, '#su-feixes').style.opacity = 1; faixas.forEach(g => g.querySelector('.su-lama').style.opacity = 1);
+      const t0 = performance.now(); (function baixa(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / 2500); secar = 1 - k * .62; pintaFaixas(); if (k < 1) requestAnimationFrame(baixa); })(t0);
+      depois(5600, comecaPatos);
+    });
+  }
+  /* ---------- fase 3: os patos ---------- */
+  const carams = [...s.querySelectorAll('.su-car')];
+  const N = 7, CORES = [['#F2DDB0', '#8A6234'], ['#E8C48A', '#7A5228'], ['#FFFDF6', '#8A8478'], ['#E8C48A', '#7A5228'], ['#FFFDF6', '#8A8478'], ['#F2DDB0', '#8A6234'], ['#E8C48A', '#7A5228']];
+  const patosG = el(s, '#su-patos');
+  patosG.innerHTML = CORES.map(([cc, e], k) => `<g class="su-pato${k === 0 ? ' toque' : ''}" ${k === 0 ? 'id="su-lider" style="cursor:grab"' : ''}><g class="su-pato-vira"><g class="su-pato-in">${k === 0 ? '<ellipse cx="0" cy="-12" rx="16" ry="18" fill="#FFF6C8" opacity=".35"/>' : ''}${patoJogo(cc, e)}</g></g>${k === 0 ? `<g class="su-lider-dica">${brilhoHotspot(10, -40)}</g><circle cx="0" cy="-12" r="22" fill="transparent"/>` : ''}</g>`).join('');
+  const patos = [...patosG.querySelectorAll('.su-pato')];
+  const lider = { x:70, y:418, tx:70, ty:418, vira:1 }, hist = [];
+  for (let k = 0; k < 160; k++) hist.push({ x:20 + (k % 7) * 8, y:416, v:1 });
+  let pegaLider = null, rotaAuto = null;
+  function comecaPatos(){
+    fase = 'patos'; el(s, '#su-bando-casa').style.display = 'none'; patosG.style.display = '';
+    carams.forEach(g => g.style.display = '');
+    lider.x = 70; lider.y = 418; lider.tx = 150; lider.ty = 470;
+    api.hud('<span class="chip">Caramujos: 0/8</span>');
+    api.diz('Depois da colheita, os patos entram no campo. Arraste o pato da frente e leve a turma até os caramujos!');
+  }
+  el(s, '#su-patos').addEventListener('pointerdown', e => {
+    if (fase !== 'patos' || !e.target.closest('#su-lider')) return; e.stopPropagation();
+    const p = c.ponto(e); pegaLider = { x0:p.x, y0:p.y, dx:p.x - lider.x, dy:p.y - lider.y }; rotaAuto = null; s.setPointerCapture(e.pointerId);
+    el(s, '.su-lider-dica').style.display = 'none'; somOn && tom(560, 0, .12, 'square', .03, 420);
+  });
+  s.addEventListener('pointermove', e => { if (!pegaLider) return; const p = c.ponto(e); lider.tx = Math.max(20, Math.min(770, p.x - pegaLider.dx)); lider.ty = Math.max(262, Math.min(494, p.y - pegaLider.dy)); });
+  s.addEventListener('pointerup', () => { pegaLider = null; });
+  carams.forEach((g, k) => g.addEventListener('click', e => { e.stopPropagation(); if (fase !== 'patos' || CARAM[k].foi) return; rotaAuto = k; lider.tx = CARAM[k].x; lider.ty = CARAM[k].y + 4; toca('clique'); }));
+  function come(k){
+    const cm = CARAM[k]; cm.foi = true; comidos++; const g = carams[k];
+    g.querySelector('.su-car-in').animate([{ transform:'scale(1)', opacity:1 }, { transform:'scale(1.3)', opacity:.8 }, { transform:'scale(0)', opacity:0 }], { duration:450, fill:'forwards' });
+    toca('pop'); somOn && [0, .12].forEach(t => tom(620, t, .09, 'square', .035, 380));
+    c.brilhos(cm.x, cm.y - 8, 4, '#C8F07A');
+    depois(900, () => { for (let j = 0; j < 3; j++) c.add({ tipo:'brilho', t:-j * 4, x:cm.x + sorte(-8, 8), y:cm.y + sorte(-2, 3), cor:'#B8E07A' }); });
+    api.hud(`<span class="chip">Caramujos: ${comidos}/8</span>`);
+    if (comidos === 1) api.diz('Os patos comem os caramujos e os insetos que estragam o arroz.');
+    if (comidos === 3) api.diz('E o cocô dos patos vira adubo para a terra!');
+    if (comidos === 5) api.diz('Sem veneno nenhum: os patos ajudam os agricultores.');
+    if (comidos === 8) { fase = 'fim'; toca('vitoria'); depois(900, () => { api.diz('Campo limpinho e adubado! Em Bali, a floresta guarda a água, os canais levam e os vizinhos repartem. Há mais de mil anos é assim. Que ideia boa!'); depois(6600, api.fim); }); }
+  }
+  /* ---------- quadro a quadro: níveis, patos, libélulas ---------- */
+  const canais = [0, 1, 2].map(k => el(s, `#su-canal-${k}`)), peixes = [{ k:0, u:.1, v:.0016, cor:'#FFB04A' }, { k:0, u:.55, v:.0013, cor:'#C8D8E8' }, { k:1, u:.3, v:.003, cor:'#FF8A5A' }, { k:2, u:.4, v:.004, cor:'#C8D8E8' }];
+  const libs = [{ x:430, y:300, f:0, c:'#E5392C' }, { x:600, y:360, f:2, c:'#2E7BF6' }, { x:300, y:420, f:4, c:'#FF8A3A' }];
+  let ultSobra = 0;
+  c.desenho(ctx => {
+    const t = performance.now() / 1000;
+    if (fase === 'repartir' || fase === 'enchendo') {
+      let mudou = false; const dtN = Math.min(.1, t - (nivel.t || t)); nivel.t = t;
+      for (let g = 0; g < 3; g++) { const d = alvoN[g] - nivel[g]; if (Math.abs(d) > .002) { nivel[g] += Math.sign(d) * Math.min(Math.abs(d), .4 * dtN); mudou = true; } }
+      if (mudou) pintaFaixas();
+      const sobra = parte()[2] > .34 && nivel[0] > .97; el(s, '#su-sobra').style.opacity = sobra ? 1 : 0;
+      if (sobra && t - ultSobra > .22) { ultSobra = t; const xs = [500, 690][Math.floor(sorte(0, 2))]; c.add({ tipo:'respingo', x:xs + sorte(-4, 4), y:T(2, xs) + 2, t:0, cor:'#E6F8FF' }); c.add({ tipo:'respingo', x:sorte(440, 760), y:F(1, 600) - 3, t:0, cor:'#FFFFFF' }); }
+      if (fase === 'enchendo' && nivel.every(v => v > .99)) { fase = 'cheio'; toca('vitoria'); faixas.forEach((g, i) => c.brilhos(560, MEIO(i, 560), 3, '#FFFFFF'));
+        s.querySelectorAll('.su-agri .su-braco').forEach(b => b.animate([{ transform:'rotate(0)' }, { transform:'rotate(-120deg)' }, { transform:'rotate(-90deg)' }, { transform:'rotate(-120deg)' }, { transform:'rotate(0)' }], { duration:1600 }));
+        api.diz('No subak, os agricultores se reúnem e decidem juntos como repartir a água. Assim, ninguém fica sem!'); depois(5200, comecaPlantio); }
+    }
+    if (fase === 'patos' || fase === 'fim') {
+      const dt = Math.min(.1, t - (lider.t || t)); lider.t = t;
+      const vx = lider.tx - lider.x, vy = lider.ty - lider.y, dd = Math.hypot(vx, vy), v = Math.min(dd, (pegaLider ? 200 : 140) * dt);
+      if (dd > .5) { lider.x += vx / dd * v; lider.y += vy / dd * v; if (Math.abs(vx) > 1) lider.vira = vx < 0 ? -1 : 1; }
+      const anda = dd > 1;
+      if (Math.hypot(lider.x - hist[0].x, lider.y - hist[0].y) > 3) { hist.unshift({ x:lider.x, y:lider.y, v:lider.vira }); hist.length = 160; }
+      patos.forEach((g, k) => {
+        const h = k === 0 ? { x:lider.x, y:lider.y, v:lider.vira } : hist[Math.min(hist.length - 1, k * 6)] || hist[hist.length - 1];
+        const bob = anda ? Math.abs(Math.sin(t * 12 + k)) * 2 : 0, ginga = anda ? Math.sin(t * 12 + k) * 6 : 0;
+        const esc = .9 + (h.y - 262) / 232 * .45;
+        g.setAttribute('transform', `translate(${f1(h.x)} ${f1(h.y - bob)}) scale(${(esc * (h.v || 1)).toFixed(3)} ${esc.toFixed(3)})`);
+        g.querySelector('.su-pato-in').setAttribute('transform', `rotate(${f1(ginga)})`);
+        if (fase === 'patos') CARAM.forEach((cm, j) => { if (!cm.foi && Math.hypot(cm.x - h.x, cm.y - h.y) < 22) come(j); });
+      });
+      if (rotaAuto != null && CARAM[rotaAuto].foi) { const prox = CARAM.findIndex(cm => !cm.foi); rotaAuto = null; }
+    }
+    peixes.forEach(pe => { const cp = canais[pe.k], w = canalW[pe.k]; if (w < 4) return; pe.u = (pe.u + pe.v * (1 + w / 10)) % 1;
+      const L = cp.getTotalLength(), a = cp.getPointAtLength(pe.u * L), b = cp.getPointAtLength(Math.min(L, pe.u * L + 2)), ang = Math.atan2(b.y - a.y, b.x - a.x), mexe = Math.sin(t * 10 + pe.u * 40) * .25;
+      ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(ang + mexe * .3); ctx.globalAlpha = .85; ctx.fillStyle = pe.cor; ctx.strokeStyle = '#1E4A7A'; ctx.lineWidth = .7;
+      ctx.beginPath(); ctx.moveTo(-3, 0); ctx.lineTo(-6, -2 + mexe * 2); ctx.lineTo(-6, 2 + mexe * 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(0, 0, 3.6, 1.6, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.restore(); });
+    for (let q = pulos.length - 1; q >= 0; q--) { const pl = pulos[q], k = (t - pl.t0) / .9; if (k >= 1) { c.add({ tipo:'respingo', x:pl.x + pl.d * 26, y:pl.y, t:0, cor:'#E6F8FF' }); pulos.splice(q, 1); continue; }
+      const x = pl.x + pl.d * 26 * k, y = pl.y - Math.sin(k * Math.PI) * 30;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(pl.d * (-1.1 + k * 2.2) + (pl.d < 0 ? Math.PI : 0)); ctx.fillStyle = '#FF9A3A'; ctx.strokeStyle = '#8A3A10'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(-11, -4); ctx.lineTo(-11, 4); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(0, 0, 7, 3.4, 0, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(4, -.8, 1.3, 0, 7); ctx.fill(); ctx.fillStyle = '#12121A'; ctx.beginPath(); ctx.arc(4.3, -.8, .7, 0, 7); ctx.fill(); ctx.restore(); }
+    for (let q = passaros.length - 1; q >= 0; q--) { const b = passaros[q], k = t - b.t0; if (k > 3.2) { passaros.splice(q, 1); continue; }
+      b.x += b.vx - 1.6; b.y += b.vy; b.vy += .03; const asa = Math.sin(t * 30 + b.f) * 4;
+      ctx.save(); ctx.translate(b.x, b.y); ctx.globalAlpha = Math.min(1, (3.2 - k) * 2); ctx.fillStyle = '#8A5A3A'; ctx.strokeStyle = '#3E2614'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(0, 0, 4.4, 2.6, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-1, -1); ctx.quadraticCurveTo(-4, -4 - asa, -8, -2 - asa); ctx.moveTo(1, -1); ctx.quadraticCurveTo(4, -4 - asa, 7, -2 - asa); ctx.stroke();
+      ctx.fillStyle = '#E8D2B0'; ctx.beginPath(); ctx.arc(-3.6, -.6, 1.8, 0, 7); ctx.fill(); ctx.restore(); }
+    libs.forEach((l, k) => {
+      const x = l.x + Math.sin(t * .7 + l.f) * 90 + Math.sin(t * 2.3 + k) * 14, y = l.y + Math.sin(t * 1.1 + l.f * 2) * 26, a = Math.cos(t * .7 + l.f) > 0 ? 0 : Math.PI, fl = Math.sin(t * 40 + k) * .5 + .5;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(a + Math.sin(t * 2 + k) * .15);
+      ctx.globalAlpha = .55; ctx.fillStyle = '#E6F6FF'; ctx.strokeStyle = '#7AA8C8'; ctx.lineWidth = .6;
+      [[-2, -1], [2, -1]].forEach(([dx]) => { ctx.beginPath(); ctx.ellipse(dx, -4 - fl * 1.5, 2, 6, dx * .25, 0, 7); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.ellipse(dx, 4 + fl * 1.5, 2, 6, -dx * .25, 0, 7); ctx.fill(); ctx.stroke(); });
+      ctx.globalAlpha = 1; ctx.strokeStyle = l.c; ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(-9, 0); ctx.lineTo(8, 0); ctx.stroke();
+      ctx.fillStyle = l.c; ctx.beginPath(); ctx.arc(9, 0, 2.2, 0, 7); ctx.fill(); ctx.restore();
+    });
+  });
+  /* ---------- toques extras ---------- */
+  el(s, '#su-puti').addEventListener('click', () => {
+    el(s, '#su-puti-in').animate([{ transform:'translateY(0)' }, { transform:'translateY(-12px)' }, { transform:'translateY(0)' }, { transform:'translateY(-6px)' }, { transform:'translateY(0)' }], { duration:700 });
+    [1800, 2400, 2000, 2700].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .1, 'sine', .06, f * 1.2), i * 110));
+    api.diz(fase === 'repartir' ? 'Eu só existo aqui, na ilha de Bali! Me ajude: arraste as tábuas para repartir a água.' : 'Estorninhos-de-bali quase sumiram. Hoje muita gente cuida para a gente voar livre de novo.');
+  });
+  const falasAgri = ['Meu campo é o mais alto. A água chega aqui primeiro, mas não posso pegar tudo!', 'No subak, a gente se reúne e decide junto a vez de cada um.', 'Meu campo é o mais baixo. Com a água bem repartida, ela chega até aqui!'];
+  s.querySelectorAll('.su-agri').forEach((g, k) => g.addEventListener('click', e => { e.stopPropagation(); toca('pop'); g.querySelector('.su-braco').animate([{ transform:'rotate(0)' }, { transform:'rotate(-120deg)' }, { transform:'rotate(-95deg)' }, { transform:'rotate(-120deg)' }, { transform:'rotate(0)' }], { duration:1200 }); api.diz(falasAgri[k]); }));
+  let garcaOcup = false;
+  el(s, '#su-garca').addEventListener('click', e => { e.stopPropagation(); if (garcaOcup) return; garcaOcup = true; toca('splash'); c.add({ tipo:'respingo', x:GARCA.x, y:MEIO(3, GARCA.x, .7), t:0, cor:'#E6F8FF' });
+    const a = el(s, '#su-garca-in').animate([{ transform:'translate(0,0)' }, { transform:'translate(-60px,-90px) scale(.9)' }, { transform:'translate(-140px,-60px) scale(.9)' }, { transform:'translate(-60px,-30px)' }, { transform:'translate(0,0)' }], { duration:3400, easing:'ease-in-out' });
+    a.onfinish = () => { garcaOcup = false; }; api.diz('A garça pesca peixinhos e girinos nos campos alagados.'); });
+  el(s, '#su-sapo').addEventListener('click', e => { e.stopPropagation(); toca('glub'); el(s, '#su-sapo-in').animate([{ transform:'translate(0,0)' }, { transform:'translate(10px,-22px)' }, { transform:'translate(20px,0)' }, { transform:'translate(10px,-12px)' }, { transform:'translate(0,0)' }], { duration:1200 }); c.add({ tipo:'respingo', x:SAPO.x + 20, y:F(4, SAPO.x) + 3, t:0, cor:'#E6F8FF' }); api.diz('Nos campos de arroz alagados vivem sapos, peixinhos e libélulas.'); });
+  el(s, '#su-pipa').addEventListener('click', e => { e.stopPropagation(); toca('vapor'); el(s, '#su-pipa-in').animate([{ transform:'rotate(0)' }, { transform:'rotate(-14deg) translate(-10px,-14px)' }, { transform:'rotate(10deg) translate(8px,-6px)' }, { transform:'rotate(0)' }], { duration:1800, easing:'ease-in-out' }); api.diz('Quando venta forte, as crianças de Bali soltam pipas enormes, até em forma de peixe!'); });
+  el(s, '#su-floresta').addEventListener('click', e => { e.stopPropagation(); toca('chuva');
+    for (let i = 0; i < 10; i++) { const x = sorte(20, 300); c.add({ tipo:'infiltra', x0:x, y0:sorte(140, 190), x1:72 + sorte(-20, 20), y1:222, dur:sorte(60, 100), f:sorte(0, 6) }); }
+    api.diz('A floresta no alto da montanha segura a água da chuva como uma esponja. Ela alimenta as nascentes, por isso é protegida.'); });
+  el(s, '#su-fonte').addEventListener('click', e => { e.stopPropagation(); toca('glub'); for (let i = 0; i < 4; i++) c.add({ tipo:'respingo', x:72 + sorte(-20, 20), y:226, t:i * 2, cor:'#E6F8FF' }); api.diz('Daqui brota a água da nascente. Ela vem da chuva que a floresta guardou.'); });
+  el(s, '#su-tunel').addEventListener('click', e => { e.stopPropagation(); toca('clique'); api.diz('Este túnel foi cavado na pedra pelos agricultores, para a água atravessar o morro!'); });
+  el(s, '#su-patofig').addEventListener('click', () => { somOn && [0, .16].forEach(t => tom(520, t, .1, 'square', .04, 380)); el(s, '#su-patofig-in').animate([{ transform:'rotate(0)' }, { transform:'rotate(-8deg)' }, { transform:'rotate(8deg)' }, { transform:'rotate(0)' }], { duration:600, iterations:2 }); });
+  el(s, '#su-tokay').addEventListener('click', () => { somOn && [[300, 0], [190, .28]].forEach(([f, t]) => tom(f, t, .18, 'square', .05, f * .7)); el(s, '#su-tokay-in').animate([{ transform:'translate(0,0)' }, { transform:'translate(10px,0)' }, { transform:'translate(0,0)' }], { duration:700 }); });
+  el(s, '#su-espiga').addEventListener('click', () => toca('planta'));
+  const pulos = [], passaros = [];
+  s.querySelectorAll('.su-canal-alvo').forEach(g => g.addEventListener('click', e => { e.stopPropagation(); const p = c.ponto(e);
+    pulos.push({ x:p.x, y:p.y, t0:performance.now() / 1000, d:sorte(0, 1) < .5 ? -1 : 1 }); toca('splash'); for (let q = 0; q < 3; q++) c.add({ tipo:'respingo', x:p.x, y:p.y, t:q * 3, cor:'#E6F8FF' });
+    api.diz('Peixinhos também moram nos canais e nos campos alagados. A água limpa é a casa deles!'); }));
+  let espOcup = false;
+  el(s, '#su-espanta').addEventListener('click', e => { e.stopPropagation(); if (espOcup) return; espOcup = true;
+    s.querySelectorAll('#su-espanta .su-tubo').forEach((tb, q) => tb.animate([{ transform:'rotate(0)' }, { transform:`rotate(${q % 2 ? 24 : -24}deg)` }, { transform:`rotate(${q % 2 ? -18 : 18}deg)` }, { transform:'rotate(8deg)' }, { transform:'rotate(0)' }], { duration:1100, delay:q * 60 }));
+    if (somOn) [0, .12, .22, .36, .46, .6].forEach((t, q) => { tom([920, 760, 1040, 820, 980, 700][q], t, .07, 'square', .05, 300); });
+    const x0 = ESPANTA.x, y0 = MEIO(ESPANTA.f, ESPANTA.x);
+    for (let q = 0; q < 6; q++) passaros.push({ x:x0 + sorte(-60, 60), y:y0 + sorte(-6, 10), vx:sorte(-3, 3) || 1, vy:sorte(-3.4, -2), f:sorte(0, 6), t0:performance.now() / 1000 });
+    api.diz('Tloc, tloc! O espantalho de bambu faz barulho com o vento e espanta os passarinhos do arroz.');
+    depois(1300, () => { espOcup = false; }); });
+  el(s, '#su-bale').addEventListener('click', e => { e.stopPropagation(); toca('ok'); api.diz('Nesta casinha aberta, os agricultores do subak se reúnem para combinar a água, o plantio e a colheita.'); });
+  el(s, '#su-chiqueiro').addEventListener('click', e => { if (fase === 'patos' || fase === 'fim') return; e.stopPropagation(); somOn && [0, .14, .28].forEach(t => tom(500 + t * 300, t, .09, 'square', .035, 360)); api.diz(fase === 'repartir' ? 'Os patos estão esperando a colheita para passear no campo.' : 'Quack! Os patos já querem sair.'); });
+  /* começo */
+  pintaFaixas();
+  api.hud('<span class="chip">Água repartida: 0/3</span>');
+  api.diz('Oi, eu sou o Puti, um estorninho-de-bali! Aqui a água desce da floresta e é repartida entre todos os campos.');
+  api.diz('O campo de cima está pegando quase toda a água. Arraste as tábuas para dividir a água em três partes iguais!');
+  return () => { vivo = false; timers.forEach(clearTimeout); c.parar(); };
+}
+/* ================= JOGO: Terra dos Inuit, o gelo do mar ================= */
+function jogoInuit(palco, api){
+  semente = 64;
+  let vivo = true, fase = 'gelo', coluna = 0, blocos = 0, pedacos = 0, fogo = 0, ocupado = false, aurora = 0;
+  const timers = [], depois = (ms, fn) => { const t = setTimeout(() => vivo && fn(), ms); timers.push(t); return t; };
+  const tween = (ms, fn, fim) => { const t0 = performance.now(); (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / ms); fn(k * k * (3 - 2 * k), k); if (k < 1) requestAnimationFrame(q); else fim && fim(); })(t0); };
+  const P = v => (+v).toFixed(1), PI = Math.PI;
+  const HZ = 208;
+  const COLS = [292, 378, 464, 550], ROWS = [298, 378], SEGURO = [0, 1, 0, 1];
+  const INICIO = { x:176, y:346 }, PARADA = { x:614, y:448 };
+  const IG = { x:716, y:336, rx:72, h:78 };
+  const PANELA = { x:420, y:438 };
+  const PILHA = [[676, 468], [726, 472], [774, 468], [700, 444], [750, 446], [726, 420]];
+  const PEDACOS = [{ x:432, y:240, doce:true }, { x:480, y:252, doce:false }, { x:528, y:238, doce:true }, { x:576, y:252, doce:false }, { x:622, y:234, doce:true }];
+  /* ---------- formas ---------- */
+  const blob = (cx, cy, rx, ry, n, amp) => {
+    const pts = []; for (let i = 0; i < n; i++) { const a = i / n * PI * 2, k = 1 + R(-amp, amp); pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); }
+    const m = (a, b) => `${P((a[0] + b[0]) / 2)} ${P((a[1] + b[1]) / 2)}`;
+    let d = `M${m(pts[n - 1], pts[0])}`; for (let i = 0; i < n; i++) d += ` Q${P(pts[i][0])} ${P(pts[i][1])} ${m(pts[i], pts[(i + 1) % n])}`; return d + 'Z';
+  };
+  /* crista de pressão: blocos de gelo empurrados uns contra os outros */
+  const crista = (x0, x1, y, h) => { let o = ''; for (let x = x0; x < x1; x += R(9, 15)) { const w = R(10, 18), hh = h * R(.5, 1.1), inc = R(-.4, .4);
+    o += `<path d="M${P(x)} ${P(y)} L${P(x + inc * hh)} ${P(y - hh)} L${P(x + w * .6)} ${P(y - hh * R(.7, 1))} L${P(x + w)} ${P(y)}Z" fill="#FFFFFF" stroke="#7FA2C8" stroke-width="1.1" stroke-linejoin="round"/><path d="M${P(x + w * .6)} ${P(y - hh * .8)} L${P(x + w)} ${P(y)} L${P(x + w * .5)} ${P(y)}Z" fill="#B4CDEA" opacity=".9"/>`; }
+    return o + `<path d="M${x0 - 6} ${y + 1} H${x1 + 10}" stroke="#A9C3E2" stroke-width="3" stroke-linecap="round" opacity=".7"/>`; };
+  /* casa colorida sobre pés de metal (por causa do chão congelado) */
+  const CASAS = [['#F26A5A', '#B23A2E'], ['#4E9BE8', '#235FAE'], ['#FFD25A', '#D8981E'], ['#5CC79A', '#2A8A62'], ['#B989E8', '#6E44A8'], ['#FF9A4A', '#C8601E']];
+  const casa = (x, y, w, h, i, porta) => { const [c1, c2] = CASAS[i], yb = y - 7, yt = yb - h;
+    let o = `<ellipse cx="${x + w / 2}" cy="${y + 1}" rx="${w * .62}" ry="3" fill="#8FA9CC" opacity=".55"/>`;
+    o += `<g stroke="#4A5068" stroke-width="1.6">${[x + 4, x + w / 2, x + w - 4].map(px => `<path d="M${px} ${yb} V${y}"/>`).join('')}</g>`;
+    o += `<rect x="${x}" y="${yt}" width="${w}" height="${h}" fill="url(#inCasa${i})" stroke="${c2}" stroke-width="1.4"/>`;
+    o += `<path d="M${x + 2} ${yt + 3} V${yb - 2}" stroke="#fff" stroke-width="1.4" opacity=".45"/>`;
+    o += `<path d="M${x - 3} ${yt + 1} L${x + w / 2} ${yt - 9} L${x + w + 3} ${yt + 1}Z" fill="#3E4560" stroke="#22283C" stroke-width="1.2" stroke-linejoin="round"/>`;
+    o += `<path d="M${x - 2} ${yt} L${x + w / 2} ${yt - 8.4} L${x + w + 2} ${yt} C${x + w * .8} ${yt - 3} ${x + w * .7} ${yt - 1} ${x + w * .55} ${yt - 4} C${x + w * .4} ${yt - 2} ${x + w * .2} ${yt - 2} ${x - 2} ${yt}Z" fill="#FFFFFF" stroke="#B8CCE6" stroke-width=".8"/>`;
+    const jw = Math.min(8, w * .2);
+    o += `<g class="in-janela">${[x + w * .18, porta ? x + w * .62 : x + w * .58].map(jx => `<rect x="${P(jx)}" y="${yt + h * .3}" width="${jw}" height="${jw * .8}" rx="1" fill="#A8DDF6" stroke="#fff" stroke-width="1.2"/>`).join('')}</g>`;
+    if (porta) o += `<rect x="${x + w * .4}" y="${yb - h * .62}" width="${w * .16}" height="${h * .62}" fill="${c2}" stroke="#22283C" stroke-width=".9"/><path d="M${x + w * .36} ${yb} h${w * .26} v4 h-${w * .26}Z" fill="#9AA4B8"/>`;
+    return o;
+  };
+  /* pessoas de parca: rosto, capuz com pelo e faixa enfeitada na barra */
+  const parca = (cx, cy, s, pele, cor, esc, faixa, cabelo) => `<g transform="translate(${cx} ${cy}) scale(${s})">
+      <path d="M-11 6 C-13 -8 -9 -20 0 -21 C9 -20 13 -8 11 6Z" fill="${cor}" stroke="${esc}" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M0 -20 V4" stroke="${esc}" stroke-width=".8" opacity=".5"/>
+      <path d="M-11.6 1.4 H11.6" stroke="${faixa}" stroke-width="3.4"/><path d="M-10 1.4 l2 -1.4 l2 1.4 l2 -1.4 l2 1.4 l2 -1.4 l2 1.4 l2 -1.4 l2 1.4 l2 -1.4 l2 1.4" stroke="${esc}" stroke-width=".9" fill="none"/>
+      <g fill="#F7F1E4" stroke="#B8A888" stroke-width=".6">${[-10, -6.6, -3.3, 0, 3.3, 6.6, 10].map(x => `<circle cx="${x}" cy="5.6" r="2.2"/>`).join('')}</g>
+      <path d="M-6 -16 C-8 -10 -8 -4 -7 -2" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".35"/>
+      <path d="${copa(0, -29, 12, 11.6, 18, .14)}" fill="#E8D4AE" stroke="#8A6A44" stroke-width="1"/>
+      <g stroke="#B08A5E" stroke-width=".7" stroke-linecap="round">${Array.from({ length:16 }, (_, k) => { const an = k / 16 * Math.PI * 2; return `<path d="M${(Math.cos(an) * 8.6).toFixed(1)} ${(-29 + Math.sin(an) * 8.4).toFixed(1)} L${(Math.cos(an) * 11).toFixed(1)} ${(-29 + Math.sin(an) * 10.8).toFixed(1)}"/>`; }).join('')}</g>
+      <circle cx="0" cy="-29" r="8.4" fill="${esc}"/>
+      <circle cx="0.4" cy="-28.6" r="7" fill="${pele}" stroke="#5A3418" stroke-width=".8"/>
+      <path d="M-6.4 -30 C-6 -37 6 -38 7.2 -30 C4 -33.6 2 -32 0 -34 C-2 -32 -4 -33 -6.4 -30Z" fill="${cabelo}"/>
+      <path d="M-3.6 -31.4 q1.4 -.9 2.6 0 M2 -31.4 q1.4 -.9 2.6 0" stroke="${cabelo}" stroke-width=".6" fill="none" stroke-linecap="round"/>
+      <ellipse cx="-2.2" cy="-28.6" rx="1.25" ry="1.55" fill="#1A1210"/><ellipse cx="3.2" cy="-28.6" rx="1.25" ry="1.55" fill="#1A1210"/><circle cx="-1.8" cy="-29.2" r=".5" fill="#fff"/><circle cx="3.6" cy="-29.2" r=".5" fill="#fff"/>
+      <ellipse cx="-4.4" cy="-25.6" rx="1.8" ry="1.1" fill="#E86A5A" opacity=".5"/><ellipse cx="5.4" cy="-25.6" rx="1.8" ry="1.1" fill="#E86A5A" opacity=".5"/>
+      <path d="M-1.6 -25.4 q2.1 2.6 4.2 0Z" fill="#8A2A1E" stroke="#5A2A18" stroke-width=".5" stroke-linejoin="round"/>
+    </g>`;
+  /* cão de trenó (pelo grosso, rabo enrolado) */
+  const cao = (x, y, fl, c1, c2, cls) => `<g class="${cls}" transform="translate(${x} ${y}) scale(${fl} 1)"><g class="in-cao-in">
+      <ellipse cx="0" cy="1" rx="12" ry="2.2" fill="#8FA9CC" opacity=".6"/>
+      <path d="M-6 -4 V0 M-3 -4 V0.4 M5 -4 V0 M8 -4 V0.4" stroke="${c2}" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M-9 -6 C-10 -11 -4 -13 2 -12 C8 -12 11 -9 10 -5 C8 -2 -6 -2 -9 -6Z" fill="${c1}" stroke="${c2}" stroke-width="1.1"/>
+      <path d="M-6 -4 C-2 -2 4 -2 8 -4" stroke="#FFFFFF" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <path d="M-8 -10 C-14 -14 -13 -20 -8 -18 C-10 -16 -9 -13 -7 -12Z" fill="${c1}" stroke="${c2}" stroke-width="1"/>
+      <path d="M7 -15 L8 -21 L11 -16Z M11 -15 L13 -21 L14.6 -15Z" fill="${c1}" stroke="${c2}" stroke-width=".9" stroke-linejoin="round"/>
+      <circle cx="11" cy="-12.6" r="4.2" fill="${c1}" stroke="${c2}" stroke-width="1"/>
+      <path d="M12 -11 C14 -12 17 -11.4 17.4 -10 C16 -8.6 13 -8.6 12 -9.4Z" fill="#FFFFFF" stroke="${c2}" stroke-width=".7"/>
+      <circle cx="17.2" cy="-10.4" r=".9" fill="#1A1A22"/><circle cx="12.4" cy="-13.6" r=".9" fill="#1A1A22"/><circle cx="12.7" cy="-13.9" r=".3" fill="#fff"/>
+      <path d="M9 -12 C10 -10 10 -8 9 -7" stroke="#FFFFFF" stroke-width="1.2" fill="none"/></g>
+      <rect x="-16" y="-24" width="36" height="28" fill="transparent"/></g>`;
+  /* placa de gelo irregular: cantos quebrados e lados retos misturados com curvas */
+  const placaForma = (cx, cy, rx, ry) => { const n = 12, pts = [];
+    for (let i = 0; i < n; i++) { const an = i / n * PI * 2 + R(-.12, .12), k = 1 + R(-.2, .16); pts.push([cx + Math.cos(an) * rx * k, cy + Math.sin(an) * ry * k]); }
+    let d = `M${P(pts[0][0])} ${P(pts[0][1])}`;
+    for (let i = 1; i <= n; i++) { const q = pts[i % n], pr = pts[i - 1]; d += i % 3 === 0 ? ` L${P(q[0])} ${P(q[1])}` : ` Q${P((pr[0] + q[0]) / 2 + R(-3, 3))} ${P((pr[1] + q[1]) / 2 + R(-3, 3))} ${P(q[0])} ${P(q[1])}`; }
+    return d + 'Z'; };
+  /* ---------- placas de gelo do caminho ---------- */
+  let placas = '';
+  const formas = [];
+  COLS.forEach((x, c) => ROWS.forEach((y, r) => {
+    const d = placaForma(x, y, 40, 25), ok = SEGURO[c] === r; formas.push(d);
+    placas += `<g class="in-placa toque" data-c="${c}" data-r="${r}" data-ok="${ok ? 1 : 0}">`;
+    if (ok) {
+      placas += `<g transform="translate(0 7)"><path d="${d}" fill="#5FAED2" stroke="#2E6E9A" stroke-width="1.6"/></g>
+        <path d="${d}" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round"/>
+        <path d="${d}" fill="url(#inGrosso)" stroke="#7FA6CC" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M${x - 30} ${y - 2} C${x - 26} ${y - 14} ${x - 12} ${y - 16} ${x - 4} ${y - 10} C${x + 4} ${y - 18} ${x + 22} ${y - 16} ${x + 26} ${y - 4} C${x + 14} ${y - 8} ${x - 18} ${y - 6} ${x - 30} ${y - 2}Z" fill="#FFFFFF" stroke="#D2E2F2" stroke-width="1"/>
+        <path d="M${x - 24} ${y - 1} C${x - 10} ${y - 4} ${x + 10} ${y - 5} ${x + 22} ${y - 2}" stroke="#B4CCE8" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>
+        <path d="M${x + 14} ${y + 14} l6 -3 l3 4Z M${x - 22} ${y + 12} l5 -2 l2 3Z" fill="#9FD0EA" opacity=".8"/>
+        <path d="M${x - 26} ${y - 8} C${x - 16} ${y - 18} ${x + 4} ${y - 20} ${x + 18} ${y - 16}" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/>
+        <g stroke="#C6D8EE" stroke-width="1.3" fill="none" stroke-linecap="round"><path d="M${x - 14} ${y + 6} q8 -4 16 0 M${x + 8} ${y + 10} q6 -3 12 0"/></g>
+        <g fill="#fff">${[[x - 20, y], [x + 16, y - 4], [x + 2, y + 12]].map(([a, b]) => `<rect class="brilho" style="animation-delay:${R(0, 2).toFixed(1)}s" x="${P(a)}" y="${P(b)}" width="2.2" height="2.2" transform="rotate(45 ${P(a + 1)} ${P(b + 1)})"/>`).join('')}</g>`;
+    } else {
+      placas += `<path d="${d}" fill="none" stroke="#C6D8EC" stroke-width="5" stroke-linejoin="round" stroke-dasharray="5 3 9 4" opacity=".8"/>
+        <path d="${d}" fill="url(#inFino)" stroke="#22344E" stroke-width="1.5" stroke-linejoin="round"/>
+        <g fill="#E6F0FA" opacity=".85">${[[x - 34, y + 4, 6, 2.4], [x + 30, y - 10, 5, 2], [x + 10, y + 21, 7, 2.2]].map(([a2, b2, rx2, ry2]) => `<ellipse cx="${P(a2)}" cy="${P(b2)}" rx="${rx2}" ry="${ry2}"/>`).join('')}</g>
+        <g stroke="#DCEBF8" stroke-width=".8" stroke-linecap="round" opacity=".7">${[[x - 16, y - 6], [x + 4, y - 12], [x + 20, y + 4]].map(([a2, b2]) => `<path d="M${P(a2 - 2)} ${P(b2)} h4 M${P(a2)} ${P(b2 - 2)} v4"/>`).join('')}</g>
+        <path d="M${x - 30} ${y - 6} C${x - 18} ${y - 18} ${x + 10} ${y - 20} ${x + 30} ${y - 10}" stroke="#16243A" stroke-width="3" fill="none" opacity=".5" stroke-linecap="round"/>
+        <path d="M${x - 22} ${y + 2} q14 -8 30 -4 M${x - 6} ${y + 12} q10 -4 22 -2" stroke="#BFD6EE" stroke-width="1.6" fill="none" opacity=".45" stroke-linecap="round"/>
+        <g fill="none" stroke="#9FC0E0" stroke-width=".9" opacity=".6">${[[x + 12, y + 2, 2.4], [x - 14, y + 8, 1.8], [x + 22, y + 10, 1.4]].map(([a, b, rr]) => `<circle cx="${P(a)}" cy="${P(b)}" r="${rr}"/>`).join('')}</g>
+        <g class="in-racha" style="opacity:0;transition:opacity .25s"><path d="M${x} ${y} l-9 -6 l-6 -10 M${x} ${y} l12 -4 l10 -9 M${x} ${y} l3 10 l10 6 M${x} ${y} l-12 6 l-13 1" stroke="#0A1426" stroke-width="3.2" fill="none" stroke-linejoin="round" stroke-linecap="round"/><path d="M${x} ${y} l-9 -6 l-6 -10 M${x} ${y} l12 -4 l10 -9 M${x} ${y} l3 10 l10 6 M${x} ${y} l-12 6 l-13 1" stroke="#E6F4FF" stroke-width="1.2" fill="none" stroke-linejoin="round"/><ellipse cx="${x}" cy="${y}" rx="9" ry="5" fill="#0E2440"/><path d="M${x - 5} ${y - 1} q5 -3 10 0" stroke="#7FB6E6" stroke-width="1" fill="none"/></g>`;
+    }
+    placas += `<ellipse class="in-dica" cx="${x}" cy="${y}" rx="45" ry="29" fill="none" stroke="#fff" stroke-width="2.6" stroke-dasharray="7 6" style="display:none"/>
+      <ellipse cx="${x}" cy="${y + 3}" rx="44" ry="30" fill="transparent"/></g>`;
+  }));
+  /* ---------- iglu: fiadas de blocos em espiral ---------- */
+  const fiadas = [[6, 17], [5, 16], [4, 15], [3, 14], [2, 10]];
+  const larg = y => IG.rx * Math.sqrt(Math.max(0, 1 - Math.pow((IG.y - y) / IG.h, 2)));
+  const pecas = []; { let yb = IG.y;
+    fiadas.forEach(([n, hh], k) => { const yt = yb - hh, passo = 180 / n, ini = -90 - (k % 2) * passo / 2, wb = larg(yb), wt = larg(yt);
+      for (let j = 0; j <= n; j++) { const a0 = Math.max(-90, ini + j * passo), a1 = Math.min(90, ini + (j + 1) * passo); if (a1 - a0 < 4) continue;
+        const sx = a => Math.sin(a * PI / 180), g = .7;
+        const d = `M${P(IG.x + wb * sx(a0 + g))} ${P(yb - .6)} L${P(IG.x + wb * sx(a1 - g))} ${P(yb - .6)} L${P(IG.x + wt * sx(a1 - g))} ${P(yt + .6)} L${P(IG.x + wt * sx(a0 + g))} ${P(yt + .6)}Z`;
+        const m = (a0 + a1) / 2; pecas.push({ d, tom: m < -35 ? 'A' : m < 25 ? 'B' : 'C', cx:IG.x + (wb + wt) / 2 * sx(m), cy:(yb + yt) / 2 }); }
+      yb = yt; });
+    pecas.push({ d:`M${P(IG.x - larg(yb) + 1)} ${P(yb)} C${IG.x - 10} ${IG.y - IG.h - 3} ${IG.x + 10} ${IG.y - IG.h - 3} ${P(IG.x + larg(yb) - 1)} ${P(yb)}Z`, tom:'A', cx:IG.x, cy:yb - 3 }); }
+  const domo = `M${IG.x - IG.rx} ${IG.y} A${IG.rx} ${IG.h} 0 0 1 ${IG.x + IG.rx} ${IG.y}Z`;
+  /* ---------- pedaços de gelo para beber ---------- */
+  const pedacoSvg = (p, i) => { const d = blob(0, 0, 19, 13, 8, .16);
+    return p.doce ? `<path d="M-16 6 C-8 14 10 14 18 6" stroke="#2E7FB6" stroke-width="6" fill="none" opacity=".25" stroke-linecap="round"/><path d="${d}" fill="url(#inVelho)" stroke="#2A78AE" stroke-width="1.6"/><path d="M-10 -5 L-2 -9 L8 -6" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/><path d="M-4 2 L4 -2 L10 3" stroke="#5FB4E0" stroke-width="1.2" fill="none" opacity=".8"/><circle cx="6" cy="5" r="1.4" fill="#E6F8FF" opacity=".8"/>`
+      : `<path d="M-16 6 C-8 14 10 14 18 6" stroke="#6A7488" stroke-width="6" fill="none" opacity=".2" stroke-linecap="round"/><path d="${d}" fill="url(#inNovo)" stroke="#7A8698" stroke-width="1.6"/><g stroke="#fff" stroke-width="1.1" stroke-linecap="round">${[[-9, -3], [0, -6], [8, -1], [-3, 4], [10, 6]].map(([a, b]) => `<path d="M${a - 2.4} ${b} h4.8 M${a} ${b - 2.4} v4.8 M${a - 1.7} ${b - 1.7} l3.4 3.4 M${a + 1.7} ${b - 1.7} l-3.4 3.4"/>`).join('')}</g><path d="M-10 -6 q6 -4 12 -3" stroke="#fff" stroke-width="1.6" fill="none" opacity=".7" stroke-linecap="round"/>`; };
+  /* ---------- montanhas, iceberg ---------- */
+  const serra = 'M0 158 L30 150 L54 152 L80 136 L118 138 L146 124 L186 128 L214 116 L252 120 L282 110 L318 122 L352 118 L388 132 L420 128 L460 140 L500 134 L540 146 L590 140 L640 150 L690 140 L740 146 L800 136 V212 H0Z';
+  const neveSerra = 'M80 136 L118 138 L146 124 L186 128 L214 116 L252 120 L282 110 L318 122 L352 118 L388 132 L380 138 L352 128 L330 134 L318 128 L290 122 L280 130 L262 126 L250 132 L222 126 L210 132 L188 136 L170 132 L146 136 L120 146 L96 142Z';
+  const iceberg = 'M416 212 L424 186 L440 172 L446 146 L462 134 L470 110 L486 96 L496 104 L506 92 L520 98 L532 86 L544 100 L552 124 L568 134 L576 156 L594 168 L604 190 L614 212Z';
+  const svg = `<svg viewBox="0 0 800 500" role="img" aria-label="Ártico com mar congelado, cidade inuit, iceberg, acampamento com iglu e raposa-do-ártico">
+    <defs>
+      <linearGradient id="inCeu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A4E92"/><stop offset=".38" stop-color="#6E92CE"/><stop offset=".72" stop-color="#E4A8BC"/><stop offset="1" stop-color="#FFD6B4"/></linearGradient>
+      <radialGradient id="inSolG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF6D8"/><stop offset=".6" stop-color="#FFD48A"/><stop offset="1" stop-color="#FFAE6A"/></radialGradient>
+      <radialGradient id="inBrilhoSol" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE4B8" stop-opacity=".9"/><stop offset="1" stop-color="#FFC0A0" stop-opacity="0"/></radialGradient>
+      <linearGradient id="inSerra" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9E98CC"/><stop offset="1" stop-color="#D6C4DE"/></linearGradient>
+      <linearGradient id="inMorro" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F2FA"/><stop offset="1" stop-color="#C8D2EC"/></linearGradient>
+      <linearGradient id="inBerg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#C8EEFA"/><stop offset="1" stop-color="#5CB8DE"/></linearGradient>
+      <linearGradient id="inBergS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7CCBEA"/><stop offset="1" stop-color="#2E8CC4"/></linearGradient>
+      <linearGradient id="inMar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8DDEB"/><stop offset=".12" stop-color="#EEF3FB"/><stop offset=".6" stop-color="#F6FAFF"/><stop offset="1" stop-color="#D6E6F6"/></linearGradient>
+      <linearGradient id="inTerra" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#D2DDF0"/></linearGradient>
+      <linearGradient id="inGrosso" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".7" stop-color="#EAF4FC"/><stop offset="1" stop-color="#CFE4F4"/></linearGradient>
+      <linearGradient id="inFino" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6A86A6"/><stop offset=".55" stop-color="#3E5876"/><stop offset="1" stop-color="#26384F"/></linearGradient>
+      <linearGradient id="inVelho" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EAFAFF"/><stop offset=".5" stop-color="#8FD4F0"/><stop offset="1" stop-color="#3E9ED4"/></linearGradient>
+      <linearGradient id="inNovo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBFBF8"/><stop offset=".6" stop-color="#D6DBE0"/><stop offset="1" stop-color="#A4AEBA"/></linearGradient>
+      <linearGradient id="inBlocoA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E6F0FA"/></linearGradient>
+      <linearGradient id="inBlocoB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F8FE"/><stop offset="1" stop-color="#D4E2F2"/></linearGradient>
+      <linearGradient id="inBlocoC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6E4F4"/><stop offset="1" stop-color="#A8C0DE"/></linearGradient>
+      <linearGradient id="inMotoG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4E9CF0"/><stop offset="1" stop-color="#1E50A8"/></linearGradient>
+      <linearGradient id="inMetal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8A96A8"/><stop offset=".35" stop-color="#EEF2F8"/><stop offset="1" stop-color="#6E7A8E"/></linearGradient>
+      <linearGradient id="inAguaPote" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ADCF8"/><stop offset="1" stop-color="#3E9AD6"/></linearGradient>
+      <linearGradient id="inCanal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E4E86"/><stop offset="1" stop-color="#0C2648"/></linearGradient>
+      <linearGradient id="inFoca" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8E98AE"/><stop offset="1" stop-color="#C8D0DE"/></linearGradient>
+      <linearGradient id="inCaminhao" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB24A"/><stop offset="1" stop-color="#E0701E"/></linearGradient>
+      <radialGradient id="inLuzIglu" cx=".5" cy=".7" r=".6"><stop offset="0" stop-color="#FFD48A" stop-opacity=".95"/><stop offset="1" stop-color="#FFB050" stop-opacity="0"/></radialGradient>
+      ${CASAS.map(([a, b], i) => `<linearGradient id="inCasa${i}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${a}"/><stop offset=".7" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`).join('')}
+      <clipPath id="inCanalClip"><rect x="140" y="380" width="220" height="${475 - 380}"/></clipPath>
+      <radialGradient id="inVinheta" cx=".5" cy=".45" r=".78"><stop offset=".6" stop-color="#14204A" stop-opacity="0"/><stop offset="1" stop-color="#14204A" stop-opacity=".34"/></radialGradient>
+      <filter id="inGrao"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .05 0"/></filter>
+    </defs>
+    <rect width="800" height="${HZ}" fill="url(#inCeu)"/>
+    <g id="in-estrelas" style="opacity:0;transition:opacity 3s">${Array.from({ length:46 }, () => `<circle class="brilho" style="animation-delay:${R(0, 2.4).toFixed(1)}s" cx="${R(6, 794).toFixed(0)}" cy="${R(6, 120).toFixed(0)}" r="${R(.7, 1.7).toFixed(1)}" fill="#fff"/>`).join('')}</g>
+    <g opacity=".75">${[[150, 52, 120], [520, 34, 160], [700, 76, 110], [360, 88, 140]].map(([x, y, w]) => `<path d="M${x} ${y} C${x + w * .2} ${y - 8} ${x + w * .6} ${y - 6} ${x + w} ${y} C${x + w * .7} ${y + 4} ${x + w * .3} ${y + 5} ${x} ${y}Z" fill="#FFE2EC" opacity=".7"/>`).join('')}</g>
+    <g id="in-sol" class="toque" style="transition:opacity 3s, transform 4s ease-in;transform-origin:352px 114px"><circle cx="352" cy="114" r="80" fill="url(#inBrilhoSol)"/>
+    <circle cx="352" cy="114" r="19" fill="url(#inSolG)" stroke="#F4A060" stroke-width="1.6"/><path d="M340 106 q8 -7 18 -6" stroke="#FFF8E4" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/><circle cx="352" cy="114" r="34" fill="transparent"/></g>
+    <path d="${serra}" fill="url(#inSerra)" stroke="#7A72AE" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="${neveSerra}" fill="#F8F4FC" opacity=".9"/>
+    <g stroke="#8E86BE" stroke-width="1" opacity=".55" fill="none"><path d="M40 168 C120 160 220 164 300 158 M380 162 C460 156 560 166 640 160 M90 182 C200 176 300 180 420 176"/></g>
+    <path d="M560 212 C600 186 650 176 700 178 C740 180 772 170 800 168 V212Z" fill="url(#inMorro)" stroke="#9EAED4" stroke-width="1.2"/>
+    <path d="M610 196 C650 184 690 182 730 184" stroke="#fff" stroke-width="2" fill="none" opacity=".8"/>
+    <rect y="${HZ - 2}" width="800" height="${500 - HZ + 2}" fill="url(#inMar)"/>
+    <rect id="in-mar" y="${HZ}" width="800" height="${500 - HZ}" fill="transparent"/>
+    <g opacity=".75">${crista(0, 140, 228, 12)}${crista(330, 420, 222, 9)}${crista(640, 800, 228, 11)}</g>
+    <g stroke="#C9DAEE" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".9">${Array.from({ length:18 }, () => { const x = R(240, 780), y = R(260, 470); return `<path d="M${P(x)} ${P(y)} q12 -4 26 0 t24 0"/>`; }).join('')}</g>
+    <g opacity=".55">${[[120, 330, 90, 10], [330, 432, 110, 9], [640, 380, 70, 8], [520, 470, 90, 8], [760, 300, 60, 7], [250, 250, 70, 6]].map(([x, y, rx, ry]) => `<path d="M${x - rx} ${y} C${x - rx * .5} ${y - ry * 1.6} ${x + rx * .4} ${y - ry * 1.8} ${x + rx} ${y} C${x + rx * .4} ${y - ry * .5} ${x - rx * .4} ${y - ry * .4} ${x - rx} ${y}Z" fill="#B8CDEA"/><path d="M${x - rx * .7} ${y - ry * .9} C${x - rx * .2} ${y - ry * 1.5} ${x + rx * .3} ${y - ry * 1.5} ${x + rx * .6} ${y - ry}" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>`).join('')}</g>
+    <g opacity=".8">${crista(250, 318, 252, 8)}${crista(704, 800, 300, 11)}${crista(0, 84, 368, 8)}</g>
+    <g>${[[300, 444, 46], [560, 404, 40], [120, 384, 52], [740, 470, 50]].map(([x, y, w]) => `<path d="M${x - w} ${y} C${x - w * .4} ${y - 9} ${x + w * .3} ${y - 11} ${x + w} ${y - 2} C${x + w * .5} ${y - 4} ${x - w * .3} ${y - 2} ${x - w} ${y}Z" fill="#FFFFFF" stroke="#C4D6EC" stroke-width="1"/><path d="M${x - w * .5} ${y - 1} C${x} ${y - 4} ${x + w * .5} ${y - 4} ${x + w * .9} ${y - 2}" stroke="#A9C3E2" stroke-width="2" fill="none" opacity=".6" stroke-linecap="round"/>`).join('')}</g>
+    <g fill="#fff">${Array.from({ length:26 }, () => { const x = R(20, 780), y = R(226, 490); return `<path class="brilho" style="animation-delay:${R(0, 2.4).toFixed(1)}s;animation-duration:${R(1.8, 3.2).toFixed(1)}s" d="M${P(x)} ${P(y - 3.4)} L${P(x + .8)} ${P(y - .8)} L${P(x + 3.4)} ${P(y)} L${P(x + .8)} ${P(y + .8)} L${P(x)} ${P(y + 3.4)} L${P(x - .8)} ${P(y + .8)} L${P(x - 3.4)} ${P(y)} L${P(x - .8)} ${P(y - .8)}Z"/>`; }).join('')}</g>
+    <g stroke="#9EB8DA" stroke-width="1.2" fill="none" opacity=".75"><path d="M250 232 l30 4 l24 -3 l40 6 l30 -2 M620 240 l40 5 l30 -4 l50 6 M60 312 l40 -4 l30 6"/></g>
+    <g fill="#F4F8FE" stroke="#8EAACE" stroke-width="1">${[[606, 300], [618, 306], [236, 452], [370, 330], [700, 392]].map(([x, y]) => `<path d="M${x - 6} ${y} L${x - 4} ${y - 6} L${x + 5} ${y - 7} L${x + 7} ${y}Z"/>`).join('')}</g>
+    <g transform="translate(704 222)"><ellipse cx="0" cy="1" rx="16" ry="2.4" fill="#9DB8DA" opacity=".6"/><path d="M-11 0 V-7 L0 -12 L11 -7 V0Z" fill="#F6F2E8" stroke="#8A8270" stroke-width=".9"/><path d="M0 -12 V0" stroke="#B8AE96" stroke-width=".8"/><path d="M-3 0 V-5 H3 V0Z" fill="#5A5444"/><path d="M15 0 l3 -5 l3 5Z M-18 -1 l2 -4 l2 4Z" fill="#E04A3C" opacity=".8"/></g>
+    <g id="in-berg" class="toque">
+      <path d="M404 214 C430 206 600 206 628 214 C600 220 430 220 404 214Z" fill="#9CC6E6" opacity=".7"/>
+      <path d="${iceberg}" fill="url(#inBerg)" stroke="#3E8CBE" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M532 86 L544 100 L552 124 L568 134 L576 156 L594 168 L604 190 L614 212 H560 L566 186 L548 160 L540 130Z" fill="url(#inBergS)" opacity=".8"/>
+      <path d="M486 96 L496 104 L492 140 L478 176 L486 212 H470 L462 178 L474 140Z" fill="#AEE2F4" opacity=".8"/>
+      <path d="M520 150 C516 170 520 192 530 212 H512 C504 192 506 170 520 150Z" fill="#2E7EB8" opacity=".7"/>
+      <path d="M446 146 L462 134 L470 110 L486 96" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <g stroke="#6CBCE0" stroke-width="1.2" fill="none" opacity=".8"><path d="M432 196 C470 192 520 194 600 198 M440 178 C480 174 540 176 590 180"/></g>
+      <path d="M418 210 C450 202 480 206 500 204 C530 200 580 204 612 210" stroke="#fff" stroke-width="2.4" fill="none" opacity=".8"/>
+      <g fill="#fff">${[[448, 186], [500, 120], [538, 160]].map(([a, b]) => `<rect class="brilho" style="animation-delay:${R(0, 2).toFixed(1)}s" x="${a}" y="${b}" width="3" height="3" transform="rotate(45 ${a + 1.5} ${b + 1.5})"/>`).join('')}</g>
+    </g>
+    <g id="in-urso" class="toque" data-fig="ursopolar"><g id="in-urso-pos"><svg x="350" y="191" width="42" height="30" viewBox="0 0 140 100"><use href="#f-ursopolar"/></svg></g>${brilhoHotspot(390, 192)}</g>
+    <g id="in-terra">
+      <path d="M0 176 C50 166 110 168 150 180 C196 194 224 232 268 288 C200 302 100 304 0 306Z" fill="url(#inTerra)" stroke="#9EB4D6" stroke-width="1.6"/>
+      <path d="M150 180 C196 194 224 232 268 288 C240 290 222 280 210 262 C196 238 176 210 150 196Z" fill="#C6D6EE" opacity=".7"/>
+      <g fill="#5E6478" stroke="#3A3E52" stroke-width="1">${[[226, 252, 9, 4], [42, 290, 12, 4], [246, 276, 7, 3]].map(([x, y, a, b]) => `<ellipse cx="${x}" cy="${y}" rx="${a}" ry="${b}"/><path d="M${x - a} ${y - 1} C${x - a / 2} ${y - b - 2} ${x + a / 2} ${y - b - 2} ${x + a} ${y - 1}" fill="#fff" stroke="none"/>`).join('')}</g>
+      <path d="M6 272 C60 266 140 266 236 272" stroke="#C2CFE6" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M6 272 C60 266 140 266 236 272" stroke="#DCE6F4" stroke-width="2" fill="none" stroke-dasharray="6 6"/>
+      <g stroke="#5A4A3E" stroke-width="1.6"><path d="M96 238 V196 M182 248 V210"/><path d="M90 200 h12 M176 214 h12" stroke-width="1.4"/></g>
+      <path d="M90 201 C120 210 150 212 176 215 M102 201 C130 210 160 213 188 215" stroke="#4A4050" stroke-width=".7" fill="none"/>
+      <g id="in-casas" class="toque">${casa(12, 214, 34, 20, 0)}${casa(54, 208, 30, 18, 3)}${casa(114, 216, 32, 19, 4)}${casa(22, 258, 36, 21, 1, 1)}${casa(68, 262, 32, 19, 5, 1)}</g>
+      <g id="in-escola" class="toque">${casa(118, 260, 54, 26, 2, 1)}<g>${[['#E8524A', 128], ['#2E7BF6', 134], ['#3FA864', 140]].map(([c, x]) => `<circle cx="${x + 26}" cy="235" r="1.6" fill="${c}"/>`).join('')}</g><rect x="118" y="214" width="54" height="40" fill="transparent"/></g>
+      <g id="in-inuksuk" class="toque" transform="translate(200 214)">
+        <ellipse cx="0" cy="2" rx="16" ry="3" fill="#8FA9CC" opacity=".6"/>
+        <g fill="#7A7E92" stroke="#3A3E52" stroke-width="1.3" stroke-linejoin="round">
+          <path d="M-11 1 L-10 -12 L-4 -13 L-4 1Z"/><path d="M4 1 L4 -13 L10 -12 L11 1Z"/>
+          <path d="M-14 -13 L14 -14 L13 -19 L-13 -18Z" fill="#8E92A6"/>
+          <path d="M-8 -19 L-7 -28 L7 -28 L8 -19Z" fill="#6E7286"/>
+          <path d="M-12 -28 L12 -29 L11 -33 L-11 -32Z" fill="#8E92A6"/>
+          <path d="M-4 -33 L-3 -40 L4 -40 L5 -33Z" fill="#7A7E92"/>
+        </g>
+        <path d="M-13 -18 L13 -19 M-11 -32 L11 -33 M-3 -40 L4 -40" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+        <rect x="-18" y="-44" width="36" height="48" fill="transparent"/>
+      </g>
+      <g id="in-coruja" class="toque" data-fig="corujaneves"><g id="in-coruja-in"><svg x="226" y="214" width="30" height="36" viewBox="0 0 100 120"><use href="#f-corujaneves"/></svg></g>${brilhoHotspot(258, 218)}</g>
+      <g id="in-caminhao" class="toque"><g id="in-cam-pos" transform="translate(40 272)">
+        <ellipse cx="0" cy="1" rx="22" ry="2.6" fill="#7E96BC" opacity=".6"/>
+        <rect x="-20" y="-14" width="26" height="11" rx="5" fill="#E9EEF6" stroke="#5A6478" stroke-width="1.2"/><path d="M-17 -12 h20" stroke="#fff" stroke-width="1.4"/>
+        <path d="M-9 -12 c2 3 3 4 3 5.4 a3 3 0 0 1 -6 0 c0 -1.4 1 -2.4 3 -5.4Z" fill="#2E8CF0" stroke="#12458A" stroke-width=".6"/>
+        <path d="M6 -3 V-15 H14 L19 -9 V-3Z" fill="url(#inCaminhao)" stroke="#8A3E0E" stroke-width="1.2" stroke-linejoin="round"/><path d="M9 -13 H13 L16.4 -9 H9Z" fill="#BFE8FF" stroke="#8A3E0E" stroke-width=".7"/>
+        <rect x="-21" y="-5" width="40" height="3" fill="#4A5068"/>
+        <circle cx="-13" cy="-1" r="3" fill="#2A2E38" stroke="#12141A" stroke-width=".8"/><circle cx="12" cy="-1" r="3" fill="#2A2E38" stroke="#12141A" stroke-width=".8"/>
+        <rect x="-24" y="-18" width="46" height="20" fill="transparent"/></g></g>
+      <g id="in-caes" class="toque">${cao(92, 298, 1, '#9AA0B2', '#3E4456', 'in-cao')}${cao(128, 301, -1, '#E8D6B4', '#7A5A34', 'in-cao')}<path d="M100 296 C108 300 116 300 124 297" stroke="#8A5A2A" stroke-width="1" fill="none"/><path d="M110 300 V292" stroke="#5A4A3E" stroke-width="1.6"/></g>
+      <g id="in-corvo" class="toque"><g id="in-corvo-voo"><g transform="translate(182 209)">
+        <path d="M-3 0 L-2 3 M2 0 L3 3" stroke="#3A3A44" stroke-width="1"/>
+        <path d="M-9 -2 C-12 -1 -14 2 -15 4 C-11 3 -8 1 -6 0Z" fill="#14161E"/>
+        <path d="M-8 -2 C-8 -8 -2 -11 3 -10 C6 -9 6 -4 4 -1 C1 1 -5 1 -8 -2Z" fill="#1E2230" stroke="#0A0C12" stroke-width=".8"/>
+        <path d="M-5 -6 C-3 -8 0 -8 2 -8" stroke="#4E5A7A" stroke-width="1" fill="none"/>
+        <circle cx="4" cy="-11" r="3.4" fill="#1E2230" stroke="#0A0C12" stroke-width=".8"/><path d="M6.6 -12 L11 -10.6 L6.6 -9.4Z" fill="#2A2E3A"/><circle cx="4.8" cy="-11.8" r=".8" fill="#fff"/></g></g>
+        <rect x="168" y="192" width="26" height="22" fill="transparent"/></g>
+    </g>
+    <g id="in-foca" class="toque" transform="translate(218 414)">
+      <ellipse cx="50" cy="7" rx="14" ry="5.6" fill="#E6F0FA" stroke="#9EB8DA" stroke-width="1.2"/><ellipse cx="50" cy="7" rx="10" ry="3.6" fill="#16406E"/><path d="M43 6 q6 -2 12 0" stroke="#5E9AD6" stroke-width="1" fill="none"/>
+      <g id="in-foca-in"><ellipse cx="0" cy="10" rx="34" ry="4" fill="#8FA9CC" opacity=".5"/>
+      <path d="M-30 4 L-41 -3 L-38 5 L-43 11 L-30 8Z" fill="#6E7A92" stroke="#343C52" stroke-width="1.3" stroke-linejoin="round"/>
+      <path d="M-30 4 C-34 -4 -24 -12 -6 -12 C10 -12 22 -9 27 -1 C29 6 20 10 4 10 C-12 10 -26 10 -30 4Z" fill="url(#inFoca)" stroke="#343C52" stroke-width="1.6"/>
+      <g fill="none" stroke="#D2DAE8" stroke-width="1" opacity=".85">${[[-18, -5], [-6, -8], [6, -6], [-12, 1], [2, 0]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="3" ry="2"/>`).join('')}</g>
+      <path d="M-20 -8 C-10 -12 4 -12 14 -9" stroke="#C6D0E2" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/>
+      <path d="M6 8 C4 13 -2 14 -6 12 C-3 10 0 8 2 6Z" fill="#5E6A82" stroke="#343C52" stroke-width="1"/>
+      <circle cx="26" cy="-4" r="9" fill="url(#inFoca)" stroke="#343C52" stroke-width="1.5"/>
+      <circle cx="28" cy="-6" r="2.6" fill="#12141E"/><circle cx="29" cy="-7" r="1" fill="#fff"/>
+      <ellipse cx="33.5" cy="-2" rx="1.6" ry="1.2" fill="#22283A"/><path d="M31 0 l7 -1 M31 1 l7 1.4 M30 1.6 l6 3" stroke="#E6ECF6" stroke-width=".6"/></g>
+      <rect x="-44" y="-18" width="110" height="34" fill="transparent"/>
+    </g>
+    <g id="in-trilhas"></g>
+    ${placas}
+    <g id="in-iglu">
+      <ellipse id="in-iglu-sombra" cx="${IG.x}" cy="${IG.y + 3}" rx="${IG.rx + 14}" ry="9" fill="#9DB8DA" opacity=".55" style="display:none"/>
+      <path id="in-fantasma" d="${domo}" fill="#fff" fill-opacity=".18" stroke="#fff" stroke-width="2.4" stroke-dasharray="8 7" style="display:none"/>
+      <g id="in-pecas">${pecas.map((p, i) => `<path class="in-peca" data-i="${i}" d="${p.d}" fill="url(#inBloco${p.tom})" stroke="#93AED0" stroke-width="1.3" stroke-linejoin="round" style="opacity:0;transform-box:fill-box;transform-origin:50% 100%"/>`).join('')}</g>
+      <g id="in-iglu-fim" style="opacity:0;transition:opacity 1s">
+        <path d="M${IG.x - 60} ${IG.y - 14} C${IG.x - 50} ${IG.y - 52} ${IG.x - 20} ${IG.y - 72} ${IG.x + 4} ${IG.y - 74}" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>
+        <path d="M${IG.x + 30} ${IG.y - 44} l14 -4 l2 12 l-14 4Z" fill="#DDF4FF" stroke="#7FB0D6" stroke-width="1.2"/>
+        <path d="M${IG.x - 52} ${IG.y + 14} V${IG.y - 4} A26 24 0 0 1 ${IG.x} ${IG.y - 4} V${IG.y + 14}Z" fill="url(#inBlocoB)" stroke="#93AED0" stroke-width="1.4"/>
+        <path d="M${IG.x - 52} ${IG.y + 3} H${IG.x} M${IG.x - 40} ${IG.y + 14} V${IG.y + 3} M${IG.x - 14} ${IG.y + 14} V${IG.y + 3} M${IG.x - 28} ${IG.y + 3} V${IG.y - 14}" stroke="#93AED0" stroke-width="1.1"/>
+        <path d="M${IG.x - 37} ${IG.y + 14} V${IG.y + 2} A11 12 0 0 1 ${IG.x - 15} ${IG.y + 2} V${IG.y + 14}Z" fill="#2A4468" stroke="#1A2E4E" stroke-width="1.2"/>
+        <ellipse cx="${IG.x - 26}" cy="${IG.y + 16}" rx="30" ry="4" fill="#B4CAE6" opacity=".8"/>
+      </g>
+    </g>
+    <g id="in-moto" transform="translate(${INICIO.x} ${INICIO.y})"><g transform="scale(.98)">
+      <ellipse cx="-40" cy="2" rx="104" ry="6" fill="#7E9CC6" opacity=".45"/>
+      <path d="M-140 -2 H-60 C-52 -2 -48 -7 -51 -13" stroke="#5A3418" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M-140 -2 H-60 C-52 -2 -48 -7 -51 -13" stroke="#C08A50" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g fill="#D8A462" stroke="#7A4A22" stroke-width="1">${Array.from({ length:10 }, (_, i) => `<rect x="${-137 + i * 8}" y="-10" width="5.4" height="4.4" rx="1"/><path d="M${-135 + i * 8} -6 V-2" stroke="#7A4A22" stroke-width="1.6"/>`).join('')}</g>
+      <rect x="-138" y="-27" width="34" height="17" rx="3" fill="#3E8A6A" stroke="#1E5A40" stroke-width="1.4"/><path d="M-130 -27 V-10 M-112 -27 V-10" stroke="#C8B48A" stroke-width="1.6"/><path d="M-136 -24 h30" stroke="#7ACCA8" stroke-width="1.4" opacity=".8"/>
+      <g id="in-crianca" class="toque" style="transform-box:fill-box;transform-origin:50% 100%">
+        <path d="M-90 -10 H-74 L-70 -8" stroke="#2E3346" stroke-width="5.4" fill="none" stroke-linecap="round"/><ellipse cx="-69" cy="-8.4" rx="3.6" ry="2.4" fill="#4A2E1E"/>
+        ${parca(-88, -16, .98, '#C08458', '#1FA6A0', '#0E5E5A', '#FFD25A', '#2A1A12')}
+        <g id="in-cri-braco" style="transform-origin:-83px -32px"><path d="M-83 -32 C-79 -36 -76 -41 -75 -46" stroke="#1FA6A0" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="-75" cy="-46" r="3" fill="#F7F1E4" stroke="#B8A888" stroke-width=".7"/><circle cx="-74.6" cy="-48.6" r="3.1" fill="#E8524A" stroke="#7A1A14" stroke-width=".8"/></g>
+        <rect x="-104" y="-70" width="38" height="70" fill="transparent"/></g>
+      <path d="M-52 -8 H-38" stroke="#4A4A50" stroke-width="2"/>
+      <rect x="-42" y="-15" width="52" height="14" rx="6" fill="#22262E"/>
+      <g fill="#5A6070" stroke="#12141A" stroke-width=".8">${[-34, -22, -10, 2].map(x => `<circle cx="${x}" cy="-8" r="4"/>`).join('')}</g>
+      <path d="M28 -15 L33 -2" stroke="#22262E" stroke-width="3"/>
+      <path d="M16 0 H52 C58 0 61 -4 59 -10" stroke="#1E2430" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <path d="M-42 -14 H16 C30 -14 44 -16 56 -22 C52 -31 38 -35 22 -35 H-2 C-10 -29 -26 -27 -42 -23Z" fill="url(#inMotoG)" stroke="#10306A" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M-38 -18 H20 C34 -18 44 -20 51 -24" stroke="#FFD25A" stroke-width="2.6" fill="none"/>
+      <path d="M-30 -24 C-14 -27 4 -31 20 -32" stroke="#9ACCFF" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/>
+      <path d="M16 -35 L26 -49 C30 -49 33 -47 32 -44 L28 -35Z" fill="#CFF0FF" fill-opacity=".85" stroke="#4E7AA8" stroke-width="1.2"/>
+      <path d="M-40 -23 C-40 -30 -8 -31 0 -29 L2 -24 Z" fill="#20242E"/>
+      <ellipse cx="53" cy="-21" rx="3.2" ry="2.6" fill="#FFF4C0" stroke="#8A7A40" stroke-width=".9"/>
+      <path d="M12 -36 L17 -43" stroke="#22262E" stroke-width="2.6" stroke-linecap="round"/>
+      <g id="in-motorista" class="toque">
+        <path d="M-18 -26 H-2 L6 -14" stroke="#2E3346" stroke-width="6.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="7" cy="-13" rx="4.6" ry="3" fill="#4A2E1E"/>
+        ${parca(-12, -30, 1.22, '#A86A44', '#E04A3C', '#8A1E16', '#2E6FD6', '#1A100C')}
+        <path d="M-5 -49 C3 -48 10 -45 15 -43" stroke="#E04A3C" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="13" cy="-43.6" r="3.2" fill="#F7F1E4" stroke="#B8A888" stroke-width=".7"/><circle cx="17" cy="-43" r="3.4" fill="#3A3040"/>
+        <rect x="-28" y="-82" width="50" height="82" fill="transparent"/></g>
+    </g></g>
+    <g id="in-tuuq" style="display:none" pointer-events="none"><g id="in-tuuq-in">
+      <path d="M0 -70 V0" stroke="#5A3418" stroke-width="4.4" stroke-linecap="round"/><path d="M0 -70 V-8" stroke="#C89A60" stroke-width="2" stroke-linecap="round"/>
+      <path d="M-2.6 -10 L0 4 L2.6 -10Z" fill="#B8C2D2" stroke="#4A5468" stroke-width="1"/>
+      <ellipse cx="0" cy="-60" rx="6" ry="7" fill="#E04A3C" stroke="#8A1E16" stroke-width="1.2"/><path d="M-4 -63 q3 -3 6 -1" stroke="#FFB0A0" stroke-width="1.2" fill="none"/>
+    </g></g>
+    <g id="in-canal" class="toque" data-fig="narval">
+      <path d="M150 474 C170 456 230 450 280 452 C320 454 346 462 352 474 C330 486 260 490 210 488 C176 486 156 482 150 474Z" fill="url(#inCanal)" stroke="#0A1A30" stroke-width="1.6"/>
+      <path d="M176 466 q20 -6 40 -2 M250 462 q20 -4 40 0 M210 478 q24 -4 50 0" stroke="#5E9AD6" stroke-width="1.4" fill="none" opacity=".7"/>
+      <g clip-path="url(#inCanalClip)"><g id="in-narval-pos"><svg x="196" y="446" width="104" height="62" viewBox="0 0 150 90"><use href="#f-narval"/></svg></g></g>
+      <path d="M144 476 C162 486 230 494 290 490 C330 488 352 482 358 474 L362 500 H140Z" fill="#F4F8FE" stroke="#A8C0DE" stroke-width="1.6"/>
+      <path d="M150 480 C190 490 280 494 352 480" stroke="#7FC0E6" stroke-width="2" fill="none" opacity=".7"/>
+      ${brilhoHotspot(292, 452)}
+    </g>
+    <g id="in-panela">
+      <ellipse cx="${PANELA.x}" cy="${PANELA.y + 48}" rx="40" ry="5" fill="#9DB8DA" opacity=".6"/>
+      <g id="in-fogareiro" class="toque">
+        <path d="M${PANELA.x - 22} ${PANELA.y + 46} L${PANELA.x - 14} ${PANELA.y + 30} M${PANELA.x + 22} ${PANELA.y + 46} L${PANELA.x + 14} ${PANELA.y + 30}" stroke="#3A3E4E" stroke-width="2.6" stroke-linecap="round"/>
+        <rect x="${PANELA.x - 13}" y="${PANELA.y + 30}" width="26" height="14" rx="3" fill="#2E8C5A" stroke="#14502E" stroke-width="1.4"/><path d="M${PANELA.x - 10} ${PANELA.y + 33} h20" stroke="#7AD8A0" stroke-width="1.4" opacity=".8"/>
+        <rect x="${PANELA.x - 16}" y="${PANELA.y + 26}" width="32" height="5" rx="2" fill="#4A5064" stroke="#22283A" stroke-width="1"/>
+        <g id="in-chama" style="transform-origin:${PANELA.x}px ${PANELA.y + 26}px;transform:scale(0);transition:transform .6s cubic-bezier(.3,1.5,.5,1)"><g style="animation:flutua .5s ease-in-out infinite alternate"><path d="M${PANELA.x - 12} ${PANELA.y + 26} C${PANELA.x - 12} ${PANELA.y + 16} ${PANELA.x - 6} ${PANELA.y + 12} ${PANELA.x - 6} ${PANELA.y + 8} C${PANELA.x - 2} ${PANELA.y + 14} ${PANELA.x + 2} ${PANELA.y + 10} ${PANELA.x + 2} ${PANELA.y + 6} C${PANELA.x + 8} ${PANELA.y + 12} ${PANELA.x + 12} ${PANELA.y + 18} ${PANELA.x + 12} ${PANELA.y + 26}Z" fill="#4E9CFF" stroke="#1E50C8" stroke-width="1"/><path d="M${PANELA.x - 6} ${PANELA.y + 26} C${PANELA.x - 6} ${PANELA.y + 20} ${PANELA.x - 2} ${PANELA.y + 16} ${PANELA.x} ${PANELA.y + 14} C${PANELA.x + 4} ${PANELA.y + 18} ${PANELA.x + 6} ${PANELA.y + 22} ${PANELA.x + 6} ${PANELA.y + 26}Z" fill="#BFE4FF"/></g></g>
+        <g id="in-fogo-dica" style="display:none">${brilhoHotspot(PANELA.x + 30, PANELA.y + 34)}</g>
+        <rect x="${PANELA.x - 30}" y="${PANELA.y + 4}" width="60" height="46" fill="transparent"/>
+      </g>
+      <path d="M${PANELA.x - 16} ${PANELA.y + 27} L${PANELA.x - 20} ${PANELA.y + 15} M${PANELA.x + 16} ${PANELA.y + 27} L${PANELA.x + 20} ${PANELA.y + 15}" stroke="#3A3E4E" stroke-width="2.4" stroke-linecap="round"/>
+      <g id="in-pote" transform="translate(0 -13)">
+        <path d="M${PANELA.x - 31} ${PANELA.y - 4} C${PANELA.x - 40} ${PANELA.y - 6} ${PANELA.x - 40} ${PANELA.y + 4} ${PANELA.x - 30} ${PANELA.y + 4} M${PANELA.x + 31} ${PANELA.y - 4} C${PANELA.x + 40} ${PANELA.y - 6} ${PANELA.x + 40} ${PANELA.y + 4} ${PANELA.x + 30} ${PANELA.y + 4}" stroke="#3A4256" stroke-width="2.6" fill="none"/>
+        <path d="M${PANELA.x - 28} ${PANELA.y - 8} V${PANELA.y + 20} C${PANELA.x - 28} ${PANELA.y + 28} ${PANELA.x + 28} ${PANELA.y + 28} ${PANELA.x + 28} ${PANELA.y + 20} V${PANELA.y - 8}Z" fill="url(#inMetal)" stroke="#3A4256" stroke-width="1.8"/>
+        <path d="M${PANELA.x - 20} ${PANELA.y - 2} V${PANELA.y + 18}" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+        <ellipse cx="${PANELA.x}" cy="${PANELA.y - 8}" rx="28" ry="7" fill="#4A5468" stroke="#3A4256" stroke-width="1.8"/>
+        <ellipse id="in-agua" cx="${PANELA.x}" cy="${PANELA.y - 7}" rx="25" ry="5.4" fill="url(#inAguaPote)" style="opacity:0;transition:opacity 1.2s"/>
+        <g id="in-pote-gelo">${[[-12, -10, 9], [2, -12, 10], [14, -9, 8]].map(([dx, dy, r], i) => `<path class="in-pg" d="M${PANELA.x + dx - r} ${PANELA.y + dy + 3} L${PANELA.x + dx - r * .6} ${PANELA.y + dy - 4} L${PANELA.x + dx + r * .4} ${PANELA.y + dy - 5} L${PANELA.x + dx + r} ${PANELA.y + dy + 2}Z" fill="url(#inVelho)" stroke="#2A78AE" stroke-width="1.2" style="opacity:0;transition:opacity .4s, transform 1.2s;transform-box:fill-box;transform-origin:50% 100%"/>`).join('')}</g>
+        <path d="M${PANELA.x - 26} ${PANELA.y - 9} C${PANELA.x - 14} ${PANELA.y - 14} ${PANELA.x + 10} ${PANELA.y - 14} ${PANELA.x + 22} ${PANELA.y - 11}" stroke="#C8D2E0" stroke-width="1.2" fill="none"/>
+      </g>
+      <g id="in-caneca" style="display:none"><g class="cresce"><path d="M${PANELA.x + 40} ${PANELA.y + 28} h18 v16 c0 4 -18 4 -18 0Z" fill="#F26A5A" stroke="#8A2A1E" stroke-width="1.4"/><path d="M${PANELA.x + 58} ${PANELA.y + 32} c7 0 7 9 0 9" stroke="#8A2A1E" stroke-width="2" fill="none"/><ellipse cx="${PANELA.x + 49}" cy="${PANELA.y + 28}" rx="9" ry="2.4" fill="#9ADCF8" stroke="#8A2A1E" stroke-width="1"/><path d="M${PANELA.x + 43} ${PANELA.y + 34} v7" stroke="#FFB0A0" stroke-width="1.6" stroke-linecap="round"/></g></g>
+    </g>
+    <g id="in-pilha">${PILHA.map(([x, y], i) => `<g class="in-bloco toque" data-i="${i}" transform="translate(${x} ${y})" style="cursor:grab"><path d="M-21 2 L-19 -10 L19 -11 L21 1Z" fill="#AFC6E2" stroke="#7C9CC4" stroke-width="1.2" stroke-linejoin="round"/><path d="M-21 2 L21 1 L20 11 L-20 12Z" fill="url(#inBlocoA)" stroke="#7C9CC4" stroke-width="1.4" stroke-linejoin="round"/><path d="M-17 4 H14" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><g fill="#C6D8EE"><circle cx="-8" cy="8" r="1"/><circle cx="6" cy="6" r=".8"/><circle cx="12" cy="9" r="1"/></g><rect x="-26" y="-16" width="52" height="32" fill="transparent"/></g>`).join('')}</g>
+    <g id="in-pedacos">${PEDACOS.map((p, i) => `<g class="in-pedaco toque" data-i="${i}" transform="translate(${p.x} ${p.y})" style="opacity:0;pointer-events:none;transition:opacity .8s"><g style="animation:flutua ${(2.4 + i * .3).toFixed(1)}s ease-in-out infinite alternate"><g transform="scale(1.18)">${pedacoSvg(p, i)}</g></g><circle r="24" fill="transparent"/></g>`).join('')}</g>
+    <path d="M610 500 C640 474 700 476 744 486 C770 490 790 486 800 482 V500Z" fill="#FFFFFF" stroke="#B4C8E4" stroke-width="1.4"/>
+    <path d="M0 444 C30 426 90 424 130 444 C150 456 160 476 158 500 H0Z" fill="url(#inGrosso)" stroke="#A8C0DE" stroke-width="1.6"/>
+    <path d="M10 440 C40 428 80 428 110 438" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M60 470 C90 462 120 466 140 480" stroke="#C6D8EE" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <g id="in-raposa" class="toque" data-fig="raposaartica"><g id="in-raposa-pulo"><svg x="14" y="368" width="114" height="104" viewBox="0 0 120 110"><use href="#f-raposaartica"/></svg></g>${brilhoHotspot(116, 384)}</g>
+    <g id="in-seta1" style="display:none" pointer-events="none"><path d="M700 404 C690 386 690 372 700 360" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="6 8"/><path d="M694 362 l8 -10 l5 12Z" fill="#fff"/></g>
+    <g id="in-seta2" style="display:none" pointer-events="none"><path d="M470 270 C470 330 450 370 432 412" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="6 8"/><path d="M426 408 l4 14 l9 -11Z" fill="#fff"/></g>
+    <rect id="in-noite" width="800" height="500" fill="#0A1638" style="opacity:0;transition:opacity 3s" pointer-events="none"/>
+    <g id="in-luzes" style="opacity:0;transition:opacity 3s" pointer-events="none">
+      <ellipse cx="${IG.x - 22}" cy="${IG.y + 4}" rx="70" ry="40" fill="url(#inLuzIglu)"/>
+      <path d="M${IG.x - 37} ${IG.y + 14} V${IG.y + 2} A11 12 0 0 1 ${IG.x - 15} ${IG.y + 2} V${IG.y + 14}Z" fill="#FFC870"/>
+      <path d="M${IG.x + 30} ${IG.y - 44} l14 -4 l2 12 l-14 4Z" fill="#FFE2A0"/>
+      <g fill="#FFE07A">${[[12, 214, 34, 20], [54, 208, 30, 18], [114, 216, 32, 19], [22, 258, 36, 21, 1], [68, 262, 32, 19, 1], [118, 260, 54, 26, 1]].map(([x, y, w, h, pt]) => { const yt = y - 7 - h, jw = Math.min(8, w * .2); return [x + w * .18, pt ? x + w * .62 : x + w * .58].map(jx => `<rect x="${P(jx)}" y="${P(yt + h * .3)}" width="${P(jw)}" height="${P(jw * .8)}" rx="1"/>`).join(''); }).join('')}</g>
+      <ellipse cx="${PANELA.x}" cy="${PANELA.y + 30}" rx="22" ry="12" fill="#7AB8FF" opacity=".35"/>
+    </g>
+    <rect width="800" height="500" fill="url(#inVinheta)" pointer-events="none"/><rect width="800" height="500" filter="url(#inGrao)" pointer-events="none"/>
+  </svg>`;
+  const c = criarCena(palco, svg), s = c.svg;
+  const neveSobe = (x, y, n, cor) => { for (let i = 0; i < n; i++) c.add({ tipo:'vapor', x0:x + sorte(-8, 8), y0:y, x1:x + sorte(-34, 34), y1:y - sorte(16, 40), dur:sorte(22, 38), f:sorte(0, 6), r:sorte(2, 4), x:0, y:0 }); };
+  /* ---------- 1. gelo seguro: tocar para testar o caminho ---------- */
+  const moto = { x:INICIO.x, y:INICIO.y };
+  const poeMoto = () => el(s, '#in-moto').setAttribute('transform', `translate(${P(moto.x)} ${P(moto.y)})`);
+  const placasEl = [...s.querySelectorAll('.in-placa')];
+  const marcaColuna = () => placasEl.forEach(g => el(g, '.in-dica').style.display = (fase === 'gelo' && +g.dataset.c === coluna) ? '' : 'none');
+  s.querySelectorAll('.in-dica').forEach((d, i) => d.animate([{ opacity:.25 }, { opacity:1 }, { opacity:.25 }], { duration:1500, iterations:Infinity, delay:(i % 2) * 300 }));
+  const tuuq = el(s, '#in-tuuq');
+  const testa = (x, y, fim) => {
+    tuuq.style.display = ''; tuuq.setAttribute('transform', `translate(${x + 14} ${y - 2})`);
+    const a = el(s, '#in-tuuq-in').animate([{ transform:'translateY(-18px)' }, { transform:'translateY(0)' }, { transform:'translateY(-12px)' }, { transform:'translateY(0)' }], { duration:700, easing:'ease-in' });
+    depois(330, () => tom(130, 0, .1, 'square', .05, 80)); depois(680, () => tom(120, 0, .1, 'square', .05, 70));
+    a.onfinish = () => { if (!vivo) return; tuuq.style.display = 'none'; fim(); };
+  };
+  const anda = (x1, y1, ms, fim) => {
+    const x0 = moto.x, y0 = moto.y; let ult = 0;
+    if (somOn) { tom(70, 0, ms / 1000, 'sawtooth', .025, 95); tom(140, 0, ms / 1000, 'triangle', .02, 180); }
+    tween(ms, (e, k) => { moto.x = x0 + (x1 - x0) * e; moto.y = y0 + (y1 - y0) * e - Math.abs(Math.sin(k * PI * 3)) * 2; poeMoto();
+      if (k - ult > .08) { ult = k; neveSobe(moto.x - 28, moto.y - 2, 2); } }, () => {
+      const tr = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      tr.setAttribute('d', `M${P(x0 - 30)} ${P(y0 + 1)} L${P(x1 - 30)} ${P(y1 + 1)}`); tr.setAttribute('stroke', '#B8CCE4'); tr.setAttribute('stroke-width', '7'); tr.setAttribute('stroke-dasharray', '2 3'); tr.setAttribute('opacity', '.8');
+      el(s, '#in-trilhas').appendChild(tr); fim && fim(); });
+  };
+  placasEl.forEach(g => g.addEventListener('click', e => {
+    e.stopPropagation();
+    const col = +g.dataset.c, row = +g.dataset.r, ok = g.dataset.ok === '1', x = COLS[col], y = ROWS[row];
+    if (fase !== 'gelo') { toca('clique'); api.diz(ok ? 'Gelo branco e grosso aguenta muito peso.' : 'Gelo escuro é fino. Ele se formou há pouco tempo.'); return; }
+    if (ocupado) return;
+    if (col !== coluna) { toca('clique'); c.brilhos(COLS[coluna], ROWS[0] + 40, 4, '#FFFFFF'); api.diz(col < coluna ? 'Esse pedaço já passou! Toque no gelo da frente.' : 'Um pedaço de cada vez! Toque no gelo mais perto.'); return; }
+    ocupado = true;
+    testa(x, y, () => {
+      if (!ok) {
+        const r = el(g, '.in-racha'); r.style.opacity = 1; toca('splash'); tom(1800, 0, .18, 'square', .03, 600);
+        for (let i = 0; i < 5; i++) c.add({ tipo:'respingo', x:x + sorte(-14, 14), y:y + sorte(-4, 6), t:i * 2, cor:'#0E2440' });
+        api.diz('Crec! Gelo escuro é fino e novinho. Perigo! Toque no gelo branco e grosso.');
+        depois(2400, () => { r.style.opacity = 0; ocupado = false; }); return;
+      }
+      toca('ok'); c.brilhos(x, y - 4, 6, '#FFFFFF');
+      anda(x + 12, y + 10, 1100, () => {
+        coluna++; ocupado = false; api.hud(`<span class="chip">Caminho: ${coluna}/4</span>`);
+        if (coluna === 1) api.diz('Toc, toc! Som firme: o gelo branco e grosso é seguro.');
+        if (coluna === 2) api.diz('Os Inuit leem as cores do gelo e escutam o som dele.');
+        if (coluna === 3) api.diz('Eles batem no gelo com uma vara de ponta de ferro para ver se é firme.');
+        if (coluna < 4) { marcaColuna(); return; }
+        fase = 'chegada'; marcaColuna(); ocupado = true;
+        anda(PARADA.x, PARADA.y, 1300, () => { ocupado = false; toca('vitoria'); c.brilhos(PARADA.x, PARADA.y - 30, 8, '#FFE27A');
+          api.diz('Chegamos ao acampamento! No inverno, o mar congelado vira a estrada dos Inuit.'); depois(5200, comecaIglu); });
+      });
+    });
+  }));
+  /* ---------- 2. iglu: arrastar blocos de neve, que sobem em espiral ---------- */
+  const pecaEl = [...s.querySelectorAll('.in-peca')];
+  const GRUPOS = [0, 1, 2, 3, 4, 5, 6].map(k => Math.round(pecaEl.length * k / 6));
+  function comecaIglu(){
+    fase = 'iglu'; el(s, '#in-fantasma').style.display = ''; el(s, '#in-iglu-sombra').style.display = ''; el(s, '#in-seta1').style.display = '';
+    api.hud('<span class="chip">Blocos: 0/6</span>');
+    api.diz('Agora vamos fazer um iglu, uma casa de neve para a noite. Arraste os blocos de neve até o iglu.');
+  }
+  const blocoEl = [...s.querySelectorAll('.in-bloco')], bpos = PILHA.map(([x, y]) => ({ x, y, foi:false }));
+  const poeBloco = (i, esc) => blocoEl[i].setAttribute('transform', `translate(${P(bpos[i].x)} ${P(bpos[i].y)})${esc ? ` scale(${esc.toFixed(2)})` : ''}`);
+  let arr = null;
+  const voo = (lista, i, x1, y1, ms, esc, fim) => { const p = lista[i], x0 = p.x, y0 = p.y; ocupado = true;
+    tween(ms, (e, k) => { p.x = x0 + (x1 - x0) * e; p.y = y0 + (y1 - y0) * e - Math.sin(k * PI) * 36; fim.poe(i, 1 + (esc - 1) * e); }, () => { ocupado = false; fim.fim && fim.fim(); }); };
+  blocoEl.forEach((g, i) => g.addEventListener('pointerdown', e => {
+    if (fase !== 'iglu' || bpos[i].foi || ocupado) return; e.stopPropagation();
+    const p = c.ponto(e); arr = { tipo:'bloco', i, dx:p.x - bpos[i].x, dy:p.y - bpos[i].y, x0:p.x, y0:p.y, moveu:false };
+    s.setPointerCapture(e.pointerId); g.style.cursor = 'grabbing'; el(s, '#in-seta1').style.display = 'none'; toca('clique');
+  }));
+  const pedEl = [...s.querySelectorAll('.in-pedaco')], ppos = PEDACOS.map(p => ({ x:p.x, y:p.y, foi:false }));
+  const poePedaco = (i, esc) => pedEl[i].setAttribute('transform', `translate(${P(ppos[i].x)} ${P(ppos[i].y)})${esc ? ` scale(${esc.toFixed(2)})` : ''}`);
+  pedEl.forEach((g, i) => g.addEventListener('pointerdown', e => {
+    if (fase !== 'agua' || ppos[i].foi || ocupado) return; e.stopPropagation();
+    const p = c.ponto(e); arr = { tipo:'pedaco', i, dx:p.x - ppos[i].x, dy:p.y - ppos[i].y, x0:p.x, y0:p.y, moveu:false };
+    s.setPointerCapture(e.pointerId); el(s, '#in-seta2').style.display = 'none'; toca('clique');
+  }));
+  s.addEventListener('pointermove', e => {
+    if (!arr) return; const p = c.ponto(e);
+    if (Math.hypot(p.x - arr.x0, p.y - arr.y0) > 8) arr.moveu = true;
+    const L = arr.tipo === 'bloco' ? bpos : ppos;
+    L[arr.i].x = Math.max(20, Math.min(780, p.x - arr.dx)); L[arr.i].y = Math.max(40, Math.min(485, p.y - arr.dy));
+    (arr.tipo === 'bloco' ? poeBloco : poePedaco)(arr.i);
+  });
+  s.addEventListener('pointerup', () => {
+    if (!arr) return; const { tipo, i, moveu } = arr; arr = null;
+    if (tipo === 'bloco') { blocoEl[i].style.cursor = 'grab';
+      if (!moveu || Math.hypot(bpos[i].x - IG.x, bpos[i].y - (IG.y - 34)) < 110) assenta(i);
+      else { const [x, y] = PILHA[i]; voo(bpos, i, x, y, 600, 1, { poe:poeBloco }); toca('glub'); api.diz('Leve o bloco até o iglu!'); }
+    } else {
+      const perto = Math.hypot(ppos[i].x - PANELA.x, ppos[i].y - PANELA.y) < 90;
+      if (moveu && !perto) { const p = PEDACOS[i]; voo(ppos, i, p.x, p.y, 600, 1, { poe:poePedaco }); toca('glub'); api.diz('Leve o gelo até a panela!'); return; }
+      escolhe(i);
+    }
+  });
+  function assenta(i){
+    bpos[i].foi = true; const alvo = pecas[GRUPOS[blocos]] || pecas[0];
+    voo(bpos, i, alvo.cx, alvo.cy, 700, .5, { poe:poeBloco, fim:() => {
+      blocoEl[i].style.display = 'none'; blocos++; toca('pop');
+      const de = GRUPOS[blocos - 1], ate = GRUPOS[blocos];
+      for (let j = de; j < ate; j++) depois((j - de) * 130, () => { const p = pecaEl[j]; p.style.opacity = 1; p.animate([{ transform:'scale(.2)' }, { transform:'scale(1.12)' }, { transform:'scale(1)' }], { duration:420, easing:'ease-out' }); tom(520 + j * 22, 0, .07, 'triangle', .04); neveSobe(pecas[j].cx, pecas[j].cy, 2); });
+      api.hud(`<span class="chip">Blocos: ${blocos}/6</span>`);
+      if (blocos === 1) api.diz('Os blocos sobem em espiral, um apoiado no outro.');
+      if (blocos === 3) api.diz('A neve tem muito ar preso dentro. Esse ar segura o calor!');
+      if (blocos === 5) api.diz('Falta pouco! O último bloco fecha o teto.');
+      if (blocos === 6) depois(1000, igluPronto);
+    } });
+  }
+  function igluPronto(){
+    fase = 'pronto'; el(s, '#in-fantasma').style.display = 'none'; el(s, '#in-iglu-fim').style.opacity = 1;
+    toca('vitoria'); c.brilhos(IG.x, IG.y - 50, 10, '#FFFFFF');
+    api.diz('Iglu pronto! Lá fora faz muito frio, mas dentro dele fica bem mais quentinho.');
+    depois(5600, comecaAgua);
+  }
+  /* ---------- 3. água para beber: gelo velho (doce) x gelo novo (salgado) ---------- */
+  function comecaAgua(){
+    fase = 'agua'; el(s, '#in-seta2').style.display = '';
+    pedEl.forEach((g, i) => depois(i * 160, () => { g.style.opacity = 1; g.style.pointerEvents = ''; }));
+    c.brilhos(PEDACOS[0].x, PEDACOS[0].y, 4, '#FFFFFF'); c.brilhos(PEDACOS[4].x, PEDACOS[4].y, 4, '#FFFFFF');
+    api.hud('<span class="chip">Gelo na panela: 0/3</span>');
+    api.diz('E para beber? Os Inuit derretem gelo. Leve o gelo azul do iceberg até a panela.');
+  }
+  function escolhe(i){
+    const p = PEDACOS[i];
+    if (!p.doce) {
+      voo(ppos, i, PANELA.x, PANELA.y - 40, 500, 1, { poe:poePedaco, fim:() => { toca('glub'); voo(ppos, i, p.x, p.y, 700, 1, { poe:poePedaco }); } });
+      api.diz('Esse é gelo novo do mar: ainda tem sal! Escolha o gelo azul.'); return;
+    }
+    ppos[i].foi = true;
+    voo(ppos, i, PANELA.x, PANELA.y - 24, 800, .4, { poe:poePedaco, fim:() => {
+      pedEl[i].style.display = 'none'; pedacos++; toca('pop'); c.brilhos(PANELA.x, PANELA.y - 28, 5, '#BFE8FF');
+      s.querySelectorAll('.in-pg')[pedacos - 1].style.opacity = 1;
+      api.hud(`<span class="chip">Gelo na panela: ${pedacos}/3</span>`);
+      if (pedacos === 1) api.diz('O iceberg veio de uma geleira, que é feita de neve. O gelo dele é de água doce!');
+      if (pedacos === 2) api.diz('Gelo do mar bem velho também perde o sal e fica azulado.');
+      if (pedacos === 3) depois(900, () => { fase = 'fogo'; el(s, '#in-fogo-dica').style.display = ''; api.hud('<span class="chip">Fogo: 0/3</span>'); api.diz('Panela cheia de gelo! Agora toque no fogareiro para derreter.'); });
+    } });
+  }
+  el(s, '#in-fogareiro').addEventListener('click', e => {
+    e.stopPropagation();
+    if (fase !== 'fogo') { toca('clique'); api.diz(fase === 'fim' ? 'A água ferveu. Hora do chá!' : 'É um fogareiro de acampamento. Ele vai esquentar a panela.'); return; }
+    if (ocupado || fogo >= 3) return; ocupado = true; fogo++; toca('vapor');
+    el(s, '#in-chama').style.transform = `scale(${(.5 + fogo * .22).toFixed(2)})`;
+    for (let i = 0; i < 8 + fogo * 4; i++) c.add({ tipo:'vapor', x0:PANELA.x + sorte(-20, 20), y0:PANELA.y - 24, x1:PANELA.x + sorte(-40, 40), y1:PANELA.y - sorte(80, 120), dur:sorte(60, 90), f:sorte(0, 6), r:sorte(3, 6), x:0, y:0 });
+    s.querySelectorAll('.in-pg').forEach(g => g.style.transform = `scale(${(1 - fogo * .3).toFixed(2)})`);
+    const ag = el(s, '#in-agua'); ag.style.opacity = (fogo / 3).toFixed(2);
+    api.hud(`<span class="chip">Fogo: ${fogo}/3</span>`);
+    depois(1500, () => { ocupado = false;
+      if (fogo === 1) api.diz('O calor faz o gelo derreter. O sólido vira líquido!');
+      if (fogo === 2) api.diz('Olha a água aparecendo na panela!');
+      if (fogo === 3) { fase = 'fim'; el(s, '#in-fogo-dica').style.display = 'none'; s.querySelectorAll('.in-pg').forEach(g => g.style.opacity = 0); el(s, '#in-caneca').style.display = '';
+        toca('vitoria'); api.diz('Água doce e quentinha! Dá para beber e fazer chá.'); depois(4600, final); }
+    });
+  });
+  function final(){
+    el(s, '#in-noite').style.opacity = .55; el(s, '#in-sol').style.opacity = 0; el(s, '#in-sol').style.transform = 'translateY(40px)'; el(s, '#in-luzes').style.opacity = 1; el(s, '#in-estrelas').style.opacity = 1;
+    tween(4000, e => aurora = e);
+    [392, 523, 659, 784].forEach((f, i) => setTimeout(() => vivo && somOn && tom(f, 0, 1.4, 'sine', .04), 1200 + i * 420));
+    api.diz('A noite chegou... e o céu ganhou luzes! É a aurora boreal.');
+    depois(5200, () => { toca('vitoria'); api.diz('Os Inuit conhecem o gelo como ninguém. Mas o planeta está esquentando, e o gelo do mar está ficando mais fino. Cuidar do planeta protege o gelo deles!'); depois(7200, api.fim); });
+  }
+  /* aurora boreal: cortinas de luz no canvas, recortadas acima das montanhas e do iceberg */
+  const perfil = (pts, x) => { for (let k = 1; k < pts.length; k++) if (x <= pts[k][0]) { const [x0, y0] = pts[k - 1], [x1, y1] = pts[k]; return y0 + (y1 - y0) * (x - x0) / Math.max(1, x1 - x0); } return pts[pts.length - 1][1]; };
+  const nums = d => d.match(/-?[\d.]+/g).map(Number), pares = arr => { const o = []; for (let k = 0; k + 1 < arr.length; k += 2) o.push([arr[k], arr[k + 1]]); return o; };
+  const ptsSerra = pares(nums(serra.split(' V')[0])), ptsBerg = pares(nums(iceberg));
+  let ceu = 'M0 0 H800'; for (let x = 800; x >= 0; x -= 4) { let y = perfil(ptsSerra, x); if (x >= 416 && x <= 614) y = Math.min(y, perfil(ptsBerg, x)); ceu += ` L${x} ${P(y)}`; } ceu += 'Z';
+  const ceuClip = typeof Path2D === 'function' ? new Path2D(ceu) : null;
+  c.desenho(ctx => {
+    if (aurora <= 0) return;
+    const t = performance.now() / 1000;
+    ctx.save(); if (ceuClip) ctx.clip(ceuClip); ctx.globalCompositeOperation = 'lighter';
+    [[0, '#3CF29A', '#7A5CFF', 0], [1.9, '#6CF5C8', '#FF6AC8', 14], [3.4, '#48D890', '#5A8CFF', -10]].forEach(([f, c1, c2, dy]) => {
+      const g = ctx.createLinearGradient(0, 20, 0, 160); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.3, c2); g.addColorStop(.75, c1); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      const base = x => 112 + dy + Math.sin(x * .007 + t * .3 + f) * 22 + Math.sin(x * .019 - t * .45) * 7;
+      const alto = x => 64 + Math.sin(x * .011 + t * .5 + f) * 22;
+      for (let x = -20; x < 820; x += 6) {
+        const x2 = x + 6, b1 = base(x), b2 = base(x2), sk = 10;
+        ctx.globalAlpha = aurora * (.09 + .2 * Math.pow((1 + Math.sin(x * .045 + t * 1.1 + f)) / 2, 2));
+        ctx.beginPath(); ctx.moveTo(x, b1); ctx.lineTo(x2, b2); ctx.lineTo(x2 + sk, b2 - alto(x2)); ctx.lineTo(x + sk, b1 - alto(x)); ctx.closePath(); ctx.fill();
+      }
+    });
+    ctx.restore();
+  });
+  /* ---------- toques extras ---------- */
+  let raposaOcupada = false;
+  el(s, '#in-raposa').addEventListener('click', () => {
+    if (raposaOcupada) return; raposaOcupada = true; toca('pop');
+    const a = el(s, '#in-raposa-pulo').animate([{ transform:'translate(0,0)' }, { transform:'translate(14px,-46px) rotate(-10deg)' }, { transform:'translate(30px,8px) rotate(14deg)' }, { transform:'translate(30px,4px)' }, { transform:'translate(0,0)' }], { duration:1500, easing:'ease-in-out' });
+    depois(620, () => { toca('splash'); neveSobe(96, 456, 12); });
+    a.onfinish = () => { raposaOcupada = false; };
+    api.diz(fase === 'gelo' ? 'Sou o Floco! Meu pelo é branco no inverno. Toque no gelo para testar o caminho.' : 'Eu escuto os bichinhos debaixo da neve e pulo de cabeça para pegar!');
+  });
+  let narvalOcupado = false;
+  el(s, '#in-canal').addEventListener('click', () => {
+    if (narvalOcupado) return; narvalOcupado = true;
+    const n = el(s, '#in-narval-pos'), sobe = n.animate([{ transform:'translateY(0)' }, { transform:'translateY(-17px)' }], { duration:900, easing:'ease-out', fill:'forwards' });
+    sobe.onfinish = () => { if (!vivo) return; toca('splash'); for (let i = 0; i < 16; i++) c.add({ tipo:'vapor', x0:262 + sorte(-3, 3), y0:452, x1:262 + sorte(-18, 18), y1:452 - sorte(30, 56), dur:sorte(26, 44), f:sorte(0, 6), r:sorte(2, 3.6), x:0, y:0 });
+      for (let i = 0; i < 4; i++) c.add({ tipo:'respingo', x:220 + i * 20, y:470, t:i * 2, cor:'#BFE6FF' });
+      api.diz('Um narval! O chifre dele é um dente bem comprido. Ele sobe nas rachaduras do gelo para respirar.');
+      depois(2200, () => { const d = n.animate([{ transform:'translateY(-17px)' }, { transform:'translateY(0)' }], { duration:1200, easing:'ease-in', fill:'forwards' }); d.onfinish = () => { narvalOcupado = false; }; }); };
+  });
+  let ursoOcupado = false;
+  el(s, '#in-urso').addEventListener('click', () => {
+    if (ursoOcupado) return; ursoOcupado = true; toca('glub');
+    const a = el(s, '#in-urso-pos').animate([{ transform:'translate(0,0)' }, { transform:'translate(-16px,-1px)' }, { transform:'translate(-20px,0)' }, { transform:'translate(0,0)' }], { duration:2600, easing:'ease-in-out' });
+    a.onfinish = () => { ursoOcupado = false; };
+    api.diz('Um urso-polar lá longe! Ele caça focas em cima do gelo do mar.');
+  });
+  el(s, '#in-coruja').addEventListener('click', () => {
+    [[420, 380], [420, 370]].forEach(([f, f2], i) => setTimeout(() => vivo && somOn && tom(f, 0, .35, 'sine', .07, f2), i * 420));
+    el(s, '#in-coruja-in').animate([{ transform:'translateY(0)' }, { transform:'translateY(-6px)' }, { transform:'translateY(0)' }], { duration:500, iterations:2 });
+    api.diz('Uma coruja-das-neves! No verão do Ártico o sol quase não se põe, e ela caça de dia.');
+  });
+  el(s, '#in-inuksuk').addEventListener('click', e => { e.stopPropagation(); toca('clique'); c.brilhos(200, 196, 4, '#FFFFFF'); api.diz('É um inuksuk, uma pilha de pedras feita pelos Inuit. Ele mostra o caminho para quem viaja.'); });
+  el(s, '#in-casas').addEventListener('click', e => { e.stopPropagation(); toca('pop'); api.diz('As casas ficam em cima de pés de metal, para o calor da casa não derreter o chão congelado.'); });
+  el(s, '#in-escola').addEventListener('click', e => { e.stopPropagation(); toca('pop'); api.diz('Na escola, as crianças aprendem inuktitut, a língua dos Inuit.'); });
+  let camOcupado = false, camX = 40;
+  el(s, '#in-caminhao').addEventListener('click', e => { e.stopPropagation(); if (camOcupado) return; camOcupado = true;
+    [0, 260].forEach(d => setTimeout(() => vivo && somOn && tom(330, 0, .18, 'square', .03), d));
+    const x0 = camX, x1 = camX < 100 ? 196 : 40;
+    tween(2200, e2 => { camX = x0 + (x1 - x0) * e2; el(s, '#in-cam-pos').setAttribute('transform', `translate(${P(camX)} ${P(272 - (camX - 40) * .01)})${x1 < x0 ? ' scale(-1 1)' : ''}`); }, () => { camOcupado = false; });
+    api.diz('Na cidade, um caminhão leva água até a caixa-d\'água de cada casa.'); });
+  el(s, '#in-motorista').addEventListener('click', e => { e.stopPropagation(); toca('pop'); api.diz(fase === 'gelo' ? 'A gente mora na cidade, mas acampa no gelo para pescar. Toque no gelo para testar o caminho!' : 'Meu avô me ensinou a fazer iglu, e agora eu ensino minha filha.'); });
+  el(s, '#in-crianca').addEventListener('click', e => { e.stopPropagation(); toca('pop'); el(s, '#in-cri-braco').animate([{ transform:'rotate(0)' }, { transform:'rotate(-30deg)' }, { transform:'rotate(15deg)' }, { transform:'rotate(0)' }], { duration:700, iterations:2 });
+    anjos++; if (anjos % 2 === 0 && !ocupado) { const cr = el(s, '#in-crianca'); cr.animate([{ transform:'translate(0,0)' }, { transform:'translate(6px,-18px)', offset:.15 }, { transform:'translate(12px,30px)', offset:.35 }, { transform:'translate(12px,30px) scale(1.1,.9)', offset:.5 }, { transform:'translate(12px,30px)', offset:.7 }, { transform:'translate(6px,-18px)', offset:.85 }, { transform:'translate(0,0)' }], { duration:2400, easing:'ease-in-out' }); depois(1000, anjo); depois(700, () => toca('splash')); api.diz('Olha, fiz um anjo de neve!'); }
+    else api.diz('Oi! Minha avó me ensinou a ler as cores do gelo.'); });
+  el(s, '#in-berg').addEventListener('click', e => { e.stopPropagation(); toca('clique'); c.brilhos(510, 140, 5, '#FFFFFF'); api.diz('Um iceberg preso no gelo do mar! Ele é azulado porque é gelo muito velho e apertado.'); });
+  let focaOcupada = false;
+  el(s, '#in-foca').addEventListener('click', e => { e.stopPropagation(); if (focaOcupada) return; focaOcupada = true; toca('glub');
+    const fi = el(s, '#in-foca-in'), a = fi.animate([{ transform:'translate(0,0) scale(1)', opacity:1 }, { transform:'translate(40px,4px) scale(.5)', opacity:0 }], { duration:700, easing:'ease-in', fill:'forwards' });
+    a.onfinish = () => { if (!vivo) return; toca('splash'); for (let i = 0; i < 4; i++) c.add({ tipo:'respingo', x:268 + sorte(-4, 4), y:421, t:i * 2, cor:'#E6F6FF' });
+      depois(2400, () => { const b = fi.animate([{ transform:'translate(40px,4px) scale(.5)', opacity:0 }, { transform:'translate(0,0) scale(1)', opacity:1 }], { duration:800, easing:'ease-out', fill:'forwards' }); b.onfinish = () => { focaOcupada = false; }; }); };
+    api.diz('Uma foca-anelada! Ela faz buracos no gelo para respirar e mergulha por eles.'); });
+  el(s, '#in-caes').addEventListener('click', e => { e.stopPropagation();
+    s.querySelectorAll('#in-caes .in-cao-in').forEach((g, i) => g.animate([{ transform:'translateY(0)' }, { transform:'translateY(-7px)' }, { transform:'translateY(0)' }, { transform:'translateY(-4px)' }, { transform:'translateY(0)' }], { duration:900, delay:i * 150 }));
+    if (somOn) { tom(520, 0, .9, 'sine', .05, 760); tom(600, .35, 1, 'sine', .04, 880); }
+    api.diz('Cães de trenó! Eles aguentam muito frio e puxavam os trenós pelo gelo. Muitas famílias ainda têm cães.'); });
+  let corvoOcupado = false;
+  el(s, '#in-corvo').addEventListener('click', e => { e.stopPropagation(); if (corvoOcupado) return; corvoOcupado = true;
+    [0, 260].forEach(d => setTimeout(() => vivo && somOn && tom(330, 0, .14, 'square', .03, 210), d));
+    const a = el(s, '#in-corvo-voo').animate([{ transform:'translate(0,0)' }, { transform:'translate(120px,-90px)' }, { transform:'translate(300px,-60px)' }, { transform:'translate(120px,-110px)' }, { transform:'translate(0,0)' }], { duration:4200, easing:'ease-in-out' });
+    a.onfinish = () => { corvoOcupado = false; };
+    api.diz('Um corvo! Ele mora no Ártico o ano inteiro e é muito esperto.'); });
+  el(s, '#in-sol').addEventListener('click', e => { e.stopPropagation(); if (aurora > 0) return;
+    for (let i = 0; i < 44; i++) c.add({ tipo:'brilho', t:-i * 2, x:sorte(20, 780), y:sorte(222, 490), cor: i % 3 ? '#FFFFFF' : '#BFE8FF' });
+    [880, 1175, 1318, 1760].forEach((f, i) => setTimeout(() => vivo && somOn && tom(f, 0, .5, 'sine', .04), i * 110));
+    api.diz('O sol baixinho faz o gelo brilhar inteirinho! No inverno, ele quase não sobe no céu.'); });
+  let anjos = 0;
+  const anjo = () => { const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'), x = moto.x - 112, y = moto.y + 32;
+    g.setAttribute('transform', `translate(${P(x)} ${P(y)})`);
+    g.innerHTML = '<g style="animation:cresce .8s ease-out"><path d="M0 -6 C-10 -14 -20 -12 -20 -4 C-18 2 -8 2 -2 0 C-6 6 -8 10 -4 12 L4 12 C8 10 6 6 2 0 C8 2 18 2 20 -4 C20 -12 10 -14 0 -6Z" fill="#DCE8F6" stroke="#A8C0DE" stroke-width="1.2"/><ellipse cx="0" cy="-9" rx="4.4" ry="3.6" fill="#DCE8F6" stroke="#A8C0DE" stroke-width="1.2"/><path d="M-16 -6 C-12 -10 -6 -9 -3 -6 M16 -6 C12 -10 6 -9 3 -6" stroke="#fff" stroke-width="1.4" fill="none"/></g>';
+    el(s, '#in-trilhas').appendChild(g); c.brilhos(x, y - 4, 6, '#FFFFFF'); };
+  let ultGelo = 0;
+  el(s, '#in-mar').addEventListener('click', e => { const p = c.ponto(e); c.brilhos(p.x, p.y, 3, '#FFFFFF');
+    if (somOn) { tom(240, 0, .9, 'sine', .05, 70); tom(900, .05, .5, 'sine', .015, 300); }
+    if (performance.now() - ultGelo > 9000) { ultGelo = performance.now(); api.diz('Ouviu? O gelo do mar estala e canta quando a maré mexe e quando esfria.'); } });
+  /* vida: brilhinhos de gelo no ar e fumaça das casas */
+  let ultB = 0;
+  (function vida(t){ if (!vivo) return; if (t - ultB > 900) { ultB = t; c.add({ tipo:'brilho', x:sorte(20, 780), y:sorte(40, 260), cor:'#FFFFFF' }); if (Math.random() < .5) { const [hx, hy] = [[29, 182], [69, 177], [130, 184]][Math.floor(Math.random() * 3)]; c.add({ tipo:'vapor', x0:hx, y0:hy, x1:hx + sorte(6, 20), y1:hy - 40, dur:110, f:sorte(0, 6), r:2.2, x:0, y:0 }); } } requestAnimationFrame(vida); })(0);
+  marcaColuna();
+  api.hud('<span class="chip">Caminho: 0/4</span>');
+  api.diz('Oi, eu sou o Floco, uma raposa-do-ártico! Aqui o mar congela e vira estrada. Toque no gelo para testar o caminho até o acampamento.');
+  return () => { vivo = false; timers.forEach(clearTimeout); c.parar(); };
+}
+/* ================= JOGO 15: Chinampas de Xochimilco, jardins no lago ================= */
+function jogoChinampa(palco, api){
+  semente = 197;
+  const AG = 300, FUN = 470, FL = 262, FR = 530, TF = 268, TB = 238, BL = 290, BR = 502, FB = 270;
+  const CAM = [{ tipo:'junco', y0:420, y1:476 }, { tipo:'lama', y0:370, y1:420 }, { tipo:'junco', y0:320, y1:370 }, { tipo:'lama', y0:TF, y1:320 }];
+  const ESTACAS = [{ x:268, y:AG, f:1 }, { x:396, y:AG, f:1 }, { x:524, y:AG, f:1 }, { x:BL, y:FB, f:0 }, { x:BR, y:FB, f:0 }];
+  const CANTOS = [{ x:282, y:TF - 2 }, { x:512, y:TF - 2 }];
+  const PLANTAS = { milho:[{ x:338, y:252 }, { x:438, y:250 }], feijao:[{ x:338, y:252 }, { x:438, y:250 }], abobora:[{ x:384, y:262 }, { x:476, y:262 }] };
+  const LIXO = [{ id:'garrafa', x:604, y:326 }, { id:'sacola', x:704, y:368 }, { id:'lata', x:766, y:452 }, { id:'copo', x:584, y:438 }];
+  const FILTROS = [{ x:552, y:AG }, { x:786, y:AG }];
+  const CESTO = { x:686, y:266 };
+  let vivo = true, fase = 'estacas', estacas = 0, camadas = 0, arvores = 0, sementes = 0, aguas = 0, lixos = 0, filtros = 0, ocupado = false, molhado = 0, cresc = .22, arvK = .4;
+  const timers = [], depois = (ms, fn) => { const t = setTimeout(() => vivo && fn(), ms); timers.push(t); return t; };
+  const F = n => n.toFixed(1);
+  /* ---------- desenhos ---------- */
+  const ahuejote = (x, y, h, w, c0, c1, esc) => {
+    let folhas = '';
+    for (let i = 0; i < Math.round(h / 7); i++) { const yy = y - h * .22 - R(0, h * .74), lim = w * .5 * Math.sin(Math.PI * Math.min(1, (y - yy) / h)) , xx = x + R(-lim, lim); folhas += `M${F(xx)} ${F(yy)} q${F(R(-2, 2))} ${F(R(3, 5))} ${F(R(-3, 3))} ${F(R(7, 10))} `; }
+    const tronco = `M${x} ${y} C${x - 1} ${y - h * .2} ${x + 2} ${y - h * .45} ${x} ${y - h * .7}`;
+    const ramos = `M${x} ${y - h * .3} q${F(-w * .25)} ${F(-h * .1)} ${F(-w * .32)} ${F(-h * .22)} M${x} ${y - h * .42} q${F(w * .2)} ${F(-h * .1)} ${F(w * .3)} ${F(-h * .24)}`;
+    const copaD = `M${x} ${F(y - h * .16)} C${F(x - w * .62)} ${F(y - h * .3)} ${F(x - w * .56)} ${F(y - h * .78)} ${F(x - w * .12)} ${F(y - h * .98)} Q${x} ${F(y - h * 1.04)} ${F(x + w * .12)} ${F(y - h * .98)} C${F(x + w * .56)} ${F(y - h * .78)} ${F(x + w * .62)} ${F(y - h * .3)} ${x} ${F(y - h * .16)}Z`;
+    return `<path d="${copaD}" fill="url(#${c0})" stroke="${esc}" stroke-width="1.6"/>
+      <path d="${tronco}" stroke="#4A3626" stroke-width="${F(Math.max(2, w * .1))}" fill="none" stroke-linecap="round"/><path d="${ramos}" stroke="#4A3626" stroke-width="${F(Math.max(1.4, w * .05))}" fill="none" stroke-linecap="round"/>
+      <path d="${folhas}" stroke="${c1}" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".9"/>
+      <path d="M${F(x - w * .26)} ${F(y - h * .38)} C${F(x - w * .34)} ${F(y - h * .6)} ${F(x - w * .24)} ${F(y - h * .82)} ${F(x - w * .06)} ${F(y - h * .94)}" stroke="#E6F4DA" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".55"/>`;
+  };
+  const estaca = (x, y0, y1, w) => `<path d="M${F(x - w / 2)} ${y0} V${y1 - w} L${x} ${y1} L${F(x + w / 2)} ${y1 - w} V${y0}Z" fill="url(#chMadeira)" stroke="#3A2414" stroke-width="1.4" stroke-linejoin="round"/><ellipse cx="${x}" cy="${y0}" rx="${F(w / 2)}" ry="${F(w / 5)}" fill="#D8B48A" stroke="#3A2414" stroke-width="1.1"/><path d="M${F(x - w / 4)} ${y0 + 4} V${y1 - w - 4}" stroke="#E8C8A0" stroke-width="1.2" opacity=".55"/><path d="M${F(x + w / 6)} ${y0 + 14} l2 6 M${F(x - w / 6)} ${y0 + 40} l-1.6 6" stroke="#5E3E26" stroke-width=".9" opacity=".7"/>`;
+  const camada = (k) => {
+    const c = CAM[k], x0 = FL + 3, x1 = FR - 3, h = c.y1 - c.y0;
+    let det = '';
+    if (c.tipo === 'junco') {
+      for (let i = 0; i < Math.round(h / 4.4); i++) { const yy = c.y0 + 3 + i * 4.4; det += `M${x0} ${F(yy)} ` + Array.from({ length:8 }, () => `q${F(R(14, 20))} ${F(R(-2, 2))} ${F(R(30, 36))} ${F(R(-1.4, 1.4))}`).join(' ') + ' '; }
+      return `<rect x="${x0}" y="${c.y0}" width="${x1 - x0}" height="${h}" fill="url(#chJunco)"/><rect x="${x0}" y="${c.y0}" width="${x1 - x0}" height="${h}" fill="url(#chTrama)"/><g stroke="#5E6E1E" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".5">${Array.from({ length:6 }, () => { const xx = R(x0 + 20, x1 - 20), yy = R(c.y0 + 8, c.y1 - 8); return `<path d="M${F(xx)} ${F(yy - 6)} q3 6 0 12"/>`; }).join('')}</g><path d="${det}" stroke="#6E8A2E" stroke-width="1.6" fill="none" opacity=".75"/><g stroke="#F2F4B0" stroke-width="1" opacity=".7" fill="none">${Array.from({ length:16 }, () => { const xx = R(x0 + 6, x1 - 30), yy = R(c.y0 + 4, c.y1 - 4); return `<path d="M${F(xx)} ${F(yy)} h${F(R(10, 26))}"/>`; }).join('')}</g><g fill="#8A9A3A">${Array.from({ length:14 }, () => `<rect x="${F(R(x0 + 4, x1 - 8))}" y="${F(R(c.y0 + 2, c.y1 - 6))}" width="1.6" height="4" rx=".8"/>`).join('')}</g><path d="M${x0} ${c.y0 + 1} H${x1}" stroke="#E8EE9A" stroke-width="1.6" opacity=".8"/>`;
+    }
+    return `<rect x="${x0}" y="${c.y0}" width="${x1 - x0}" height="${h}" fill="url(#chLama)"/>${Array.from({ length:7 }, () => `<ellipse cx="${F(R(x0 + 20, x1 - 20))}" cy="${F(R(c.y0 + 10, c.y1 - 10))}" rx="${F(R(26, 50))}" ry="${F(R(9, 16))}" fill="url(#chLamaB)"/>`).join('')}<g fill="#fff" opacity=".22">${Array.from({ length:14 }, () => { const xx = R(x0 + 6, x1 - 30), yy = R(c.y0 + 5, c.y1 - 5); return `<path d="M${F(xx)} ${F(yy)} q${F(R(6, 12))} -2.4 ${F(R(14, 24))} 0 q-${F(R(6, 10))} 1.2 -${F(R(14, 24))} 0Z"/>`; }).join('')}</g><g>${Array.from({ length:6 }, () => { const xx = R(x0 + 8, x1 - 8), yy = R(c.y0 + 6, c.y1 - 6); return `<ellipse cx="${F(xx)}" cy="${F(yy)}" rx="2.6" ry="1.6" fill="#3E6A7A" opacity=".6"/><circle cx="${F(xx - .8)}" cy="${F(yy - .6)}" r=".7" fill="#E6FFFF"/>`; }).join('')}</g><path d="${Array.from({ length:4 }, () => { const xx = R(x0 + 10, x1 - 40), yy = R(c.y0 + 6, c.y1 - 6); return `M${F(xx)} ${F(yy)} c4 3 8 -2 12 1 s8 3 12 -1`; }).join(' ')}" stroke="#C8A27A" stroke-width=".9" fill="none" opacity=".55"/><g fill="#8E6A4A" opacity=".75">${Array.from({ length:34 }, () => `<ellipse cx="${F(R(x0 + 3, x1 - 3))}" cy="${F(R(c.y0 + 3, c.y1 - 3))}" rx="${F(R(1.2, 3.4))}" ry="${F(R(.8, 2))}"/>`).join('')}</g><g fill="#2A1A0E" opacity=".55">${Array.from({ length:22 }, () => `<circle cx="${F(R(x0 + 3, x1 - 3))}" cy="${F(R(c.y0 + 3, c.y1 - 3))}" r="${F(R(.8, 1.8))}"/>`).join('')}</g><path d="${Array.from({ length:5 }, () => { const xx = R(x0 + 10, x1 - 40), yy = R(c.y0 + 6, c.y1 - 6); return `M${F(xx)} ${F(yy)} q6 -3 12 -1 t12 1`; }).join(' ')}" stroke="#A88A5A" stroke-width="1.1" fill="none" opacity=".6"/><path d="M${x0} ${c.y0 + 1} H${x1}" stroke="#9A7A5A" stroke-width="1.6" opacity=".8"/>`;
+  };
+  /* plantas da milpa: desenhadas na base (0,0), crescem por escala */
+  const milho = () => `<g><path d="M0 0 C-1 -30 1 -70 0 -112" stroke="#3E6A1E" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M0 0 C-1 -30 1 -70 0 -112" stroke="#8CC84A" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    ${[[-18, 1, 34], [-36, -1, 38], [-54, 1, 36], [-72, -1, 32], [-90, 1, 26]].map(([y, l, L]) => `<path d="M0 ${y} C${l * 10} ${y - 12} ${l * L * .8} ${y - 8} ${l * L} ${y + 6} C${l * L * .7} ${y - 2} ${l * 10} ${y - 6} 0 ${y - 4}Z" fill="url(#chFolhaM)" stroke="#2E5A1A" stroke-width="1.1" stroke-linejoin="round"/>`).join('')}
+    <path d="M0 -112 l-6 -14 M0 -112 l1 -18 M0 -112 l7 -13 M0 -110 l-10 -8 M0 -110 l10 -6" stroke="#C8A44A" stroke-width="2" stroke-linecap="round"/><path d="M0 -112 l-6 -14 M0 -112 l1 -18 M0 -112 l7 -13" stroke="#F2DA8A" stroke-width=".9" stroke-linecap="round"/>
+    <g class="ch-fruto" style="opacity:0;transition:opacity 1s"><g transform="translate(3 -58) rotate(24)"><path d="M0 0 C-6 -6 -6 -22 0 -28 C6 -22 6 -6 0 0Z" fill="#7AA03A" stroke="#3E5A1A" stroke-width="1"/><path d="M0 -4 C-4 -9 -4 -20 0 -25 C4 -20 4 -9 0 -4Z" fill="url(#chEspiga)" stroke="#8A3A5A" stroke-width=".8"/><g fill="#fff" opacity=".6"><circle cx="-1.2" cy="-18" r=".9"/><circle cx="-1.2" cy="-12" r=".9"/></g><path d="M0 -28 q-2 -6 2 -9 M0 -28 q3 -5 6 -6" stroke="#D8A04A" stroke-width="1" fill="none"/></g>
+      <g transform="translate(-3 -40) rotate(-26)"><path d="M0 0 C-5 -5 -5 -18 0 -23 C5 -18 5 -5 0 0Z" fill="#7AA03A" stroke="#3E5A1A" stroke-width="1"/><path d="M0 -3 C-3.4 -8 -3.4 -16 0 -20 C3.4 -16 3.4 -8 0 -3Z" fill="url(#chEspiga2)" stroke="#A8701A" stroke-width=".8"/></g></g></g>`;
+  const feijao = () => `<g><path d="M2 0 C-8 -10 8 -20 -4 -30 C-12 -38 8 -46 -2 -56 C-10 -64 8 -72 0 -82 C-6 -90 4 -96 2 -102" stroke="#2E5A1A" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M2 0 C-8 -10 8 -20 -4 -30 C-12 -38 8 -46 -2 -56 C-10 -64 8 -72 0 -82 C-6 -90 4 -96 2 -102" stroke="#6EAA3A" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    ${[[-6, -12, -1], [6, -24, 1], [-9, -38, -1], [7, -50, 1], [-7, -64, -1], [6, -78, 1], [-3, -92, -1]].map(([x, y, l]) => `<path d="M${x} ${y} c${l * 4} -6 ${l * 12} -6 ${l * 13} 1 c${-l * 2} 6 ${-l * 9} 6 ${-l * 13} -1Z" fill="url(#chFolhaF)" stroke="#24561E" stroke-width=".9"/>`).join('')}
+    <g class="ch-fruto" style="opacity:0;transition:opacity 1s">${[[8, -30], [-10, -46], [8, -62], [-6, -86]].map(([x, y]) => `<path d="M${x} ${y} c2 6 1 14 -2 18" stroke="#3E6A1E" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M${x} ${y} c2 6 1 14 -2 18" stroke="#9AD05A" stroke-width="2" fill="none" stroke-linecap="round"/>`).join('')}<g fill="#FFFFFF" stroke="#B060A8" stroke-width=".6">${[[-6, -20], [10, -56], [-4, -76]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.2"/>`).join('')}</g></g></g>`;
+  const abobora = () => `<g><path d="M-30 -2 C-20 -8 20 -8 34 -2" stroke="#3E6A1E" stroke-width="3" fill="none" stroke-linecap="round"/>
+    ${[[-26, -10, 13], [-6, -16, 16], [16, -12, 14], [32, -6, 10]].map(([x, y, r]) => `<path d="M${x} ${y + r * .7} C${x - r * 1.1} ${y + r * .2} ${x - r} ${y - r * .9} ${x - r * .2} ${y - r * .8} Q${x} ${y - r * 1.2} ${x + r * .2} ${y - r * .8} C${x + r} ${y - r * .9} ${x + r * 1.1} ${y + r * .2} ${x} ${y + r * .7}Z" fill="url(#chFolhaA)" stroke="#1E4A22" stroke-width="1.2"/><path d="M${x} ${y + r * .6} V${y - r * .6} M${x} ${y} l${-r * .5} ${-r * .4} M${x} ${y} l${r * .5} ${-r * .4}" stroke="#9AD08A" stroke-width=".9" fill="none" opacity=".8"/>`).join('')}
+    <g class="ch-fruto" style="opacity:0;transition:opacity 1s"><g transform="translate(-14 -6)"><path d="M-11 0 C-13 -12 13 -12 11 0 C10 6 -10 6 -11 0Z" fill="url(#chAbob)" stroke="#9A4A0A" stroke-width="1.2"/><path d="M-4 -8 C-6 -2 -5 3 -3 5 M4 -8 C6 -2 5 3 3 5" stroke="#C86A1A" stroke-width="1" fill="none"/><path d="M0 -9 l2 -5" stroke="#4E6A1E" stroke-width="2.4" stroke-linecap="round"/><path d="M-7 -5 q3 -3 6 -3" stroke="#FFE0A8" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
+      ${[[10, -22], [30, -14]].map(([x, y]) => `<g transform="translate(${x} ${y})">${[0, 1, 2, 3, 4].map(k => `<ellipse cx="${F(Math.cos(k * 1.256) * 3.6)}" cy="${F(Math.sin(k * 1.256) * 3.6)}" rx="3.4" ry="2.4" transform="rotate(${F(k * 72)} ${F(Math.cos(k * 1.256) * 3.6)} ${F(Math.sin(k * 1.256) * 3.6)})" fill="#FFC83D" stroke="#B07A08" stroke-width=".6"/>`).join('')}<circle r="2" fill="#F08A1E"/></g>`).join('')}</g></g>`;
+  /* axolote da cena (cabeça para a esquerda), origem no centro da cabeça */
+  const guelra = (p0, p1, p2, cor, esc) => {
+    const bq = t => [(1 - t) * (1 - t) * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) * (1 - t) * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]];
+    let fr = ''; for (let i = 1; i < 9; i++) { const t = .18 + i * .1; if (t > 1) break; const [x, y] = bq(t), [x2, y2] = bq(Math.min(1, t + .02)), L = Math.hypot(x2 - x, y2 - y) || 1, dx = (x2 - x) / L, dy = (y2 - y) / L, nx = -dy, ny = dx, f = 3.6 - t * 1.6; fr += `M${F(x)} ${F(y)} l${F(nx * f + dx * 2)} ${F(ny * f + dy * 2)} M${F(x)} ${F(y)} l${F(-nx * f + dx * 2)} ${F(-ny * f + dy * 2)} `; }
+    const d = `M${p0[0]} ${p0[1]} Q${p1[0]} ${p1[1]} ${p2[0]} ${p2[1]}`;
+    return `<path d="${fr}" stroke="${esc}" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${esc}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="${fr}" stroke="${cor}" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${cor}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  };
+  const axo = (corpo, cab, esc, gc, ge, pinta) => `<g transform="translate(-44 -48)">
+    <path d="M86 60 C98 52 110 44 124 40 C124 52 116 64 100 72 C94 75 88 72 86 68Z" fill="url(#${corpo})" stroke="${esc}" stroke-width="1.6" stroke-linejoin="round" opacity=".95"/>
+    <path d="M84 74 C86 80 84 84 80 86 M90 72 C94 78 96 82 94 86 M40 76 C38 82 34 86 30 88 M54 78 C54 84 56 88 60 90" stroke="${esc}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M84 74 C86 80 84 84 80 86 M90 72 C94 78 96 82 94 86 M40 76 C38 82 34 86 30 88 M54 78 C54 84 56 88 60 90" stroke="${pinta}" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M34 64 C38 52 58 50 76 54 C92 57 100 62 96 72 C92 80 74 82 58 80 C44 79 32 74 34 64Z" fill="url(#${corpo})" stroke="${esc}" stroke-width="1.8"/>
+    <path d="M56 56 C66 54 78 56 88 60" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/>
+    <g class="ch-guelras">${[[[24, 40], [14, 30], [12, 16]], [[22, 46], [10, 42], [8, 34]], [[24, 52], [12, 56], [9, 53]], [[62, 38], [70, 26], [80, 16]], [[64, 44], [78, 38], [88, 32]], [[64, 50], [78, 52], [88, 50]]].map(g => guelra(...g, gc, ge)).join('')}</g>
+    <ellipse cx="44" cy="48" rx="24" ry="19" fill="url(#${cab})" stroke="${esc}" stroke-width="2"/>
+    <path d="M28 38 C34 31 46 29 56 32" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".75"/>
+    <ellipse cx="34" cy="46" rx="3.4" ry="3.8" fill="#1A0E14"/><circle cx="35.2" cy="44.6" r="1.3" fill="#fff"/><ellipse cx="54" cy="46" rx="3.4" ry="3.8" fill="#1A0E14"/><circle cx="55.2" cy="44.6" r="1.3" fill="#fff"/>
+    <path class="ch-boca" d="M30 54 C36 61 52 61 58 54" stroke="#5E1E34" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <ellipse cx="27" cy="53" rx="4" ry="2.2" fill="#FF7A9E" opacity=".45"/><ellipse cx="61" cy="53" rx="4" ry="2.2" fill="#FF7A9E" opacity=".45"/></g>`;
+  /* pessoas */
+  const agricultora = (x, y) => `<g transform="translate(${x} ${y}) scale(1.38)">
+    <ellipse cx="0" cy="1" rx="15" ry="2.6" fill="#2A1A0A" opacity=".25"/>
+    <path d="M-6 0 v-14 M5 0 v-14" stroke="#9A6440" stroke-width="4.4" stroke-linecap="round"/><path d="M-10 0 h7 M2 0 h8" stroke="#5E3A22" stroke-width="3.6" stroke-linecap="round"/><path d="M-9 -.6 h5 M3 -.6 h5" stroke="#8A5A3A" stroke-width="1" stroke-linecap="round"/>
+    <path d="M-14 -12 C-15 -26 -11 -36 0 -37 C11 -36 15 -26 14 -12 C8 -10 -8 -10 -14 -12Z" fill="url(#chSaia)" stroke="#14244A" stroke-width="1.4"/>
+    <path d="M-13.6 -15 C-8 -13 8 -13 13.6 -15" stroke="#FFC83D" stroke-width="1.6" fill="none"/><path d="M-13.4 -18 C-8 -16 8 -16 13.4 -18" stroke="#E0458A" stroke-width="1.2" fill="none" stroke-dasharray="2 1.6"/>
+    <path d="M-6 -36 C-7 -26 -6 -18 -4 -12 M5 -36 C6 -26 5 -18 3 -12" stroke="#3A5AA0" stroke-width="1" fill="none" opacity=".7"/>
+    <path d="M-12 -36 C-13 -46 -8 -53 0 -53 C8 -53 13 -46 12 -36 L13 -27 C6 -25 -6 -25 -13 -27Z" fill="url(#chBlusa)" stroke="#0E5A5A" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M-7 -52 C-5 -46 5 -46 7 -52" fill="#FFF6E6" stroke="#0E5A5A" stroke-width=".9"/>
+    <g stroke-width=".6">${[[-5, -47, '#E0458A'], [0, -45.4, '#FFC83D'], [5, -47, '#E0458A'], [-8.6, -43, '#FF8A3A'], [8.6, -43, '#FF8A3A']].map(([fx, fy, fc]) => `<g>${[0, 1, 2, 3, 4].map(k => `<circle cx="${F(fx + Math.cos(k * 1.256) * 1.3)}" cy="${F(fy + Math.sin(k * 1.256) * 1.3)}" r="1" fill="${fc}" stroke="#7A1E3A"/>`).join('')}<circle cx="${fx}" cy="${fy}" r=".6" fill="#fff"/></g>`).join('')}</g>
+    <path d="M-10 -40 l2 1.6 l2 -1.6 l2 1.6 l2 -1.6 l2 1.6 l2 -1.6 l2 1.6 l2 -1.6 l2 1.6 l2 -1.6" stroke="#FFF2B0" stroke-width=".9" fill="none"/>
+    <path d="M-5 -46 q-1 -3 1 -4 M5 -46 q1 -3 -1 -4" stroke="#3FA864" stroke-width=".9" fill="none"/>
+    <path d="M-12 -30 C-6 -28 6 -28 12 -30" stroke="#0E5A5A" stroke-width=".8" fill="none" opacity=".6"/>
+    <path d="M-11 -48 C-17 -42 -18 -34 -16 -28" stroke="#0E5A5A" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M-11 -48 C-17 -42 -18 -34 -16 -28" stroke="#3EC2B8" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M-17.4 -32 h3.4" stroke="#E0458A" stroke-width="1.4"/>
+    <circle cx="-16" cy="-26.6" r="2.8" fill="#A86A44" stroke="#4E2A14" stroke-width=".9"/>
+    <g id="ch-braco-ag" style="transform-origin:11px -48px"><path d="M11 -48 C17 -54 20 -60 21 -66" stroke="#0E5A5A" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M11 -48 C17 -54 20 -60 21 -66" stroke="#3EC2B8" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M18 -58.6 l3.2 1.4" stroke="#E0458A" stroke-width="1.4"/><circle cx="21.4" cy="-68" r="3" fill="#A86A44" stroke="#4E2A14" stroke-width=".9"/><path d="M20 -70.6 l-.6 -2 M22 -70.8 l.2 -2.2" stroke="#4E2A14" stroke-width=".8" stroke-linecap="round"/></g>
+    <path d="M-3.4 -52 v-4 h6.8 v4Z" fill="#9A6440"/>
+    <path d="M-2 -60 C-13 -60 -13 -77 0 -77 C13 -77 13 -60 2 -60Z" fill="#2A1A14"/>
+    <path d="M-8.4 -64 C-11 -56 -9 -50 -6.6 -43" stroke="#2A1A14" stroke-width="3.6" fill="none" stroke-linecap="round"/><path d="M-9.6 -58 l2.4 .6 M-8.8 -53 l2.4 .6 M-7.8 -48 l2.4 .6" stroke="#5A3A2A" stroke-width=".8"/><circle cx="-6.6" cy="-43" r="1.7" fill="#E0458A" stroke="#8A1A4A" stroke-width=".5"/>
+    <ellipse cx="0" cy="-65" rx="8.2" ry="9.2" fill="url(#chPele1)" stroke="#4E2A14" stroke-width="1.3"/>
+    <circle cx="-8" cy="-62.6" r="1.1" fill="#FFC83D" stroke="#A86A08" stroke-width=".4"/><circle cx="8" cy="-62.6" r="1.1" fill="#FFC83D" stroke="#A86A08" stroke-width=".4"/>
+    <path d="M-5.6 -68.6 q2 -1.2 4 -.2 M1.8 -68.8 q2 -1 4 .2" stroke="#2A1A14" stroke-width=".9" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-3.4" cy="-65.4" rx="1.3" ry="1.6" fill="#1A0E0A"/><ellipse cx="3.6" cy="-65.4" rx="1.3" ry="1.6" fill="#1A0E0A"/><circle cx="-3" cy="-66" r=".5" fill="#fff"/><circle cx="4" cy="-66" r=".5" fill="#fff"/>
+    <path d="M0 -64.2 q.8 1.6 -.2 2.4" stroke="#7A3E20" stroke-width=".8" fill="none" stroke-linecap="round"/>
+    <path d="M-3 -60.4 C-1.6 -58.4 1.8 -58.4 3.2 -60.4" fill="#fff" stroke="#6E2E14" stroke-width=".9" stroke-linecap="round"/>
+    <ellipse cx="-5.4" cy="-61.8" rx="1.9" ry="1.1" fill="#E07A5A" opacity=".55"/><ellipse cx="5.6" cy="-61.8" rx="1.9" ry="1.1" fill="#E07A5A" opacity=".55"/>
+    <path d="M-21 -71 C-13 -75 13 -75 21 -71 C15 -67.6 -15 -67.6 -21 -71Z" fill="url(#chPalha)" stroke="#8A6A2A" stroke-width="1.1"/>
+    <path d="M-8.4 -72.4 C-8.4 -83 8.4 -83 8.4 -72.4Z" fill="url(#chPalha)" stroke="#8A6A2A" stroke-width="1.1"/>
+    <g stroke="#B08A3A" stroke-width=".5" opacity=".8" fill="none"><path d="M-17 -72.6 l3 2 M-13 -73.4 l3 2.4 M-9 -73.8 l2 2.6 M9 -73.8 l-2 2.6 M13 -73.4 l-3 2.4 M17 -72.6 l-3 2 M-15 -70 l3 -2 M15 -70 l-3 -2"/><path d="M-6 -76 h12 M-7 -78.4 h14 M-5 -80.6 h10"/></g>
+    <path d="M-8.4 -74.4 h16.8" stroke="#E0458A" stroke-width="1.8"/><path d="M-8.4 -74.4 h16.8" stroke="#FFC83D" stroke-width=".6" stroke-dasharray="1.4 1.4"/>
+    <path d="M-5 -80 q3 -2 7 -1.4" stroke="#FFF2C0" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <rect x="-24" y="-84" width="50" height="86" fill="transparent"/></g>`;
+  const barqueiro = (x, y) => `<g transform="translate(${x} ${y}) scale(1.36)">
+    <path d="M-5 0 v-16 M5 0 v-16" stroke="#3A3A48" stroke-width="5" stroke-linecap="round"/><path d="M-5 -6 v-9" stroke="#5A5A6A" stroke-width="1" opacity=".6"/><path d="M-8 0 h5 M3 0 h6" stroke="#2A1E14" stroke-width="3" stroke-linecap="round"/>
+    <path d="M-11 -14 C-12 -32 -8 -40 0 -41 C8 -40 12 -32 11 -14Z" fill="url(#chCamisa)" stroke="#7A2A10" stroke-width="1.4"/>
+    <path d="M0 -40 V-15" stroke="#A8380E" stroke-width=".9"/><g fill="#FFF2E0">${[-36, -30, -24, -18].map(cy => `<circle cx="1.6" cy="${cy}" r=".7"/>`).join('')}</g>
+    <path d="M3.6 -33 h5 v4.4 h-5Z" fill="none" stroke="#A8380E" stroke-width=".8"/>
+    <path d="M-3.6 -41 L0 -37 L3.6 -41" fill="#FFF2E0" stroke="#A8380E" stroke-width=".8"/>
+    <path d="M-11 -20 C-6 -18 6 -18 11 -20" stroke="#5A3A22" stroke-width="2" fill="none"/>
+    <path d="M9 -36 C12 -42 13 -46 14 -50 M-9 -36 C-4 -27 6 -27 15 -30" stroke="#A8380E" stroke-width="6.4" fill="none" stroke-linecap="round"/><path d="M9 -36 C12 -42 13 -46 14 -50 M-9 -36 C-4 -27 6 -27 15 -30" stroke="#E0602A" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+    <path d="M12.6 -44 l3 .8 M9 -29 l2 2.4" stroke="#7A4A2E" stroke-width="3.4" stroke-linecap="round"/>
+    <circle cx="14.6" cy="-51" r="2.8" fill="#7A4A2E" stroke="#3E2010" stroke-width=".9"/><circle cx="16" cy="-30" r="2.8" fill="#7A4A2E" stroke="#3E2010" stroke-width=".9"/>
+    <path d="M-3 -41 v-4 h6 v4Z" fill="#7A4A2E"/>
+    <ellipse cx="0" cy="-51" rx="7.6" ry="8.2" fill="url(#chPele2)" stroke="#3E2010" stroke-width="1.3"/>
+    <ellipse cx="-7.4" cy="-50" rx="1.4" ry="2" fill="#7A4A2E" stroke="#3E2010" stroke-width=".7"/>
+    <path d="M-8 -54 C-8 -63 8 -63 8 -54 L14 -54 C14 -51.6 8 -51.6 6 -52.6 H-8Z" fill="#2E6AB0" stroke="#163A6A" stroke-width="1.1"/><path d="M-4 -59 q4 -2.6 8 -.6" stroke="#8AC0FF" stroke-width="1.2" fill="none" stroke-linecap="round"/><circle cx="0" cy="-61.6" r="1" fill="#163A6A"/>
+    <path d="M-5.2 -54 q2 -1 3.6 0 M2 -54 q2 -1 3.6 0" stroke="#1A0E0A" stroke-width=".9" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-2.8" cy="-51.2" rx="1.2" ry="1.5" fill="#1A0E0A"/><ellipse cx="3.4" cy="-51.2" rx="1.2" ry="1.5" fill="#1A0E0A"/><circle cx="-2.4" cy="-51.8" r=".45" fill="#fff"/><circle cx="3.8" cy="-51.8" r=".45" fill="#fff"/>
+    <path d="M.4 -50 q1 1.6 0 2.4" stroke="#4E2410" stroke-width=".8" fill="none"/>
+    <path d="M-4 -47.2 h8.4" stroke="#2A1A10" stroke-width="1.4" stroke-linecap="round" opacity=".7"/><path d="M-3 -45.4 C-1.4 -43.6 2 -43.6 3.6 -45.4" stroke="#3E1A0A" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-4.6" cy="-47.6" rx="1.6" ry=".9" fill="#C86A4A" opacity=".45"/><ellipse cx="5" cy="-47.6" rx="1.6" ry=".9" fill="#C86A4A" opacity=".45"/>
+    <rect x="-20" y="-66" width="40" height="68" fill="transparent"/></g>`;
+  const elodea = (x, y, h, esc, cor) => { let d = '', fol = ''; const n = Math.round(h / 9); for (let i = 0; i <= n; i++) { const yy = y - i * h / n, xx = x + Math.sin(i * .7) * 5; d += (i ? 'L' : 'M') + F(xx) + ' ' + F(yy) + ' '; if (i > 0) [-1, 1].forEach(l => { fol += `<ellipse cx="${F(xx + l * 5)}" cy="${F(yy + 1)}" rx="5" ry="1.7" transform="rotate(${l * -24} ${F(xx + l * 5)} ${F(yy + 1)})" fill="${cor}" stroke="${esc}" stroke-width=".7"/>`; }); } return `<g class="balanca" style="animation-duration:${F(R(4, 6))}s;transform-origin:${x}px ${y}px"><path d="${d}" stroke="${esc}" stroke-width="2.4" fill="none" stroke-linejoin="round"/>${fol}</g>`; };
+  const cabomba = (x, y, h) => { let s2 = `<path d="M${x} ${y} C${x - 6} ${y - h * .4} ${x + 6} ${y - h * .7} ${x} ${y - h}" stroke="#2E6A4A" stroke-width="2" fill="none"/>`; for (let i = 1; i < 6; i++) { const yy = y - i * h / 6, xx = x + Math.sin(i) * 3; s2 += `<g stroke="#4EB88A" stroke-width="1.1" fill="none" stroke-linecap="round">${[-60, -35, -12, 12, 35, 60].map(a => { const r = a * Math.PI / 180; return `<path d="M${F(xx)} ${F(yy)} l${F(Math.sin(r) * 9)} ${F(-Math.cos(r) * 7)}"/>`; }).join('')}</g>`; } return `<g class="balanca" style="animation-duration:${F(R(3.6, 5))}s;transform-origin:${x}px ${y}px">${s2}</g>`; };
+  const trajMini = (teto, casco, musicos) => `<path d="M-30 -1 C-24 4 24 4 30 -1 L28 -7 H-28Z" fill="${casco}" stroke="#5E0E2A" stroke-width="1"/><path d="M-27 -4 H27" stroke="#FFF2B0" stroke-width="1.4"/><g fill="#fff">${[-20, -10, 0, 10, 20].map(x => `<circle cx="${x}" cy="-1.6" r="1.1"/>`).join('')}</g>
+    <path d="M-24 -7 V-22 M-6 -7 V-22 M10 -7 V-22 M24 -7 V-22" stroke="#1E4A8A" stroke-width="1.3"/>
+    <path d="M-28 -22 C-14 -27 14 -27 28 -22 V-19.6 H-28Z" fill="${teto}" stroke="#8A5A08" stroke-width=".8"/><g fill="#3FA864">${Array.from({ length:7 }, (_, k) => `<path d="M${-28 + k * 8} -19.6 q4 4 8 0Z"/>`).join('')}</g>
+    <path d="M-36 -7 V-20 C-36 -30 -22 -30 -22 -20 V-7" fill="none" stroke="${casco}" stroke-width="3"/><path d="M-35 -20 C-35 -28 -23 -28 -23 -20" fill="#FFF2B0" stroke="#8A5A08" stroke-width=".6"/>${[[-32, -22, '#E0458A'], [-29, -25, '#FFC83D'], [-26, -22, '#3E9AE0']].map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="1.5" fill="${c}"/>`).join('')}
+    ${musicos ? `<g><circle cx="-14" cy="-13" r="2.6" fill="#A86A44" stroke="#4E2A14" stroke-width=".5"/><path d="M-17 -7 v-4 h6 v4Z" fill="#2E2E3A"/><ellipse cx="-11" cy="-9" rx="2.6" ry="1.8" fill="#C8863A" stroke="#6E3E14" stroke-width=".5"/><path d="M-9 -9.6 l5 -2" stroke="#6E3E14" stroke-width=".8"/>
+      <circle cx="-1" cy="-13.4" r="2.6" fill="#7A4A2E" stroke="#3E2010" stroke-width=".5"/><path d="M-4 -7 v-4 h6 v4Z" fill="#E5392C"/><path d="M1 -11.4 l6 -2.4" stroke="#FFC83D" stroke-width="1.4" stroke-linecap="round"/><circle cx="7.4" cy="-13.8" r="1.4" fill="#FFC83D"/>
+      <circle cx="12" cy="-13" r="2.6" fill="#C8865A" stroke="#4E2A14" stroke-width=".5"/><path d="M9 -7 v-4 h6 v4Z" fill="#3E9AE0"/><path d="M13 -9 l4 -5" stroke="#8A4A1E" stroke-width="1.6" stroke-linecap="round"/><path d="M11 -12 l8 3" stroke="#3E2010" stroke-width=".5"/></g>` : `<path d="M-2 -7 v-6" stroke="#7A4A2E" stroke-width="2.4"/>`}
+    <path d="M26 -7 v-12" stroke="#2E2E3A" stroke-width="2"/><circle cx="26" cy="-21" r="2.2" fill="#8A5A3A"/><path d="M30 -30 L34 4" stroke="#7A5232" stroke-width=".9"/>`;
+  const desenhoLixo = {
+    garrafa:'<g transform="rotate(70)"><path d="M-6 -18 h12 v5 C10 -10 11 -6 11 0 V18 C11 22 8 23 0 23 C-8 23 -11 22 -11 18 V0 C-11 -6 -10 -10 -6 -13Z" fill="#B8E8E0" fill-opacity=".8" stroke="#3E8A7A" stroke-width="1.6"/><rect x="-5" y="-25" width="10" height="8" rx="2" fill="#E5392C" stroke="#8A1A10" stroke-width="1.2"/><rect x="-11" y="2" width="22" height="8" fill="#4E9AE0" stroke="#1E4A8A" stroke-width="1"/><path d="M-6 -6 V16" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/></g>',
+    sacola:'<path d="M-16 -6 C-18 8 -12 20 0 22 C12 20 18 8 16 -6Z" fill="#F4F8FF" fill-opacity=".75" stroke="#8A9AB8" stroke-width="1.5"/><path d="M-10 -6 C-12 -17 -3 -18 -3 -7 M10 -6 C12 -17 3 -18 3 -7" stroke="#8A9AB8" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M-8 3 q4 7 0 12 M6 1 q-3 9 2 14" stroke="#C9D4E6" stroke-width="1.3" fill="none"/>',
+    lata:'<g transform="rotate(-14)"><rect x="-18" y="-10" width="36" height="20" rx="4" fill="#C9CED8" stroke="#5A6070" stroke-width="1.6"/><rect x="-6" y="-10" width="12" height="20" fill="#3FA864"/><ellipse cx="18" cy="0" rx="3.4" ry="10" fill="#E9EEF6" stroke="#5A6070" stroke-width="1.3"/><path d="M-15 -6 H13" stroke="#fff" stroke-width="1.8" opacity=".7" stroke-linecap="round"/></g>',
+    copo:'<g transform="rotate(100)"><path d="M-10 -14 H10 L7 14 H-7Z" fill="#FFFFFF" stroke="#9AA4B8" stroke-width="1.5" stroke-linejoin="round"/><path d="M-9 -8 H9 M-8 0 H8" stroke="#FF8A5A" stroke-width="2.4"/><ellipse cx="0" cy="-14" rx="10" ry="2.4" fill="#E6ECF4" stroke="#9AA4B8" stroke-width="1.2"/><path d="M-5 -10 L-3 10" stroke="#fff" stroke-width="1.6" opacity=".8"/></g>'
+  };
+  const tule = (x, y, h, n, cor, esc, cls) => `<g class="${cls || 'balanca'}" style="animation-duration:${F(R(3.5, 5.5))}s;animation-delay:${F(R(-4, 0))}s;transform-origin:${x}px ${y}px">${Array.from({ length:n }, (_, i) => { const dx = (i - (n - 1) / 2) * 4, L = h * R(.7, 1.05), cx = x + dx + R(-6, 6); return `<path d="M${F(x + dx)} ${y} Q${F(cx)} ${F(y - L * .55)} ${F(cx + R(-8, 8))} ${F(y - L)}" stroke="${esc}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M${F(x + dx)} ${y} Q${F(cx)} ${F(y - L * .55)} ${F(cx + R(-8, 8))} ${F(y - L)}" stroke="${cor}" stroke-width="2" fill="none" stroke-linecap="round"/>`; }).join('')}</g>`;
+  const tifa = (x, y, h) => `<path d="M${x} ${y} V${y - h}" stroke="#4E6A2A" stroke-width="2"/><rect x="${x - 2.6}" y="${y - h + 4}" width="5.2" height="16" rx="2.6" fill="#7A4A2A" stroke="#3E2414" stroke-width=".8"/><path d="M${x} ${y - h + 4} v-6" stroke="#4E6A2A" stroke-width="1.2"/>`;
+  const vitoria = (x, y, r) => `<g><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${F(r * .32)}" fill="url(#chLirio)" stroke="#1E5A2A" stroke-width="1.1"/><path d="M${x} ${y} L${x + r} ${F(y - r * .08)}" stroke="#1E5A2A" stroke-width="1.1"/><path d="M${F(x - r * .6)} ${F(y - r * .1)} q${F(r * .4)} ${F(-r * .12)} ${F(r * .8)} 0" stroke="#B8E8A0" stroke-width="1" fill="none" opacity=".8"/></g>`;
+  const flor = (x, y, r, cor, esc) => `<g>${[0, 1, 2, 3, 4].map(k => { const a = k * 1.2566 - 1.57; return `<circle cx="${F(x + Math.cos(a) * r * .9)}" cy="${F(y + Math.sin(a) * r * .9)}" r="${F(r * .62)}" fill="${cor}" stroke="${esc}" stroke-width=".6"/>`; }).join('')}<circle cx="${x}" cy="${y}" r="${F(r * .45)}" fill="#FFE27A" stroke="#B07A08" stroke-width=".5"/></g>`;
+  const pompom = (x, y, r) => `<g><path d="${copa(x, y, r, r * .85, 10, .35)}" fill="url(#chCemp)" stroke="#A8480A" stroke-width="1"/><path d="${copa(x, y - r * .1, r * .55, r * .45, 8, .35)}" fill="#FFC83D" stroke="#C8740A" stroke-width=".7"/><path d="M${F(x - r * .5)} ${F(y - r * .35)} q${F(r * .3)} ${F(-r * .35)} ${F(r * .7)} ${F(-r * .35)}" stroke="#FFF3B0" stroke-width="1.2" fill="none" opacity=".8" stroke-linecap="round"/></g>`;
+  const alface = (x, y) => `<g><path d="${copa(x, y - 5, 9, 6, 8, .4)}" fill="url(#chAlface)" stroke="#2E6A22" stroke-width="1"/><path d="M${x - 4} ${y - 7} q4 -4 8 0" stroke="#E6FFC8" stroke-width="1" fill="none"/></g>`;
+  const pato = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="2" rx="14" ry="2.6" fill="#E6F6FF" opacity=".5"/><path d="M-13 -2 C-14 -10 -6 -12 2 -11 C8 -11 13 -8 12 -2 C9 2 -9 2 -13 -2Z" fill="url(#chPato)" stroke="#4E3A24" stroke-width="1.3"/><path d="M-12 -4 l-5 -3 l1 5Z" fill="#6E5236" stroke="#3E2A16" stroke-width=".8"/><path d="M-6 -7 q6 -3 12 0" stroke="#E6D6C0" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M-2 -6 h7" stroke="#3E6AB0" stroke-width="2"/><circle cx="8" cy="-15" r="5.4" fill="#8A6A48" stroke="#4E3A24" stroke-width="1.1"/><path d="M12.6 -15.4 l6 1 l-6 2Z" fill="#E8B43A" stroke="#8A5A0A" stroke-width=".8"/><circle cx="9.4" cy="-16" r="1.2" fill="#12121A"/><circle cx="9.8" cy="-16.4" r=".45" fill="#fff"/><path d="M4 -17 h8" stroke="#4E3A24" stroke-width=".9" opacity=".6"/></g>`;
+  /* ---------- cena ---------- */
+  const velhaCam = ['#5E3E22', '#7A8A3A', '#4E3420', '#6E7A34', '#46301C', '#62702E', '#3E2A18'];
+  const svg = `<svg viewBox="0 0 800 500" role="img" aria-label="Chinampas de Xochimilco: jardins construídos dentro do lago, com canais, árvores ahuejote, uma trajinera colorida, vulcões ao longe e axolotes debaixo da água">
+    <defs>
+      <linearGradient id="chCeu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5FB2EC"/><stop offset=".62" stop-color="#BFE2F6"/><stop offset="1" stop-color="#FFEBD2"/></linearGradient>
+      <linearGradient id="chVulc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9AA6C8"/><stop offset="1" stop-color="#C6CEE0"/></linearGradient>
+      <linearGradient id="chVulc2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#AEB8D4"/><stop offset="1" stop-color="#D2D8E8"/></linearGradient>
+      <linearGradient id="chNeve" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DCE6F6"/></linearGradient>
+      <linearGradient id="chLonge" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A8C8A8"/><stop offset="1" stop-color="#7EA88A"/></linearGradient>
+      <linearGradient id="chSup" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ED2D8"/><stop offset=".5" stop-color="#5EB0B8"/><stop offset="1" stop-color="#3A96A4"/></linearGradient>
+      <linearGradient id="chAgua" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3EA8B4"/><stop offset=".45" stop-color="#22808E"/><stop offset="1" stop-color="#14505E"/></linearGradient>
+      <linearGradient id="chRaio" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+      <linearGradient id="chProf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7EE0E0" stop-opacity=".22"/><stop offset=".35" stop-color="#1E7A8A" stop-opacity="0"/><stop offset="1" stop-color="#062A3A" stop-opacity=".45"/></linearGradient>
+      <linearGradient id="chBrilhoSup" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E6FFFF" stop-opacity=".45"/><stop offset="1" stop-color="#E6FFFF" stop-opacity="0"/></linearGradient>
+      <radialGradient id="chSeixo" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#C8BAA0"/><stop offset="1" stop-color="#6E6050"/></radialGradient>
+      <pattern id="chTrama" width="14" height="9" patternUnits="userSpaceOnUse"><path d="M0 9 L14 0 M-7 4.5 L7 -4.5 M7 13.5 L21 4.5" stroke="#6E7E26" stroke-width="1.1" opacity=".55"/><path d="M0 0 L14 9 M-7 4.5 L7 13.5 M7 -4.5 L21 4.5" stroke="#F4F2A8" stroke-width=".8" opacity=".45"/></pattern>
+      <radialGradient id="chLamaB" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#8E6440" stop-opacity=".8"/><stop offset="1" stop-color="#8E6440" stop-opacity="0"/></radialGradient>
+      <linearGradient id="chMonarca" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFA23A"/><stop offset="1" stop-color="#E0600A"/></linearGradient>
+      <linearGradient id="chFundo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E5A3E"/><stop offset="1" stop-color="#3A2C1C"/></linearGradient>
+      <linearGradient id="chTopo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A6440"/><stop offset="1" stop-color="#5E3E22"/></linearGradient>
+      <linearGradient id="chTopoV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7A6A3A"/><stop offset="1" stop-color="#4E3A20"/></linearGradient>
+      <linearGradient id="chJunco" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D2D67A"/><stop offset="1" stop-color="#94A444"/></linearGradient>
+      <linearGradient id="chLama" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E4A2C"/><stop offset="1" stop-color="#3E2816"/></linearGradient>
+      <linearGradient id="chMolha" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#14303A" stop-opacity=".55"/><stop offset=".8" stop-color="#1E4A5A" stop-opacity=".35"/><stop offset="1" stop-color="#2E6A7A" stop-opacity="0"/></linearGradient>
+      <linearGradient id="chMadeira" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B8885A"/><stop offset=".5" stop-color="#8E5E36"/><stop offset="1" stop-color="#5E3A1E"/></linearGradient>
+      <linearGradient id="chAhue" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A8C8A0"/><stop offset=".55" stop-color="#6E9A72"/><stop offset="1" stop-color="#46705A"/></linearGradient>
+      <linearGradient id="chAhue2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#B4D2A4"/><stop offset=".55" stop-color="#7EA878"/><stop offset="1" stop-color="#4E7A5E"/></linearGradient>
+      <linearGradient id="chFolhaM" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B8E66A"/><stop offset="1" stop-color="#5E9A2E"/></linearGradient>
+      <linearGradient id="chFolhaF" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ED06A"/><stop offset="1" stop-color="#2E8A3E"/></linearGradient>
+      <radialGradient id="chFolhaA" cx=".45" cy=".35" r=".8"><stop offset="0" stop-color="#6EC08A"/><stop offset="1" stop-color="#1E6A4A"/></radialGradient>
+      <linearGradient id="chEspiga" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E06AB0"/><stop offset=".5" stop-color="#8E3EA8"/><stop offset="1" stop-color="#4E2A8A"/></linearGradient>
+      <linearGradient id="chEspiga2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE27A"/><stop offset="1" stop-color="#F0A81E"/></linearGradient>
+      <radialGradient id="chAbob" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#FFC060"/><stop offset="1" stop-color="#E06A12"/></radialGradient>
+      <radialGradient id="chCemp" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#FFB040"/><stop offset="1" stop-color="#E8600A"/></radialGradient>
+      <radialGradient id="chAlface" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#D6F49A"/><stop offset="1" stop-color="#6EAE3A"/></radialGradient>
+      <radialGradient id="chLirio" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#8ED86A"/><stop offset="1" stop-color="#3E8A3A"/></radialGradient>
+      <linearGradient id="chPato" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B08A62"/><stop offset="1" stop-color="#7A5A3A"/></linearGradient>
+      <linearGradient id="chCanoa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9A6A42"/><stop offset="1" stop-color="#5A3820"/></linearGradient>
+      <linearGradient id="chTraj" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF6A8E"/><stop offset="1" stop-color="#C8285A"/></linearGradient>
+      <linearGradient id="chTrajT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD84A"/><stop offset="1" stop-color="#F0A81E"/></linearGradient>
+      <linearGradient id="chPalha" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D88A"/><stop offset="1" stop-color="#C8A04A"/></linearGradient>
+      <linearGradient id="chSaia" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A5AA8"/><stop offset="1" stop-color="#1E3A7A"/></linearGradient>
+      <linearGradient id="chBlusa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3EC2B8"/><stop offset="1" stop-color="#1E8A86"/></linearGradient>
+      <linearGradient id="chCamisa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8A4A"/><stop offset="1" stop-color="#D2501E"/></linearGradient>
+      <radialGradient id="chPele1" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#C8865A"/><stop offset="1" stop-color="#9A6440"/></radialGradient>
+      <radialGradient id="chPele2" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#A86E46"/><stop offset="1" stop-color="#7A4A2E"/></radialGradient>
+      <linearGradient id="chCesto" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E2B870"/><stop offset="1" stop-color="#A8763A"/></linearGradient>
+      <linearGradient id="chXc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFDCE8"/><stop offset="1" stop-color="#F49AB8"/></linearGradient>
+      <radialGradient id="chXh" cx=".42" cy=".3" r=".75"><stop offset="0" stop-color="#FFF0F4"/><stop offset=".6" stop-color="#FFC2D6"/><stop offset="1" stop-color="#F08EB2"/></radialGradient>
+      <linearGradient id="chWc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8A8A66"/><stop offset="1" stop-color="#4E5236"/></linearGradient>
+      <radialGradient id="chWh" cx=".42" cy=".3" r=".75"><stop offset="0" stop-color="#A8A884"/><stop offset=".6" stop-color="#7A7A58"/><stop offset="1" stop-color="#55583C"/></radialGradient>
+      <radialGradient id="chSolG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF6C8"/><stop offset=".55" stop-color="#FFD84A"/><stop offset="1" stop-color="#F0A81E"/></radialGradient>
+      <radialGradient id="chVinheta" cx=".5" cy=".45" r=".78"><stop offset=".62" stop-color="#0A1A2A" stop-opacity="0"/><stop offset="1" stop-color="#0A1A2A" stop-opacity=".34"/></radialGradient>
+      <linearGradient id="chNevoa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4E4" stop-opacity="0"/><stop offset="1" stop-color="#FFF4E4" stop-opacity=".7"/></linearGradient>
+      <pattern id="chCaus" width="80" height="30" patternUnits="userSpaceOnUse"><path d="M0 15 C10 5 20 25 30 12 C40 2 50 22 60 14 C68 8 74 18 80 15 M10 28 C18 22 26 30 34 26 M46 4 C54 0 62 8 70 4" stroke="#fff" stroke-width="1.5" fill="none" opacity=".45"/></pattern>
+      <clipPath id="chCorte"><rect x="${FL + 3}" y="200" width="${FR - FL - 6}" height="280"/></clipPath>
+      <filter id="chGrao"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .055 0"/></filter>
+    </defs>
+    <rect width="800" height="300" fill="url(#chCeu)"/>
+    <g id="ch-sol" class="toque"><circle cx="86" cy="58" r="46" fill="#FFE27A" opacity=".25"/><circle cx="86" cy="58" r="33" fill="#FFE27A" opacity=".3"/><circle cx="86" cy="58" r="23" fill="url(#chSolG)" stroke="#F0A81E" stroke-width="2"/><path d="M74 50 q7 -8 17 -8" stroke="#FFF6C8" stroke-width="3.4" fill="none" stroke-linecap="round"/></g>
+    <g class="deriva"><use href="#nuvem" x="180" y="26" width="96" height="46" style="color:#fff" opacity=".92"/><use href="#nuvem" x="640" y="40" width="70" height="34" style="color:#fff" opacity=".8"/></g>
+    <g stroke="#4E5A7A" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".7"><path d="M300 70 q6 -6 12 0 q6 -6 12 0"/><path d="M330 90 q4 -4 8 0 q4 -4 8 0"/></g>
+    <g id="ch-vulcoes" class="toque">
+      <path d="M318 200 L432 86 C438 80 446 80 452 86 L590 200Z" fill="url(#chVulc)"/>
+      <path d="M432 90 L392 150 L362 200 H404 L420 150 L438 112Z" fill="#C2CAE2" opacity=".55"/>
+      <path d="M440 96 L428 160 L436 200 H462 L452 150Z" fill="#B4BEDA" opacity=".45"/>
+      <path d="M446 84 C452 86 470 104 590 200 H486 C494 170 476 130 446 84Z" fill="#6E7AA2" opacity=".42"/>
+      <path d="M454 100 L500 160 L520 200 H548 L496 146Z" fill="#5E6A92" opacity=".25"/>
+      <g stroke="#7E8AAE" stroke-width="1.2" fill="none" opacity=".5" stroke-linecap="round"><path d="M436 104 L420 144 L414 176 M444 100 L446 150 L440 190 M452 104 L476 150 L488 186 M428 120 L396 168"/></g>
+      <path d="M418 100 L432 86 C438 80 446 80 452 86 L468 102 L462 108 L456 104 L452 116 L446 104 L440 118 L434 106 L426 112 L424 104Z" fill="url(#chNeve)" stroke="#B8C4DA" stroke-width="1"/>
+      <path d="M446 82 C450 84 460 94 468 102 L462 108 L456 104 L452 116 L448 98Z" fill="#C6D2EC"/>
+      <path d="M428 96 q6 -8 12 -12" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M439 118 l-2 8 M452 116 l2 9 M426 112 l-3 6" stroke="#F2F6FF" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M520 200 C540 150 560 138 584 136 C600 128 616 130 630 136 C650 128 668 132 690 142 C720 150 750 176 790 200Z" fill="url(#chVulc2)"/>
+      <path d="M584 136 C574 150 560 172 552 200 H580 C584 174 592 154 600 132Z M630 136 C624 156 620 178 622 200 H646 C640 176 640 156 646 134Z" fill="#C8D0E4" opacity=".55"/>
+      <path d="M690 142 C710 160 724 180 730 200 H790 C760 176 730 152 690 142Z" fill="#8E9ABA" opacity=".4"/>
+      <path d="M566 142 C576 136 590 134 600 132 C612 128 624 130 632 136 C646 130 662 132 676 138 C670 142 662 141 656 145 L650 152 L644 144 C636 142 630 146 626 152 L620 144 C612 144 606 148 600 156 L596 146 C588 144 578 146 566 142Z" fill="url(#chNeve)" stroke="#C4CEE0" stroke-width="1"/>
+      <path d="M632 136 C646 130 662 132 676 138 C670 142 662 141 656 145 L650 152 L644 144Z" fill="#CCD6EE"/>
+      <path d="M574 139 q12 -5 24 -6 M610 131 q10 -2 18 2" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <rect x="300" y="80" width="500" height="120" fill="transparent"/></g>
+    <path d="M0 196 C30 170 70 160 110 168 C150 176 180 160 220 168 C260 176 290 186 320 196Z" fill="#B8C6D6" opacity=".85"/><path d="M60 196 C90 180 130 176 170 184 C200 190 230 186 260 196Z" fill="#A6B8C6" opacity=".7"/>
+    <g opacity=".8">${[[640, 184, 10, 14], [652, 178, 8, 20], [662, 186, 12, 12], [676, 172, 9, 26], [688, 182, 14, 16], [704, 188, 10, 10], [716, 176, 8, 22], [726, 184, 12, 14], [740, 180, 9, 18], [752, 188, 16, 10], [770, 182, 8, 16], [782, 186, 12, 12]].map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#B4BED2"/><rect x="${x + w * .6}" y="${y}" width="${F(w * .4)}" height="${h}" fill="#A4AEC6"/>${h > 15 ? `<path d="M${x + 2} ${y + 4} h${w - 4} M${x + 2} ${y + 9} h${w - 4} M${x + 2} ${y + 14} h${w - 4}" stroke="#CED6E6" stroke-width=".8" stroke-dasharray="1.4 1.4"/>` : ''}`).join('')}</g>
+    <path d="M0 196 C80 184 160 190 240 194 C320 186 400 192 800 194 V204 H0Z" fill="#9ABCA8" opacity=".8"/>
+    <g opacity=".5">${Array.from({ length:44 }, (_, i) => { const x = i * 18.5 + R(-4, 4), y = 199, h = R(9, 15); return `<path d="M${F(x)} ${y} C${F(x - 3.4)} ${F(y - h * .4)} ${F(x - 2.4)} ${F(y - h * .9)} ${F(x)} ${F(y - h)} C${F(x + 2.4)} ${F(y - h * .9)} ${F(x + 3.4)} ${F(y - h * .4)} ${F(x)} ${y}Z" fill="#9EB8B4"/>`; }).join('')}</g>
+    <rect y="170" width="800" height="34" fill="url(#chNevoa)"/>
+    <rect y="200" width="800" height="100" fill="url(#chSup)"/>
+    <rect y="200" width="800" height="40" fill="url(#chCaus)" opacity=".25"/>
+    <g id="ch-longe">
+      ${[[0, 206, 210, 6, '#8CB878'], [250, 205, 230, 6, '#A0C07A'], [520, 206, 280, 6, '#8CB878']].map(([x, y, w, h, c]) => `<path d="M${x} ${y + h} L${x + 6} ${y} H${x + w - 6} L${x + w} ${y + h}Z" fill="${c}" stroke="#5E8A5A" stroke-width=".8"/><path d="M${x + 2} ${y + h} H${x + w - 2}" stroke="#4E7A4A" stroke-width="1.6" opacity=".6"/>`).join('')}
+      <path d="M262 207.4 h80" stroke="#FF8A3A" stroke-width="2.4" stroke-dasharray="6 3" opacity=".85"/><path d="M360 207.4 h70" stroke="#E0458A" stroke-width="2.4" stroke-dasharray="5 3" opacity=".8"/><path d="M20 208 h90" stroke="#B57BFF" stroke-width="2" stroke-dasharray="4 2" opacity=".7"/><path d="M560 208 h70" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="4 2" opacity=".75"/>
+      <g opacity=".22">${Array.from({ length:30 }, (_, i) => { const x = 6 + i * 27 + R(-4, 4), y = 213, h = R(12, 18); return `<path d="M${F(x)} ${y} C${F(x - 6)} ${F(y + h * .4)} ${F(x - 4)} ${F(y + h * .9)} ${F(x)} ${F(y + h)} C${F(x + 4)} ${F(y + h * .9)} ${F(x + 6)} ${F(y + h * .4)} ${F(x)} ${y}Z" fill="#4E8A6E"/>`; }).join('')}</g>
+      <g opacity=".8">${Array.from({ length:30 }, (_, i) => { const x = 6 + i * 27 + R(-4, 4), y = 207, h = R(20, 30); return `<path d="M${F(x)} ${y} C${F(x - 6)} ${F(y - h * .4)} ${F(x - 4)} ${F(y - h * .9)} ${F(x)} ${F(y - h)} C${F(x + 4)} ${F(y - h * .9)} ${F(x + 6)} ${F(y - h * .4)} ${F(x)} ${y}Z" fill="url(#chLonge)" stroke="#6E9A7E" stroke-width=".6"/><path d="M${F(x - 2)} ${F(y - h * .3)} q-1 ${F(-h * .3)} 1 ${F(-h * .55)}" stroke="#D8ECD8" stroke-width=".8" fill="none" opacity=".7"/>`; }).join('')}</g>
+      ${[[-20, 224, 190, 7, '#7EAE6A'], [560, 223, 260, 7, '#88B470']].map(([x, y, w, h, c]) => `<path d="M${x} ${y + h} L${x + 7} ${y} H${x + w - 7} L${x + w} ${y + h}Z" fill="${c}" stroke="#4E7A4A" stroke-width=".9"/><path d="M${x + 10} ${y + 3} H${x + w - 10}" stroke="${x < 0 ? '#FFC83D' : '#E0458A'}" stroke-width="2.4" stroke-dasharray="5 2.4" opacity=".85"/><path d="M${x + 2} ${y + h} H${x + w - 2}" stroke="#3E6A3A" stroke-width="1.8" opacity=".6"/>`).join('')}
+      <g opacity=".25">${[580, 616, 700, 742, 790, 6, 44].map((x, i) => { const y = 231, h = 22 + (i % 3) * 5; return `<path d="M${x} ${y} C${x - 7} ${y + h * .4} ${x - 5} ${y + h * .9} ${x} ${y + h} C${x + 5} ${y + h * .9} ${x + 7} ${y + h * .4} ${x} ${y}Z" fill="#3E7A5E"/>`; }).join('')}</g>
+      <g>${[580, 616, 700, 742, 790, 6, 44].map((x, i) => { const y = 224, h = 34 + (i % 3) * 7; return `<path d="M${x} ${y} C${x - 8} ${y - h * .4} ${x - 6} ${y - h * .9} ${x} ${y - h} C${x + 6} ${y - h * .9} ${x + 8} ${y - h * .4} ${x} ${y}Z" fill="url(#chAhue2)" stroke="#5E8A6E" stroke-width=".8" opacity=".92"/><path d="M${x} ${y} V${y - h * .5}" stroke="#5A4636" stroke-width="1.2"/><path d="M${x - 3} ${F(y - h * .3)} q-1 ${F(-h * .3)} 1.4 ${F(-h * .58)}" stroke="#E6F4DA" stroke-width="1" fill="none" opacity=".6"/>`; }).join('')}</g>
+      ${[[262, 217, .62], [596, 218, .75]].map(([x, y, k]) => `<g transform="translate(${x} ${y}) scale(${k})"><g class="deriva" style="animation-duration:${x > 300 ? 26 : 32}s">${trajMini('#3FA864', '#FF6A8E')}</g></g>`).join('')}
+      <g fill="#fff">${Array.from({ length:16 }, (_, i) => `<rect class="brilho" style="animation-delay:${F(i * .41 % 2.6)}s" x="${F(20 + (i * 97) % 760)}" y="${F(232 + (i * 13) % 60)}" width="${8 + i % 3 * 5}" height="1.8" rx=".9" opacity=".8"/>`).join('')}</g>
+      <g stroke="#E6F6FF" stroke-width="1.2" fill="none" opacity=".7"><path d="M120 236 q6 -2 12 0 M300 246 q6 -2 12 0 M560 240 q6 -2 12 0 M690 252 q6 -2 12 0 M210 258 q6 -2 12 0"/></g>
+    </g>
+    <g id="ch-musicos" class="toque"><g transform="translate(404 228) scale(1.3)"><g id="ch-mus-in">${trajMini('#FFC83D', '#E0458A', true)}</g></g><rect x="360" y="192" width="88" height="46" fill="transparent"/></g>
+    <!-- chinampa antiga (esquerda) -->
+    <g id="ch-velha">
+      <path d="M-10 ${TF} L-10 ${TB} H162 L188 ${TF}Z" fill="url(#chTopoV)" stroke="#3A2A14" stroke-width="1.6"/>
+      ${[0, 1, 2, 3].map(k => `<path d="M${-10} ${TB + 4 + k * 7} H${F(165 + k * 5.6)}" stroke="#4E3A1E" stroke-width="2" opacity=".5"/>`).join('')}
+      <g>${Array.from({ length:7 }, (_, i) => alface(92 + (i % 4) * 18 + (i > 3 ? 9 : 0), 252 + (i > 3 ? 12 : 0))).join('')}</g>
+      <g>${[[8, 246], [22, 244], [36, 246], [50, 244], [64, 246], [14, 258], [30, 258], [46, 258], [62, 258], [76, 256]].map(([x, y], i) => `<path d="M${x} ${y + 6} V${y}" stroke="#2E5A1E" stroke-width="1.6"/><path d="M${x - 5} ${y + 5} l5 -3 l5 3" stroke="#4E8A2E" stroke-width="1.6" fill="none"/>${pompom(x, y - 2, 6.4)}`).join('')}</g>
+      <g class="toque" data-fig="cempasuchil" id="ch-cemp"><g style="animation:flutua 3.4s ease-in-out infinite alternate"><svg x="2" y="214" width="38" height="38" viewBox="0 0 110 110"><use href="#f-cempasuchil"/></svg></g>${brilhoHotspot(38, 220)}<rect x="0" y="212" width="86" height="56" fill="transparent"/></g>
+    </g>
+    <g id="ch-ahue-velho" class="toque"><g class="balanca" style="animation-duration:6s;transform-origin:170px ${TF}px">${ahuejote(170, TF - 2, 236, 46, 'chAhue', '#3E6A4E', '#2E5A3E')}</g></g>
+    <g id="ch-agric" class="toque">${agricultora(96, TF - 5)}</g>
+    <g id="ch-cesto-sem"><path d="M128 ${TF - 4} L130 ${TF - 22} H160 L162 ${TF - 4}Z" fill="url(#chCesto)" stroke="#6E4418" stroke-width="1.4" stroke-linejoin="round"/><path d="M130 ${TF - 16} H160 M129 ${TF - 10} H161" stroke="#8A5A22" stroke-width="1"/><path d="M134 ${TF - 22} l2 18 M142 ${TF - 22} v18 M150 ${TF - 22} v18 M157 ${TF - 22} l-1 18" stroke="#8A5A22" stroke-width=".8" opacity=".7"/></g>
+    
+    <g id="ch-pato" class="toque"><g id="ch-pato-pos" transform="translate(0 0)">${pato(252, 254, .8)}</g><rect x="230" y="234" width="44" height="28" fill="transparent"/></g>
+    <!-- nova chinampa: pegada, estacas de trás, topo, árvores e plantas -->
+    <path id="ch-pegada" d="M${FL} ${AG} L${BL} ${FB} H${BR} L${FR} ${AG}Z" fill="#fff" fill-opacity=".14" stroke="#fff" stroke-width="2.4" stroke-dasharray="8 6"/>
+    <g id="ch-estacas-tras">${ESTACAS.map((e, i) => e.f ? '' : `<g class="ch-estaca" data-i="${i}"><g class="ch-est-in" style="opacity:0">${estaca(e.x, 222, FB + 4, 8)}</g></g>`).join('')}</g>
+    <g id="ch-topo" style="opacity:0;transition:opacity 1s">
+      <path d="M${FL} ${TF} L${BL} ${TB} H${BR} L${FR} ${TF}Z" fill="url(#chTopo)" stroke="#3A2414" stroke-width="1.6"/>
+      <path d="M${FL} ${TF} L${BL} ${TB} H${BR} L${FR} ${TF}Z" fill="#1E3A3A" opacity="0" id="ch-topo-molhado" style="transition:opacity 1.4s"/>
+      ${[0, 1, 2, 3].map(k => `<path d="M${F(BL - k * 6.5)} ${TB + 6 + k * 7} H${F(BR + k * 6.5)}" stroke="#4A2E18" stroke-width="2" opacity=".45"/>`).join('')}
+      <g fill="#A8805A" opacity=".7">${Array.from({ length:24 }, () => `<ellipse cx="${F(R(296, 500))}" cy="${F(R(TB + 4, TF - 4))}" rx="${F(R(1.4, 3))}" ry="${F(R(.8, 1.6))}"/>`).join('')}</g>
+      <path d="M${BL + 6} ${TB + 2} H${BR - 6}" stroke="#B89070" stroke-width="1.6" opacity=".7"/>
+    </g>
+    <g id="ch-plantas">
+      ${['milho', 'feijao', 'abobora'].map(t => PLANTAS[t].map((p, j) => `<g class="ch-planta" data-t="${t}" transform="translate(${p.x} ${p.y})"><g class="ch-pl-in" style="transform-origin:0px 0px;transform:scale(0);transition:transform 1.2s cubic-bezier(.3,1.4,.5,1)">${t === 'milho' ? milho() : t === 'feijao' ? feijao() : abobora()}</g></g>`).join('')).join('')}
+    </g>
+    <g id="ch-arvores">${CANTOS.map((p, i) => `<g class="ch-arv" data-i="${i}"><g class="ch-arv-in" style="transform-origin:${p.x}px ${p.y}px;transform:scale(0);transition:transform 1.4s cubic-bezier(.3,1.3,.5,1)"><g class="balanca" style="animation-duration:${5 + i}s;transform-origin:${p.x}px ${p.y}px">${ahuejote(p.x, p.y, 220, 40, 'chAhue2', '#4A7A5A', '#2E5A3E')}</g></g></g>`).join('')}</g>
+    <!-- colheita (fase 3) -->
+    <g id="ch-colheita" class="toque" style="opacity:0;transition:opacity .8s;pointer-events:none" transform="translate(470 254)"><g id="ch-colh-in">
+      <path d="M-24 0 L-22 -18 H22 L24 0Z" fill="url(#chCesto)" stroke="#6E4418" stroke-width="1.4" stroke-linejoin="round"/><path d="M-22 -12 H22 M-23 -6 H23" stroke="#8A5A22" stroke-width="1"/>
+      <g transform="translate(-12 -22) rotate(-30)"><path d="M0 0 C-5 -5 -5 -18 0 -22 C5 -18 5 -5 0 0Z" fill="url(#chEspiga)" stroke="#5E2A6A" stroke-width=".9"/></g><g transform="translate(-4 -22) rotate(-10)"><path d="M0 0 C-5 -5 -5 -18 0 -22 C5 -18 5 -5 0 0Z" fill="url(#chEspiga2)" stroke="#A8701A" stroke-width=".9"/></g>
+      <path d="M2 -20 C0 -30 22 -30 20 -20 C19 -14 3 -14 2 -20Z" fill="url(#chAbob)" stroke="#9A4A0A" stroke-width="1.1"/><path d="M11 -27 l1 -4" stroke="#4E6A1E" stroke-width="2"/>
+      ${pompom(-18, -22, 6)}${pompom(18, -30, 5)}
+      <circle r="34" cy="-14" fill="transparent"/></g></g>
+    <!-- água em corte -->
+    <rect y="${AG}" width="800" height="${500 - AG}" fill="url(#chAgua)"/>
+    <rect y="${AG}" width="800" height="70" fill="url(#chCaus)" opacity=".3" id="ch-caus"/>
+    <g id="ch-raios">${[[192, 16, 1.6], [226, 12, 1.2], [300, 34, 1.6], [420, 46, 1.4], [548, 30, 1.8], [610, 44, 1.5], [690, 26, 2], [748, 38, 1.4]].map(([x, w, k]) => `<path d="M${x} ${AG} L${x + w} ${AG} L${F(x + w * k + 14)} 466 L${F(x - w * .4 + 4)} 466Z" fill="url(#chRaio)" opacity=".5"/>`).join('')}</g>
+    <rect y="${AG}" width="800" height="${500 - AG}" fill="url(#chProf)" pointer-events="none"/>
+    <rect id="ch-agua-toque" x="0" y="${AG + 2}" width="800" height="${FUN - AG}" fill="transparent"/>
+    <g id="ch-velha-corte">
+      ${velhaCam.map((c, k) => `<rect x="-10" y="${TF + k * 30}" width="198" height="31" fill="${c}"/>`).join('')}
+      <g stroke="#B8C47A" stroke-width="1" opacity=".35" fill="none">${Array.from({ length:12 }, () => { const y = R(TF + 30, 470); return `<path d="M${F(R(-10, 60))} ${F(y)} h${F(R(30, 90))}"/>`; }).join('')}</g>
+      <g fill="#2A1A0E" opacity=".35">${Array.from({ length:40 }, () => `<circle cx="${F(R(-8, 184))}" cy="${F(R(TF + 4, 470))}" r="${F(R(.8, 2))}"/>`).join('')}</g>
+      <rect x="-10" y="${TF}" width="198" height="${AG - TF}" fill="#3A2A14" opacity=".15"/>
+      <path d="M-10 ${AG} H188" stroke="#9ED2D8" stroke-width="1.4" opacity=".55" stroke-dasharray="4 4"/>
+      <g stroke="#E8D6B0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".75"><path d="M170 ${TF} C166 300 176 330 160 370 C150 396 156 420 146 446 M168 300 C150 316 136 320 120 342 M172 330 C186 346 180 370 186 392 M162 370 C140 380 126 400 118 430"/></g>
+      ${[8, 92, 182].map(x => estaca(x, TF - 10, 484, 8)).join('')}
+      <path d="M-10 ${TF} H188" stroke="#2A1A0A" stroke-width="2"/>
+    </g>
+    <g id="ch-camadas" clip-path="url(#chCorte)">${CAM.map((cm, k) => `<g class="ch-cam" data-k="${k}" style="transform-origin:400px ${cm.y1}px;transform:scaleY(0);transition:transform .9s cubic-bezier(.3,1.25,.5,1)">${camada(k)}</g>`).join('')}
+      <rect id="ch-molhado" x="${FL}" y="${TF}" width="${FR - FL}" height="${AG - TF + 30}" fill="url(#chMolha)" opacity="0" style="transition:opacity 1.4s"/>
+    </g>
+    <g id="ch-raizes">${CANTOS.map((p, i) => { const s = i ? -1 : 1, x = p.x; return `<path class="ch-raiz" d="M${x} ${TF} C${x + s * 4} 300 ${x - s * 6} 330 ${x + s * 10} 368 C${x + s * 18} 390 ${x + s * 8} 412 ${x + s * 20} 440 M${x} 298 C${x + s * 20} 312 ${x + s * 34} 316 ${x + s * 48} 336 M${x + s * 2} 336 C${x + s * 26} 350 ${x + s * 36} 372 ${x + s * 56} 384 M${x + s * 10} 368 C${x - s * 2} 384 ${x - s * 2} 400 ${x + s * 4} 420" stroke="#F0DEB8" stroke-width="2.4" fill="none" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" style="transition:stroke-dashoffset 2.4s ease-out"/>`; }).join('')}
+      <g id="ch-raizes-pl" style="opacity:0;transition:opacity 1.4s" stroke="#E8D2A8" stroke-width="1.2" fill="none" stroke-linecap="round">${[338, 438, 384, 476].map(x => `<path d="M${x} ${TF} c-3 8 2 14 -2 22 M${x} ${TF + 4} c6 6 8 12 12 18 M${x} ${TF + 4} c-6 6 -10 10 -12 18"/>`).join('')}</g></g>
+    <g id="ch-estacas-frente">${ESTACAS.map((e, i) => e.f ? `<g class="ch-estaca" data-i="${i}"><g class="ch-est-in" style="opacity:0">${estaca(e.x, TF - 14, 488, 10)}</g></g>` : '').join('')}</g>
+    <g id="ch-cerca" style="opacity:0;transition:opacity 1s">
+      <g stroke="#6E4A2A" stroke-width="3" fill="none" stroke-linecap="round">${[TF + 6, TF + 15, TF + 24].map((y, k) => `<path d="M268 ${y} Q332 ${y + (k % 2 ? -4 : 4)} 396 ${y} T524 ${y}"/>`).join('')}</g>
+      <g stroke="#B88A5A" stroke-width="1.2" fill="none" stroke-linecap="round">${[TF + 5, TF + 14, TF + 23].map((y, k) => `<path d="M268 ${y} Q332 ${y + (k % 2 ? -4 : 4)} 396 ${y} T524 ${y}"/>`).join('')}</g>
+      <g stroke="#8A6A4A" stroke-width="2" fill="none" opacity=".35">${[340, 380, 420, 460].map((y, k) => `<path d="M268 ${y} Q332 ${y + (k % 2 ? -4 : 4)} 396 ${y} T524 ${y}"/>`).join('')}</g>
+      <path d="M${BL} 232 H${BR}" stroke="#6E4A2A" stroke-width="2.4" opacity=".8"/><path d="M${BL} 244 H${BR}" stroke="#6E4A2A" stroke-width="2.4" opacity=".8"/>
+    </g>
+    <!-- fundo do lago -->
+    <path d="M0 ${FUN} C80 462 160 474 260 468 C360 462 460 476 560 466 C660 458 740 472 800 464 V500 H0Z" fill="url(#chFundo)" stroke="#2A1E10" stroke-width="1.6"/>
+    <g fill="#8A7656" opacity=".7">${Array.from({ length:26 }, () => `<ellipse cx="${F(R(4, 796))}" cy="${F(R(476, 496))}" rx="${F(R(2, 5))}" ry="${F(R(1, 2.4))}"/>`).join('')}</g>
+    ${elodea(612, FUN, 110, '#3E9A5A', '#9AD87A')}${elodea(742, FUN - 2, 92, '#2E8A6A', '#8ED8B0')}${cabomba(676, FUN, 80)}${cabomba(232, FUN, 70)}${elodea(194, FUN, 78, '#4E8A3A', '#B8E07A')}
+    <g stroke="#5E8A3A" stroke-width="1.6" fill="none" opacity=".85"><path d="M246 ${AG} C240 360 252 410 244 ${FUN}"/><path d="M200 ${AG + 1} C206 350 196 420 202 ${FUN}"/></g>
+    <g>${Array.from({ length:44 }, () => { const x = R(4, 796), y = R(472, 497), rx = R(2.6, 7), ry = rx * R(.5, .7); return `<ellipse cx="${F(x)}" cy="${F(y)}" rx="${F(rx)}" ry="${F(ry)}" fill="url(#chSeixo)" stroke="#3A2E1E" stroke-width=".8"/><path d="M${F(x - rx * .5)} ${F(y - ry * .3)} q${F(rx * .4)} ${F(-ry * .5)} ${F(rx * .8)} ${F(-ry * .3)}" stroke="#E8DCC4" stroke-width=".9" fill="none" opacity=".75"/>`; }).join('')}</g>
+    <path d="M0 ${FUN + 3} C80 ${FUN - 5} 160 ${FUN + 7} 260 ${FUN + 1} C360 ${FUN - 5} 460 ${FUN + 9} 560 ${FUN - 1} C660 ${FUN - 9} 740 ${FUN + 5} 800 ${FUN - 3}" stroke="#A89070" stroke-width="2" fill="none" opacity=".55"/>
+    ${tule(204, FUN, 120, 4, '#5EA85A', '#24562E')}${tule(250, FUN, 90, 3, '#6EB86A', '#24562E')}${tule(14, 478, 70, 3, '#5EA85A', '#24562E')}
+    <g id="ch-filtros">${FILTROS.map((f, i) => `<g class="ch-filtro toque" data-i="${i}"><g class="ch-fil-in" style="transform-origin:${f.x}px ${FUN}px;transform:scale(1,0);transition:transform 1.4s cubic-bezier(.3,1.3,.5,1)">${tule(f.x, FUN, 200, 5, '#7CC86A', '#2E6A2E', 'x')}${tifa(f.x - 8, FUN - 176, 30)}${tifa(f.x + 6, FUN - 184, 34)}<g stroke="#E8DCB0" stroke-width="1.4" fill="none" opacity=".8">${[-12, -4, 4, 12].map(d => `<path d="M${f.x + d} ${FUN} q${d / 2} 8 ${d} 14"/>`).join('')}</g></g><g class="ch-fil-hint" style="display:none"><circle cx="${f.x}" cy="${AG + 8}" r="16" fill="#fff" opacity=".22"/>${brilhoHotspot(f.x, AG - 10)}<path d="M${f.x} ${AG + 30} v40 M${f.x - 7} ${AG + 62} l7 9 l7 -9" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/></g><rect x="${f.x - 22}" y="${AG - 30}" width="44" height="${FUN - AG + 30}" fill="transparent"/></g>`).join('')}</g>
+    <g id="ch-lixos">${LIXO.map((l, i) => `<g class="ch-lixo toque" data-i="${i}" transform="translate(${l.x} ${l.y})" style="cursor:grab"><g style="animation:flutua ${F(2.4 + i * .5)}s ease-in-out infinite alternate">${desenhoLixo[l.id]}</g><circle r="28" fill="transparent"/></g>`).join('')}</g>
+    <g id="ch-primos" style="opacity:0;transition:opacity 1.4s">
+      <g transform="translate(700 400) scale(.42 .42)"><g style="animation:flutua 3.6s ease-in-out infinite alternate">${axo('chWc', 'chWh', '#2E3020', '#B8606E', '#5E2430', '#6E7050')}</g></g>
+      <g transform="translate(236 430) scale(-.36 .36)"><g style="animation:flutua 4.2s ease-in-out infinite alternate">${axo('chWc', 'chWh', '#2E3020', '#A8585E', '#5E2430', '#6E7050')}</g></g>
+    </g>
+    <rect id="ch-sujeira" x="${FR + 2}" y="${AG}" width="${800 - FR}" height="${500 - AG}" fill="#6E6A3A" opacity=".55" pointer-events="none" style="transition:opacity 1.2s"/>
+    <rect id="ch-sujeira-sup" x="${FR + 2}" y="250" width="${800 - FR}" height="50" fill="#7A7A4A" opacity=".35" pointer-events="none" style="transition:opacity 1.2s"/>
+    <g id="ch-xochi" class="toque" data-fig="axolote"><g id="ch-xochi-pos" transform="translate(632 420) scale(.62)"><g style="animation:flutua 3s ease-in-out infinite alternate"><g id="ch-xochi-in">${axo('chXc', 'chXh', '#B4506E', '#FF5C8A', '#9A1E48', '#FFC2D6')}</g></g></g>${brilhoHotspot(668, 396)}<rect x="596" y="382" width="90" height="70" fill="transparent"/></g>
+    <!-- superfície -->
+    <rect y="${AG + 1}" width="800" height="10" fill="url(#chBrilhoSup)" pointer-events="none"/>
+    <g id="ch-onda1" pointer-events="none"><path d="M-40 ${AG} ${Array.from({ length:44 }, () => 'q10 -3.4 20 0').join(' ')}" stroke="#E6F6FF" stroke-width="2.2" fill="none" opacity=".9"/></g>
+    <g id="ch-onda2" pointer-events="none"><path d="M-60 ${AG + 5} ${Array.from({ length:30 }, () => 'q15 3 30 0').join(' ')}" stroke="#BFE6EE" stroke-width="1.2" fill="none" opacity=".5"/></g>
+    <g fill="#fff" pointer-events="none">${[200, 236, 560, 600, 650, 712, 770].map((x, i) => `<rect class="brilho" style="animation-delay:${F(i * .5)}s" x="${x}" y="${AG + 3 + i % 3 * 3}" width="${10 + i % 2 * 8}" height="1.6" rx=".8"/>`).join('')}</g>
+    <g>${vitoria(246, AG - 3, 12)}${vitoria(200, AG - 1, 8)}<g transform="translate(250 ${AG - 6})">${flor(0, 0, 4, '#FFB8D8', '#B0407A')}</g></g>
+    <g id="ch-garca" class="toque" data-fig="garcabranca"><g id="ch-garca-in" style="transform-origin:214px 298px"><svg x="192" y="232" width="48" height="62" viewBox="0 0 100 130"><use href="#f-garcabranca"/></svg></g>${brilhoHotspot(236, 240)}</g>
+    <!-- canoa de trabalho -->
+    <g id="ch-canoa"><g id="ch-canoa-pos"><g style="animation:flutua 3.4s ease-in-out infinite alternate">
+      <path d="M770 150 L788 476" stroke="#3A2414" stroke-width="5" stroke-linecap="round"/><path d="M770 150 L788 476" stroke="#B88A5A" stroke-width="2.2" stroke-linecap="round"/>
+      <ellipse cx="670" cy="${AG + 6}" rx="104" ry="7" fill="#0E3A44" opacity=".35"/>
+      <path d="M566 ${AG - 18} C580 ${AG - 12} 760 ${AG - 12} 776 ${AG - 20} C772 ${AG - 2} 760 ${AG + 6} 740 ${AG + 6} H600 C582 ${AG + 6} 570 ${AG - 4} 566 ${AG - 18}Z" fill="url(#chCanoa)" stroke="#2E1A0A" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M570 ${AG - 16} C590 ${AG - 10} 754 ${AG - 10} 774 ${AG - 18}" stroke="#C8986A" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M580 ${AG - 4} C620 ${AG} 720 ${AG} 762 ${AG - 6}" stroke="#4E3018" stroke-width="1.2" fill="none" opacity=".7"/>
+      <g id="ch-junco" class="toque ch-fonte" data-t="junco" style="cursor:grab"><g class="ch-fonte-in"><path d="M582 ${AG - 18} C590 ${AG - 40} 640 ${AG - 44} 650 ${AG - 20}Z" fill="url(#chJunco)" stroke="#5E6A1E" stroke-width="1.4"/><g stroke="#6E7A2A" stroke-width="1.3" fill="none">${Array.from({ length:9 }, (_, k) => `<path d="M${586 + k * 7} ${AG - 18} q${F(R(-4, 4))} -16 ${F(R(-10, 10))} -${F(R(26, 40))}"/>`).join('')}</g><path d="M604 ${AG - 34} q12 4 24 0" stroke="#8A5A22" stroke-width="2.6" fill="none"/><path d="M596 ${AG - 34} q4 -6 12 -6" stroke="#F4F6B0" stroke-width="1.6" fill="none" stroke-linecap="round"/></g><g class="ch-fonte-hint" style="display:none">${brilhoHotspot(616, AG - 52)}</g><rect x="576" y="${AG - 72}" width="80" height="58" fill="transparent"/></g>
+      <g id="ch-lama" class="toque ch-fonte" data-t="lama" style="cursor:grab"><g class="ch-fonte-in"><path d="M660 ${AG - 16} L662 ${AG - 36} H702 L704 ${AG - 16}Z" fill="url(#chCesto)" stroke="#6E4418" stroke-width="1.4" stroke-linejoin="round"/><path d="M662 ${AG - 28} H704" stroke="#8A5A22" stroke-width="1"/><path d="M660 ${AG - 36} C666 ${AG - 46} 696 ${AG - 46} 704 ${AG - 36}Z" fill="url(#chLama)" stroke="#2A1A0A" stroke-width="1.2"/><g fill="#8E6A4A"><circle cx="672" cy="${AG - 40}" r="1.6"/><circle cx="690" cy="${AG - 41}" r="1.4"/></g><path d="M668 ${AG - 40} q6 -3 12 -2" stroke="#A88A5A" stroke-width="1.4" fill="none"/></g><g class="ch-fonte-hint" style="display:none">${brilhoHotspot(682, AG - 56)}</g><rect x="652" y="${AG - 66}" width="60" height="52" fill="transparent"/></g>
+      <g id="ch-cesto-lixo" style="display:none"><path d="M664 ${AG - 16} L662 ${AG - 40} H708 L706 ${AG - 16}Z" fill="#4EA864" stroke="#1E5A2A" stroke-width="1.6" stroke-linejoin="round"/><path d="M662 ${AG - 40} H708" stroke="#2E7A3A" stroke-width="3.4" stroke-linecap="round"/><path d="M678 ${AG - 30} l4 -5 l4 5 M692 ${AG - 34} l4 2 l-2 4 M686 ${AG - 22} l-5 0 l2 -4" stroke="#E8FFD8" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><g id="ch-cesto-dentro">${['#B8E8E0', '#F4F8FF', '#3FA864', '#FFFFFF'].map((c, i) => `<circle cx="${670 + i * 10}" cy="${AG - 40}" r="5" fill="${c}" stroke="#4E5A6A" stroke-width="1" style="opacity:0;transition:opacity .4s"/>`).join('')}</g></g>
+      <g id="ch-barq" class="toque">${barqueiro(754, AG - 16)}</g>
+    </g></g></g>
+    <!-- trajinera -->
+    <g id="ch-traj" class="toque"><g id="ch-traj-pos" transform="translate(360 0)"><g style="animation:flutua 3.8s ease-in-out infinite alternate">
+      <ellipse cx="676" cy="${AG + 6}" rx="116" ry="7" fill="#0E3A44" opacity=".35"/>
+      <path d="M770 140 L790 476" stroke="#3A2414" stroke-width="5" stroke-linecap="round"/><path d="M770 140 L790 476" stroke="#B88A5A" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M570 ${AG - 92} V${AG - 22} M620 ${AG - 92} V${AG - 22} M690 ${AG - 92} V${AG - 22} M740 ${AG - 92} V${AG - 22}" stroke="#1E4A8A" stroke-width="3.4"/><path d="M570 ${AG - 92} V${AG - 22} M620 ${AG - 92} V${AG - 22} M690 ${AG - 92} V${AG - 22} M740 ${AG - 92} V${AG - 22}" stroke="#5EA8FF" stroke-width="1.4"/>
+      <path d="M560 ${AG - 92} C600 ${AG - 106} 712 ${AG - 106} 752 ${AG - 92} V${AG - 86} H560Z" fill="url(#chTrajT)" stroke="#8A5A08" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M560 ${AG - 86} H752" stroke="#E0458A" stroke-width="4"/><g fill="#3FA864">${Array.from({ length:12 }, (_, k) => `<path d="M${563 + k * 16} ${AG - 84} q8 9 16 0Z" stroke="#1E6A3A" stroke-width=".8"/>`).join('')}</g>
+      <g transform="translate(560 ${AG - 92})"><path d="M-6 0 C-6 -26 26 -26 26 0Z" fill="url(#chTraj)" stroke="#7A0E2A" stroke-width="1.6"/><path d="M-1 -2 C-1 -18 21 -18 21 -2" fill="none" stroke="#FFC83D" stroke-width="2"/>${flor(10, -10, 4, '#FFFFFF', '#B0407A')}${flor(1, -4, 2.6, '#FFC83D', '#A86A08')}${flor(19, -4, 2.6, '#7CC8FF', '#1E5AA8')}</g>
+      <path d="M552 ${AG - 22} C566 ${AG - 16} 770 ${AG - 16} 790 ${AG - 24} C786 ${AG - 2} 772 ${AG + 6} 750 ${AG + 6} H590 C568 ${AG + 6} 556 ${AG - 6} 552 ${AG - 22}Z" fill="url(#chTraj)" stroke="#6E0E2A" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M560 ${AG - 12} C600 ${AG - 6} 740 ${AG - 6} 782 ${AG - 14}" stroke="#FFC83D" stroke-width="4" fill="none"/><path d="M566 ${AG - 4} C610 ${AG} 730 ${AG} 774 ${AG - 6}" stroke="#2E7BF6" stroke-width="2.4" fill="none"/>
+      <g>${[590, 630, 670, 710, 750].map(x => flor(x, AG - 12, 3.4, '#FFFFFF', '#B0407A')).join('')}</g>
+      <path d="M556 ${AG - 23} C570 ${AG - 18} 770 ${AG - 18} 788 ${AG - 26}" stroke="#FFB8CC" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <g id="ch-carga" style="opacity:0;transition:opacity .8s"><path d="M640 ${AG - 18} L642 ${AG - 36} H686 L688 ${AG - 18}Z" fill="url(#chCesto)" stroke="#6E4418" stroke-width="1.4"/><g transform="translate(652 ${AG - 36}) rotate(-24)"><path d="M0 0 C-5 -5 -5 -18 0 -22 C5 -18 5 -5 0 0Z" fill="url(#chEspiga)" stroke="#5E2A6A" stroke-width=".9"/></g><path d="M662 ${AG - 38} C660 ${AG - 48} 682 ${AG - 48} 680 ${AG - 38}Z" fill="url(#chAbob)" stroke="#9A4A0A" stroke-width="1"/>${pompom(648, AG - 40, 5)}${pompom(684, AG - 44, 5)}</g>
+      ${barqueiro(755, AG - 20)}
+    </g><rect x="550" y="${AG - 120}" width="250" height="130" fill="transparent"/></g></g>
+    <g id="ch-borboletas" class="toque">${[[26, 198, 1], [66, 186, .85]].map(([x, y, k], i) => `<g class="ch-borb" transform="translate(${x} ${y}) scale(${k})"><g class="ch-borb-voo"><g style="animation:flutua ${2 + i * .6}s ease-in-out infinite alternate"><g class="ch-asas">
+      <path d="M0 0 C-4 -10 -14 -14 -16 -8 C-18 -2 -10 2 0 1Z M0 1 C-8 2 -12 8 -9 11 C-6 13 -2 8 0 3Z" fill="url(#chMonarca)" stroke="#2A1408" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M0 0 C4 -10 14 -14 16 -8 C18 -2 10 2 0 1Z M0 1 C8 2 12 8 9 11 C6 13 2 8 0 3Z" fill="url(#chMonarca)" stroke="#2A1408" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M-2 -1 L-12 -9 M-3 0 L-14 -4 M2 -1 L12 -9 M3 0 L14 -4 M-1 3 L-8 9 M1 3 L8 9" stroke="#2A1408" stroke-width=".7"/>
+      <g fill="#fff">${[[-14, -9], [-16, -6], [-12, -12], [14, -9], [16, -6], [12, -12], [-9, 10], [9, 10]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r=".8"/>`).join('')}</g></g>
+      <ellipse cx="0" cy="2" rx="1.4" ry="5" fill="#2A1408"/><path d="M0 -3 l-3 -5 M0 -3 l3 -5" stroke="#2A1408" stroke-width=".7"/></g></g><rect x="-20" y="-18" width="40" height="34" fill="transparent"/></g>`).join('')}</g>
+    <g id="ch-peixe-garca" style="opacity:0" pointer-events="none"><g transform="translate(244 244) rotate(-20)"><path d="M-7 0 C-3 -4 4 -4 7 0 C4 4 -3 4 -7 0Z M7 0 l5 -3.4 v6.8Z" fill="#C8D6C0" stroke="#3E5A4A" stroke-width=".9"/><circle cx="-3.6" cy="-.6" r=".9" fill="#12121A"/></g></g>
+    <!-- beija-flor e marcas -->
+    <g id="ch-beija" class="toque" data-fig="beijaflor"><g id="ch-beija-pos"><g style="animation:flutua 1.1s ease-in-out infinite alternate"><svg x="128" y="132" width="52" height="43" viewBox="0 0 120 100"><use href="#f-beijaflor"/></svg></g></g>${brilhoHotspot(176, 136)}<rect x="126" y="128" width="56" height="50" fill="transparent"/></g>
+    <g id="ch-marcas">${ESTACAS.map((e, i) => `<g class="ch-marca toque" data-i="${i}"><ellipse cx="${e.x}" cy="${e.y}" rx="${e.f ? 16 : 12}" ry="${e.f ? 6 : 4.6}" fill="#fff" opacity=".35" stroke="#fff" stroke-width="2"/><path d="M${e.x} ${e.y - (e.f ? 54 : 44)} v${e.f ? 30 : 24} M${e.x - 6} ${e.y - (e.f ? 30 : 26)} l6 8 l6 -8" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>${brilhoHotspot(e.x + 12, e.y - 20)}<rect x="${e.x - (e.f ? 15 : 11)}" y="${e.y - (e.f ? 58 : 48)}" width="${e.f ? 30 : 22}" height="${e.f ? 68 : 56}" fill="transparent"/></g>`).join('')}</g>
+    <g id="ch-cantos">${CANTOS.map((p, i) => `<g class="ch-canto toque" data-i="${i}" style="display:none"><circle cx="${p.x}" cy="${p.y - 6}" r="13" fill="#fff" opacity=".3" stroke="#fff" stroke-width="2"/><path d="M${p.x} ${p.y - 2} V${p.y - 16} M${p.x} ${p.y - 10} l-5 -4 M${p.x} ${p.y - 13} l5 -4" stroke="#3E8A3A" stroke-width="2.4" stroke-linecap="round"/>${brilhoHotspot(p.x + 14, p.y - 22)}<rect x="${p.x - 22}" y="${p.y - 32}" width="44" height="40" fill="transparent"/></g>`).join('')}</g>
+    <g id="ch-sementes" style="display:none">${[['milho', 130, '#FFD447', '#B07A08'], ['feijao', 148, '#8E2A2A', '#3E0A0A'], ['abobora', 166, '#F6EBC8', '#9A8A5A']].map(([t, x, c, e]) => `<g class="ch-sem toque" data-t="${t}" transform="translate(${x} ${TF - 28})" style="cursor:grab"><g class="ch-sem-in"><circle r="9" fill="#FFF8E6" stroke="#8A5A22" stroke-width="1.4"/>${t === 'milho' ? `<g fill="${c}" stroke="${e}" stroke-width=".7"><path d="M-4 -2 l2 -3 h2 l1 3 l-2 2Z"/><path d="M1 1 l2 -3 h2 l1 3 l-2 2Z"/><path d="M-4 3 l2 -3 h2 l1 3 l-2 2Z" fill="#E06AB0"/></g>` : t === 'feijao' ? `<g fill="${c}" stroke="${e}" stroke-width=".7"><ellipse cx="-2.6" cy="-1" rx="3.4" ry="2.2" transform="rotate(-20 -2.6 -1)"/><ellipse cx="3" cy="2" rx="3.4" ry="2.2" transform="rotate(15 3 2)"/></g><circle cx="-3" cy="-2" r=".6" fill="#fff"/>` : `<g fill="${c}" stroke="${e}" stroke-width=".7"><ellipse cx="-2.6" cy="0" rx="2" ry="3.6" transform="rotate(-20 -2.6 0)"/><ellipse cx="2.8" cy="0" rx="2" ry="3.6" transform="rotate(20 2.8 0)"/></g>`}</g>${brilhoHotspot(6, -10)}<circle r="10.4" fill="transparent"/></g>`).join('')}</g>
+    <g id="ch-mao" style="display:none"><path d="M640 236 C560 180 460 190 410 236" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-dasharray="6 9"/><path d="M404 242 l6 -14 l8 10Z" fill="#fff"/></g>
+    ${tule(788, 500, 110, 4, '#4E9A4A', '#1E4A26')}${tule(8, 500, 90, 4, '#4E9A4A', '#1E4A26')}
+    <rect width="800" height="500" fill="url(#chVinheta)" pointer-events="none"/><rect width="800" height="500" filter="url(#chGrao)" pointer-events="none"/>
+  </svg>`;
+  const c = criarCena(palco, svg), s = c.svg;
+  s.querySelectorAll('#ch-raios path').forEach((r, i) => r.animate([{ opacity:.25 }, { opacity:.6 }, { opacity:.25 }], { duration:4200 + i * 900, iterations:Infinity }));
+  el(s, '#ch-caus').animate([{ opacity:.15 }, { opacity:.38 }, { opacity:.15 }], { duration:3600, iterations:Infinity });
+  s.querySelectorAll('.ch-asas').forEach((a, i) => a.animate([{ transform:'scaleX(1)' }, { transform:'scaleX(.25)' }], { duration:260 + i * 40, iterations:Infinity, direction:'alternate', easing:'ease-in-out' }));
+  el(s, '#ch-onda1').animate([{ transform:'translateX(0)' }, { transform:'translateX(20px)' }], { duration:2400, iterations:Infinity });
+  el(s, '#ch-onda2').animate([{ transform:'translateX(0)' }, { transform:'translateX(-30px)' }], { duration:3600, iterations:Infinity });
+  el(s, '#ch-musicos').animate([{ transform:'translateX(0)' }, { transform:'translateX(-14px)' }], { duration:9000, iterations:Infinity, direction:'alternate', easing:'ease-in-out' });
+  const pegada = el(s, '#ch-pegada'); pegada.animate([{ strokeDashoffset:0 }, { strokeDashoffset:-28 }], { duration:1200, iterations:Infinity });
+  const mao = el(s, '#ch-mao'); mao.animate([{ opacity:.2 }, { opacity:1 }, { opacity:.2 }], { duration:1600, iterations:Infinity });
+  const bolhas = (x, y, n) => { for (let i = 0; i < n; i++) c.add({ tipo:'bolha', x:x + sorte(-8, 8), y:y + sorte(-4, 4), vy:sorte(.7, 1.6), r:sorte(1.6, 4), topo:AG + 4, f:sorte(0, 6) }); };
+  const respinga = (x, y, n, cor) => { for (let i = 0; i < n; i++) c.add({ tipo:'respingo', x:x + sorte(-8, 8), y, t:i * 2, cor:cor || '#E6F6FF' }); };
+  const chip = t => api.hud(`<span class="chip">${t}</span>`);
+  /* arrasto genérico: move um grupo e solta numa área */
+  let arr = null;
+  function arrastavel(g, ok, x0, y0, solta, bx, by){
+    const st = { x:x0, y:y0 };
+    const poe = (x, y, k) => g.setAttribute('transform', `translate(${F(x)} ${F(y)})${k ? ` scale(${k})` : ''}`);
+    g.addEventListener('pointerdown', e => { if (!ok() || ocupado || arr) return; e.stopPropagation(); const p = c.ponto(e); arr = { g, st, poe, solta, x0, y0, bx:bx || 0, by:by || 0, dx:p.x - st.x, dy:p.y - st.y, px:p.x, py:p.y, moveu:false }; s.setPointerCapture(e.pointerId); g.style.cursor = 'grabbing'; mao.style.display = 'none'; toca('clique'); });
+    return { st, poe };
+  }
+  s.addEventListener('pointermove', e => { if (!arr) return; const p = c.ponto(e); if (Math.hypot(p.x - arr.px, p.y - arr.py) > 8) arr.moveu = true; arr.st.x = Math.max(10 - arr.bx, Math.min(790 - arr.bx, p.x - arr.dx)); arr.st.y = Math.max(20 - arr.by, Math.min(490 - arr.by, p.y - arr.dy)); arr.poe(arr.st.x, arr.st.y); });
+  s.addEventListener('pointerup', () => { if (!arr) return; const a = arr; arr = null; a.g.style.cursor = 'grab'; a.solta(a.moveu, a.st.x, a.st.y); });
+  function voa(g, st, x1, y1, ms, k1, fim){
+    const x0 = st.x, y0 = st.y, t0 = performance.now(); ocupado = true;
+    (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / ms), e = k * k * (3 - 2 * k); st.x = x0 + (x1 - x0) * e; st.y = y0 + (y1 - y0) * e - Math.sin(k * Math.PI) * 40;
+      g.setAttribute('transform', `translate(${F(st.x)} ${F(st.y)}) scale(${F(1 + (k1 - 1) * e)})`);
+      if (k < 1) requestAnimationFrame(q); else { ocupado = false; fim && fim(); } })(t0);
+  }
+  /* ---------- 1. construir: estacas ---------- */
+  const marcas = [...s.querySelectorAll('.ch-marca')];
+  marcas.forEach(m => m.animate([{ transform:'translateY(0)' }, { transform:'translateY(-5px)' }, { transform:'translateY(0)' }], { duration:1100, iterations:Infinity }));
+  marcas.forEach(m => m.addEventListener('click', e => {
+    e.stopPropagation(); if (fase !== 'estacas' || m.dataset.feito) return; m.dataset.feito = 1; m.style.display = 'none';
+    const i = +m.dataset.i, E = ESTACAS[i], est = s.querySelector(`.ch-estaca[data-i="${i}"] .ch-est-in`);
+    est.style.opacity = 1;
+    const a = est.animate([{ transform:'translateY(-170px)' }, { transform:'translateY(6px)', offset:.75 }, { transform:'translateY(0)' }], { duration:700, easing:'cubic-bezier(.5,0,.8,1)' });
+    a.onfinish = () => { if (!vivo) return; toca('splash'); respinga(E.x, E.y, 4); if (E.f) bolhas(E.x, FUN - 6, 4); c.brilhos(E.x, E.y - 30, 3, '#FFE27A'); somOn && tom(180, 0, .12, 'square', .06, 120); };
+    estacas++; chip(`Estacas: ${estacas}/5`);
+    if (estacas === 1) api.diz('Toc! A estaca entra firme no fundo do lago.');
+    if (estacas === 3) api.diz('As estacas vão segurar as paredes da chinampa.');
+    if (estacas === 5) depois(900, () => { el(s, '#ch-cerca').style.opacity = 1; pegada.style.display = 'none'; toca('ok'); api.diz('A cerca está pronta! Galhos trançados ligam as estacas.'); depois(2600, comecaCamadas); });
+  }));
+  /* ---------- 1b. camadas de juncos e lama ---------- */
+  const fontes = { junco:el(s, '#ch-junco'), lama:el(s, '#ch-lama') }, pos0 = { junco:{ x:0, y:0 }, lama:{ x:0, y:0 } };
+  const precisa = () => CAM[camadas] ? CAM[camadas].tipo : null;
+  const marcaFonte = () => Object.entries(fontes).forEach(([t, g]) => { el(g, '.ch-fonte-hint').style.display = fase === 'camadas' && precisa() === t ? '' : 'none'; });
+  function comecaCamadas(){ fase = 'camadas'; chip('Camadas: 0/4'); mao.style.display = ''; marcaFonte(); api.diz('Arraste os juncos da canoa para dentro da cerca.'); }
+  Object.entries(fontes).forEach(([t, g]) => {
+    const { st, poe } = arrastavel(g, () => fase === 'camadas', 0, 0, (moveu, x, y) => {
+      if (precisa() !== t) { voltaFonte(g, st); toca('glub'); api.diz(t === 'lama' ? 'Primeiro os juncos! Arraste os juncos da canoa.' : 'Agora é a vez da lama! Arraste o cesto de lama.'); return; }
+      const cx = (t === 'junco' ? 616 : 682) + x, cy = AG - 30 + y;
+      if (!moveu || (cx > FL - 20 && cx < FR + 20 && cy > 180 && cy < 480)) poeCamada(g, st); else { voltaFonte(g, st); api.diz('Solte dentro da cerca de estacas!'); }
+   }, t === 'junco' ? 616 : 682, AG - 30);
+    g._st = st; g._poe = poe;
+  });
+  function voltaFonte(g, st){ voa(g, st, 0, 0, 500, 1); }
+  function poeCamada(g, st){
+    const t = precisa(), alvoX = 400 - (t === 'junco' ? 616 : 682), alvoY = (CAM[camadas].y0 + 10) - (AG - 30);
+    voa(g, st, alvoX, alvoY, 650, .7, () => {
+      const k = camadas; camadas++;
+      g.setAttribute('transform', ''); st.x = 0; st.y = 0;
+      const cam = s.querySelector(`.ch-cam[data-k="${k}"]`); cam.style.transform = 'scaleY(1)';
+      toca(t === 'junco' ? 'planta' : 'glub'); bolhas(sorte(300, 500), CAM[k].y0, 6); c.brilhos(400, CAM[k].y0, 4, t === 'junco' ? '#F4F6B0' : '#E8C8A0');
+      chip(`Camadas: ${camadas}/4`);
+      if (camadas === 1) api.diz('Juncos e plantas do lago fazem a base. Agora arraste a lama do fundo do canal!');
+      if (camadas === 2) api.diz('A lama do fundo é cheia de restos de plantas, um adubo natural. Arraste os juncos de novo.');
+      if (camadas === 3) api.diz('Mais uma camada de lama e a terra sai da água! Arraste a lama.');
+      if (camadas === 4) { mao.style.display = 'none'; el(s, '#ch-topo').style.opacity = 1; toca('vitoria'); c.brilhos(400, 250, 10, '#FFE27A'); api.diz('Uma ilha de terra no meio do lago! Assim os povos do lago, como os mexicas, construíam as chinampas há centenas de anos.'); depois(5200, comecaArvores); }
+      marcaFonte();
+    });
+  }
+  /* ---------- 2. ahuejotes, sementes e água que sobe ---------- */
+  function comecaArvores(){ fase = 'arvores'; chip('Ahuejotes: 0/2'); s.querySelectorAll('.ch-canto').forEach(g => g.style.display = ''); api.diz('Toque nos cantos da chinampa para plantar ahuejotes, árvores que seguram a terra.'); }
+  s.querySelectorAll('.ch-canto').forEach(g => g.addEventListener('click', e => {
+    e.stopPropagation(); if (fase !== 'arvores' || g.dataset.feito) return; g.dataset.feito = 1; g.style.display = 'none';
+    const i = +g.dataset.i; arvores++; chip(`Ahuejotes: ${arvores}/2`); toca('planta');
+    s.querySelector(`.ch-arv[data-i="${i}"] .ch-arv-in`).style.transform = `scale(${arvK})`;
+    depois(500, () => { s.querySelectorAll('.ch-raiz')[i].style.strokeDashoffset = 0; });
+    c.brilhos(CANTOS[i].x, CANTOS[i].y - 30, 5, '#C8F0A0');
+    if (arvores === 1) api.diz('As raízes do ahuejote crescem dentro da lama e prendem a chinampa, como pregos vivos!');
+    if (arvores === 2) depois(2600, comecaSementes);
+  }));
+  const semG = [...s.querySelectorAll('.ch-sem')], SEMX = { milho:130, feijao:148, abobora:166 };
+  function comecaSementes(){ fase = 'sementes'; chip('Sementes: 0/3'); el(s, '#ch-sementes').style.display = ''; api.diz('Arraste as sementes do cesto para a chinampa: milho, feijão e abóbora.'); }
+  semG.forEach(g => {
+    const t = g.dataset.t;
+    const { st } = arrastavel(g, () => fase === 'sementes' && !g.dataset.feito, SEMX[t], TF - 28, (moveu, x, y) => {
+      if (!moveu || (x > FL && x < FR && y > 150 && y < AG + 10)) planta(g, st); else { voa(g, st, SEMX[t], TF - 28, 500, 1); api.diz('Solte a semente em cima da chinampa nova!'); }
+    });
+    g._st = st;
+  });
+  function planta(g, st){
+    const t = g.dataset.t; g.dataset.feito = 1;
+    voa(g, st, PLANTAS[t][0].x, PLANTAS[t][0].y - 40, 600, .6, () => {
+      g.style.display = 'none'; sementes++; chip(`Sementes: ${sementes}/3`);
+      PLANTAS[t].forEach((p, j) => c.add({ tipo:'semente', x:p.x + (t === 'feijao' ? 6 : 0), y:p.y - 50, vy:1, alvoY:p.y, chega:() => {
+        const pl = s.querySelectorAll(`.ch-planta[data-t="${t}"] .ch-pl-in`)[j]; pl.style.transform = `scale(${cresc})`; toca('planta'); } }));
+      if (t === 'milho') api.diz('Milho! Ele cresce alto e forte.');
+      if (t === 'feijao') api.diz('O feijão sobe enrolado no pé de milho.');
+      if (t === 'abobora') api.diz('As folhas largas da abóbora fazem sombra e guardam a umidade da terra.');
+      if (sementes === 3) { el(s, '#ch-raizes-pl').style.opacity = 1; depois(3200, comecaAgua); }
+    });
+  }
+  function comecaAgua(){ fase = 'agua'; chip('Água: 0/3'); api.diz('Milho, feijão e abóbora juntos formam a milpa. Ninguém precisa regar: toque na água do canal e veja!'); }
+  const cresce = () => {
+    s.querySelectorAll('.ch-pl-in').forEach(p => { if (p.style.transform !== 'scale(0)') p.style.transform = `scale(${cresc})`; });
+    s.querySelectorAll('.ch-arv-in').forEach(p => { if (p.style.transform !== 'scale(0)') p.style.transform = `scale(${arvK})`; });
+  };
+  function sobeAgua(px){
+    ocupado = true; aguas++; chip(`Água: ${aguas}/3`); toca('glub');
+    for (let i = 0; i < 26; i++) {
+      const lado = i % 2 ? FR - 6 : FL + 6, y0 = sorte(AG + 10, 440);
+      depois(i * 70, () => c.add({ tipo:'infiltra', x0:lado + (lado < 400 ? -10 : 10), y0, x1:sorte(300, 500), y1:sorte(TF + 4, TF + 26), dur:sorte(70, 110), f:sorte(0, 6), chega:() => { if (Math.random() < .3) c.add({ tipo:'brilho', x:sorte(300, 500), y:TF - 4, cor:'#BFE6FF' }); } }));
+    }
+    bolhas(px, AG + 40, 4);
+    depois(1400, () => {
+      molhado = aguas / 3; el(s, '#ch-molhado').style.opacity = F(molhado); el(s, '#ch-topo-molhado').style.opacity = F(molhado * .32);
+      cresc = [.22, .55, .8, 1][aguas]; arvK = [.4, .58, .76, .92][aguas]; cresce(); toca('planta'); ocupado = false;
+      if (aguas === 1) api.diz('A água do canal entra pela terra e sobe sozinha, como num pano molhado!');
+      if (aguas === 2) api.diz('As raízes bebem essa água o tempo todo.');
+      if (aguas === 3) { s.querySelectorAll('.ch-fruto').forEach(f => f.style.opacity = 1); toca('vitoria'); c.brilhos(400, 160, 10, '#FFE27A'); api.diz('Terra molhada e cheia de adubo: na chinampa dá para colher várias vezes por ano!'); voaBeija(380, 120); depois(5200, comecaLixo); }
+    });
+  }
+  el(s, '#ch-agua-toque').addEventListener('pointerdown', e => {
+    const p = c.ponto(e);
+    if (fase === 'agua' && !ocupado && aguas < 3) { sobeAgua(p.x); return; }
+    toca('glub'); bolhas(p.x, p.y, 3);
+  });
+  /* ---------- 3. limpar o canal, plantas-filtro e trajinera ---------- */
+  const lix = [...s.querySelectorAll('.ch-lixo')];
+  function comecaLixo(){ fase = 'lixo'; chip('Lixo: 0/4'); el(s, '#ch-cesto-lixo').style.display = ''; s.querySelectorAll('.ch-fonte').forEach(f => f.style.display = 'none'); api.diz('Ih, o canal da Xóchi está sujo! O axolote só vive em água limpa. Arraste o lixo até o cesto verde da canoa.'); }
+  lix.forEach((g, i) => {
+    const { st } = arrastavel(g, () => fase === 'lixo' && !g.dataset.feito, LIXO[i].x, LIXO[i].y, (moveu, x, y) => {
+      if (!moveu || Math.hypot(x - CESTO.x, y - CESTO.y) < 80) recolhe(g, st, i); else { voa(g, st, LIXO[i].x, LIXO[i].y, 600, 1); toca('glub'); api.diz('Leve até o cesto verde da canoa!'); }
+    });
+  });
+  function recolhe(g, st, i){
+    g.dataset.feito = 1; if (st.y > AG) bolhas(st.x, st.y, 5);
+    voa(g, st, CESTO.x, CESTO.y - 6, 800, .3, () => {
+      g.style.display = 'none'; lixos++; toca('pop'); c.brilhos(CESTO.x, CESTO.y - 20, 5, '#FFE27A');
+      el(s, '#ch-cesto-dentro').children[lixos - 1].style.opacity = 1; chip(`Lixo: ${lixos}/4`);
+      el(s, '#ch-sujeira').style.opacity = F(.55 - lixos * .08); el(s, '#ch-sujeira-sup').style.opacity = F(.35 - lixos * .05);
+      const falas = { garrafa:'Garrafa de plástico no canal, não!', sacola:'A sacola pode enroscar nos bichos da água.', lata:'A lata vai para a reciclagem.', copo:'Copo descartável também é lixo de plástico.' };
+      if (lixos < 4) api.diz(falas[LIXO[i].id]);
+      else { toca('ok'); depois(1200, comecaFiltros); }
+    });
+  }
+  function comecaFiltros(){ fase = 'filtros'; chip('Plantas-filtro: 0/2'); s.querySelectorAll('.ch-fil-hint').forEach(h => h.style.display = ''); api.diz('Sem lixo! Agora toque nas beiradas do canal para plantar plantas-filtro.'); }
+  s.querySelectorAll('.ch-filtro').forEach(g => g.addEventListener('click', e => {
+    e.stopPropagation(); if (fase !== 'filtros' || g.dataset.feito) return; g.dataset.feito = 1;
+    const i = +g.dataset.i; filtros++; chip(`Plantas-filtro: ${filtros}/2`); toca('planta');
+    el(g, '.ch-fil-hint').style.display = 'none'; el(g, '.ch-fil-in').style.transform = 'scale(1,1)'; bolhas(FILTROS[i].x, FUN - 20, 8);
+    el(s, '#ch-sujeira').style.opacity = F(.23 - filtros * .115); el(s, '#ch-sujeira-sup').style.opacity = F(.15 - filtros * .075);
+    for (let k = 0; k < 8; k++) c.add({ tipo:'brilho', t:-k * 3, x:FILTROS[i].x + sorte(-40, 40), y:sorte(AG + 20, 440), cor:'#E6FFF8' });
+    if (filtros === 1) api.diz('As raízes dessas plantas seguram a sujeira e deixam a água limpinha.');
+    if (filtros === 2) depois(1600, voltamPrimos);
+  }));
+  function voltamPrimos(){
+    fase = 'primos'; el(s, '#ch-primos').style.opacity = 1; toca('vitoria'); bolhas(700, 420, 8); bolhas(236, 440, 6); festaXochi();
+    api.diz('Água limpinha! Olha quem voltou: meus primos axolotes. Na natureza, a maioria é escura assim.');
+    depois(4600, () => {
+      api.diz('O barqueiro leva o lixo para a reciclagem.');
+      el(s, '#ch-canoa-pos').animate([{ transform:'translateX(0)' }, { transform:'translateX(320px)' }], { duration:2800, easing:'ease-in', fill:'forwards' });
+      depois(3000, chegaTraj);
+    });
+  }
+  let trajX = 360;
+  function moveTraj(x1, ms, fim){ const x0 = trajX, t0 = performance.now(); (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / ms), e = k * k * (3 - 2 * k); trajX = x0 + (x1 - x0) * e; el(s, '#ch-traj-pos').setAttribute('transform', `translate(${F(trajX)} 0)`); if (k < 1) requestAnimationFrame(q); else fim && fim(); })(t0); }
+  function chegaTraj(){
+    toca('splash'); moveTraj(0, 2600, () => {
+      fase = 'colheita'; chip('Colheita'); const co = el(s, '#ch-colheita'); co.style.opacity = 1; co.style.pointerEvents = '';
+      mao.style.display = ''; mao.setAttribute('transform', 'translate(0 0) scale(-1 1) translate(-1110 0)');
+      api.diz('Chegou a trajinera, o barco colorido de Xochimilco! Arraste a colheita até ela.');
+    });
+  }
+  const colh = el(s, '#ch-colheita');
+  const colhSt = arrastavel(colh, () => fase === 'colheita', 470, 254, (moveu, x, y) => {
+    if (!moveu || (x > 560 && y > 180 && y < AG + 20)) carrega(); else { voa(colh, colhSt.st, 470, 254, 500, 1); api.diz('Leve a cesta até a trajinera!'); }
+  });
+  function carrega(){
+    mao.style.display = 'none';
+    voa(colh, colhSt.st, 664, AG - 26, 700, .5, () => {
+      colh.style.display = 'none'; el(s, '#ch-carga').style.opacity = 1; toca('pop'); c.brilhos(664, AG - 40, 6, '#FFE27A');
+      fase = 'partir'; chip('Para o mercado!');
+      api.diz('Agora arraste a trajinera para a direita e leve a colheita pelo canal!');
+    });
+  }
+  let pegaTraj = null;
+  el(s, '#ch-traj').addEventListener('pointerdown', e => { if (fase !== 'partir') return; e.stopPropagation(); const p = c.ponto(e); pegaTraj = { x0:p.x }; s.setPointerCapture(e.pointerId); });
+  s.addEventListener('pointermove', e => { if (!pegaTraj) return; const p = c.ponto(e); trajX = Math.max(0, Math.min(120, p.x - pegaTraj.x0)); el(s, '#ch-traj-pos').setAttribute('transform', `translate(${F(trajX)} 0)`); });
+  s.addEventListener('pointerup', () => { if (!pegaTraj) return; pegaTraj = null; parte(); });
+  function parte(){
+    if (fase !== 'partir') return; fase = 'fim'; toca('splash'); respinga(600, AG, 4); bolhas(790, 440, 5);
+    moveTraj(380, 3400, () => {});
+    depois(1200, () => { toca('vitoria'); api.diz('Os canais são as ruas de Xochimilco! As chinampas dão comida e flores há centenas de anos e são Patrimônio da Humanidade. Quem cuida da chinampa cuida da água e dos axolotes!'); depois(6800, api.fim); });
+  }
+  el(s, '#ch-traj').addEventListener('click', e => { if (fase !== 'partir') return; e.stopPropagation(); });
+  /* ---------- toques extras ---------- */
+  function festaXochi(){ const g = el(s, '#ch-xochi-in'); g.animate([{ transform:'rotate(0)' }, { transform:'rotate(-8deg) translateY(-6px)' }, { transform:'rotate(6deg)' }, { transform:'rotate(0)' }], { duration:900 }); s.querySelectorAll('#ch-xochi .ch-guelras').forEach(q => q.animate([{ opacity:1 }, { opacity:.6 }, { opacity:1 }], { duration:500, iterations:3 })); bolhas(612, 400, 5); }
+  let xoK = 0;
+  el(s, '#ch-xochi').addEventListener('click', () => { toca('glub'); festaXochi();
+    const falas = fase === 'lixo' || fase === 'filtros' ? ['Me ajuda a limpar o canal? Água limpa é a minha casa!'] : ['Eu respiro pelas guelras, essas plumas cor-de-rosa na minha cabeça!', 'Se eu machuco uma patinha, ela cresce de novo!', 'Eu vivo na natureza só aqui, nos canais de Xochimilco.'];
+    api.diz(falas[xoK++ % falas.length]); });
+  let garcaOc = false;
+  el(s, '#ch-garca').addEventListener('click', () => {
+    if (garcaOc) return; garcaOc = true; toca('clique');
+    const g = el(s, '#ch-garca-in');
+    g.animate([{ transform:'rotate(0)' }, { transform:'rotate(-6deg)', offset:.3 }, { transform:'rotate(58deg)', offset:.5 }, { transform:'rotate(58deg)', offset:.6 }, { transform:'rotate(0)' }], { duration:1500, easing:'ease-in-out' });
+    depois(700, () => { toca('splash'); respinga(262, AG, 4); bolhas(262, AG + 14, 4); });
+    depois(1500, () => { const pg = el(s, '#ch-peixe-garca'); pg.style.opacity = 1; pg.animate([{ transform:'rotate(-4deg)' }, { transform:'rotate(4deg)' }], { duration:200, iterations:6, direction:'alternate' }); toca('pop'); api.diz('Pegou um peixinho! A garça-branca espera paradinha e mergulha o bico bem rápido.'); });
+    depois(2900, () => { el(s, '#ch-peixe-garca').style.opacity = 0; toca('glub'); garcaOc = false; });
+  });
+  /* músicos da trajinera tocam uma melodia */
+  let musOc = false;
+  el(s, '#ch-musicos').addEventListener('click', e => {
+    e.stopPropagation(); if (musOc) return; musOc = true;
+    const mel = [[523, .18], [659, .18], [784, .18], [880, .36], [784, .18], [698, .18], [659, .36], [587, .18], [659, .18], [523, .5]];
+    let t = 0; mel.forEach(([f, d]) => { if (somOn) { tom(f, t, d * .95, 'triangle', .07); tom(f / 2, t, d * .9, 'sine', .04); } t += d; });
+    el(s, '#ch-mus-in').animate([{ transform:'translateY(0)' }, { transform:'translateY(-1.5px)' }], { duration:180, iterations:Math.round(t / .18), direction:'alternate' });
+    for (let i = 0; i < 8; i++) depois(i * 280, () => {
+      const n = document.createElementNS('http://www.w3.org/2000/svg', 'g'), x = 404 + sorte(-26, 26), cor = ['#E0458A', '#FFC83D', '#3E9AE0', '#3FA864'][i % 4];
+      n.setAttribute('pointer-events', 'none');
+      n.innerHTML = `<g transform="translate(${F(x)} 206)"><ellipse cx="0" cy="0" rx="3.4" ry="2.6" transform="rotate(-20)" fill="${cor}" stroke="#2A1A3A" stroke-width=".8"/><path d="M3 -1 V-13 q4 2 6 6" stroke="#2A1A3A" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>`;
+      el(s, '#ch-musicos').appendChild(n);
+      const a = n.animate([{ transform:'translate(0,0)', opacity:1 }, { transform:`translate(${F(sorte(-20, 20))}px,-60px)`, opacity:0 }], { duration:2000, easing:'ease-out' }); a.onfinish = () => n.remove();
+    });
+    api.diz('Música na trajinera! Nos passeios pelos canais, músicos tocam para as famílias.');
+    depois(Math.round(t * 1000) + 300, () => { musOc = false; });
+  });
+  /* borboletas-monarca sobre o cempasúchil */
+  let borbOc = false;
+  el(s, '#ch-borboletas').addEventListener('click', e => {
+    e.stopPropagation(); if (borbOc) return; borbOc = true; toca('pop');
+    s.querySelectorAll('.ch-borb-voo').forEach((b, i) => b.animate([{ transform:'translate(0,0)' }, { transform:`translate(${50 + i * 20}px,-60px)` }, { transform:`translate(${120 - i * 30}px,-20px)` }, { transform:`translate(${40 + i * 10}px,-90px)` }, { transform:'translate(0,0)' }], { duration:4200, easing:'ease-in-out' }));
+    api.diz('Borboletas-monarca! Elas voam milhares de quilômetros, do Canadá e dos Estados Unidos até as florestas do México.');
+    depois(4300, () => { borbOc = false; });
+  });
+  function voaBeija(x, y){ const g = el(s, '#ch-beija-pos'); g.animate([{ transform:'translate(0,0)' }, { transform:`translate(${x - 154}px, ${y - 153}px)` }, { transform:`translate(${x - 134}px, ${y - 163}px)` }, { transform:'translate(0,0)' }], { duration:3600, easing:'ease-in-out' }); }
+  el(s, '#ch-beija').addEventListener('click', () => { [2400, 2900, 2600].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .08, 'sine', .04, f * 1.2), i * 90)); voaBeija(sorte(160, 420), sorte(110, 170)); api.diz('O beija-flor bate as asas tão rápido que parece parado no ar!'); });
+  el(s, '#ch-cemp').addEventListener('click', () => { toca('planta'); for (let i = 0; i < 16; i++) c.add({ tipo:'petala', x:sorte(10, 80), y:sorte(222, 250), vy:sorte(.5, 1), f:sorte(0, 6), chao:sorte(262, 270), cor:Math.random() < .5 ? '#FF9A2A' : '#FFC83D', borda:'#A8480A' }); api.diz('Cempasúchil, uma flor laranja do México. Xochimilco quer dizer campo de flores!'); });
+  el(s, '#ch-agric').addEventListener('click', e => { e.stopPropagation(); toca('pop'); el(s, '#ch-braco-ag').animate([{ transform:'rotate(0)' }, { transform:'rotate(-25deg)' }, { transform:'rotate(12deg)' }, { transform:'rotate(0)' }], { duration:700, iterations:2 });
+    api.diz(fase === 'sementes' ? 'As sementes estão no meu cesto. Eu guardo as melhores de cada colheita!' : 'Bom dia! Minha família planta nesta chinampa há muitas gerações.'); });
+  el(s, '#ch-barq').addEventListener('click', e => { e.stopPropagation(); toca('pop'); api.diz('O barqueiro empurra a canoa com uma vara comprida que toca o fundo do canal.'); });
+  el(s, '#ch-vulcoes').addEventListener('click', e => { e.stopPropagation(); toca('clique'); api.diz('Lá longe estão os vulcões Popocatépetl e Iztaccíhuatl, com neve no topo.'); });
+  el(s, '#ch-sol').addEventListener('click', e => { e.stopPropagation(); toca('ok'); c.brilhos(86, 58, 6, '#FFE27A'); api.diz('O sol aquece a chinampa, e a água do canal mantém a terra fresquinha.'); });
+  el(s, '#ch-ahue-velho').addEventListener('click', e => { e.stopPropagation(); toca('planta'); api.diz('O ahuejote é fininho e alto. Ele deixa o sol passar para as plantas da chinampa.'); });
+  let patoX = 0, patoOc = false;
+  el(s, '#ch-pato').addEventListener('click', e => { e.stopPropagation(); if (patoOc) return; patoOc = true; [520, 440].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .12, 'sawtooth', .04, f * .7), i * 160));
+    const x0 = patoX, x1 = patoX ? 0 : 16, t0 = performance.now();
+    (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / 1400); patoX = x0 + (x1 - x0) * k; el(s, '#ch-pato-pos').setAttribute('transform', `translate(${F(patoX)} ${F(Math.sin(k * 12) * 1.2)})`); if (k < 1) requestAnimationFrame(q); else patoOc = false; })(t0);
+    respinga(246 + patoX, 256, 2); api.diz('Quá! Os patos também gostam dos canais.'); });
+  /* peixinhos nativos no canal limpo e bolhas */
+  const cardume = (n, cx, cy, esc, cor) => ({ cx, cy, esc, cor, fx:Array.from({ length:n }, (_, k) => ({ ox:Math.cos(k * 2.4) * (8 + k % 3 * 7), oy:Math.sin(k * 2.4) * (5 + k % 3 * 3), f:sorte(0, 6) })) });
+  const cardumes = [cardume(9, 660, 360, 1, '#C8D6C0'), cardume(5, 224, 360, .7, '#D8E4C8')];
+  const poeira = Array.from({ length:46 }, (_, i) => ({ x:i % 4 === 0 ? sorte(190, 258) : i % 4 === 1 ? sorte(270, 522) : sorte(536, 796), y:sorte(AG + 8, FUN - 6), r:sorte(.6, 1.8), f:sorte(0, 6), v:sorte(.05, .18) }));
+  c.desenho(ctx => {
+    const t = performance.now() / 1000, limpo = Math.min(1, lixos / 4 * .6 + filtros * .2);
+    poeira.forEach(p => { p.y -= p.v; if (p.y < AG + 6) p.y = FUN - 6; const sujo = p.x > FR ? 1 - limpo : 0; if (p.x > FL && p.x < FR && camadas && p.y > CAM[camadas - 1].y0 - 4) return;
+      ctx.globalAlpha = .28 + .25 * Math.sin(t + p.f) * .5; ctx.fillStyle = sujo > .5 ? '#C8B87A' : '#E6FFF8'; ctx.beginPath(); ctx.arc(p.x + Math.sin(t * .6 + p.f) * 4, p.y, p.r, 0, 7); ctx.fill(); });
+    cardumes.forEach((cd, ci) => {
+      const ax = ci ? 224 + Math.sin(t * .5) * 16 : 664 + Math.sin(t * .23) * 100, ay = ci ? 346 + Math.sin(t * .9) * 22 : 344 + Math.sin(t * .41) * 26;
+      const dir = ci ? Math.cos(t * .5) : Math.cos(t * .23);
+      ctx.globalAlpha = ci ? .9 : .3 + limpo * .62;
+      cd.fx.forEach(p => { const x = ax + p.ox * (dir > 0 ? 1 : -1), y = ay + p.oy + Math.sin(t * 1.6 + p.f) * 2.4;
+        ctx.save(); ctx.translate(x, y); ctx.scale((dir > 0 ? 1 : -1) * cd.esc, cd.esc); ctx.fillStyle = cd.cor; ctx.strokeStyle = '#3E5A4A'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(-5, 0); ctx.lineTo(-10, -3.4 + Math.sin(t * 12 + p.f)); ctx.lineTo(-10, 3.4 + Math.sin(t * 12 + p.f)); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(0, 0, 7, 2.8, 0, 0, 7); ctx.fill(); ctx.stroke(); ctx.strokeStyle = '#fff'; ctx.globalAlpha *= .7; ctx.beginPath(); ctx.moveTo(-3, -1); ctx.lineTo(3, -1.4); ctx.stroke(); ctx.globalAlpha /= .7;
+        ctx.fillStyle = '#12121A'; ctx.beginPath(); ctx.arc(4, -.6, .9, 0, 7); ctx.fill(); ctx.restore(); });
+    });
+    ctx.globalAlpha = 1;
+  });
+  let ultB = 0;
+  (function vida(t){ if (!vivo) return; if (t - ultB > 1500) { ultB = t; bolhas(sorte(560, 780), 450, 1); if (Math.random() < .5) bolhas(sorte(200, 250), 450, 1); } requestAnimationFrame(vida); })(0);
+  chip('Estacas: 0/5');
+  api.diz('Oi, eu sou a Xóchi, uma axolote de Xochimilco, no México! Aqui as pessoas plantam jardins dentro do lago.');
+  api.diz('Toque nas setas para fincar as estacas da nova chinampa.');
+  return () => { vivo = false; timers.forEach(clearTimeout); c.parar(); };
+}
