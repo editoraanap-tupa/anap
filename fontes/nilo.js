@@ -6,20 +6,20 @@ function jogoNilo(palco, api){
   const tw = (ms, fn, fim) => { const t0 = performance.now(); (function q(t){ if (!vivo) return; const k = Math.min(1, (t - t0) / ms); fn(k, k*k*(3-2*k)); if (k < 1) requestAnimationFrame(q); else fim && fim(); })(t0); };
   const lgd = (id, st, x2, y2) => `<linearGradient id="${id}" x1="0" y1="0" x2="${x2 || 0}" y2="${y2 === undefined ? 1 : y2}">${st.map((c, i) => `<stop offset="${(i / (st.length - 1)).toFixed(2)}" stop-color="${c}"/>`).join('')}</linearGradient>`;
   const PIV = { x:437, y:296 }, L1 = 118, L2 = 58, CORDA = 44, TH_UP = -28, TH_DN = 22, BACIA = { x:398, y:346 };
-  const NUV = [{ x:66, y:70, s:1 }, { x:168, y:44, s:1.15 }, { x:268, y:78, s:.92 }];
-  const NIVEIS = [392, 366, 338, 306];
-  const DOCA = { x:606, y:452 }, DE = .86;
+  const NUV = [{ x:70, y:74, s:.82 }, { x:172, y:50, s:.95 }, { x:270, y:84, s:.78 }];
+  const NIVEIS = [450, 420, 392, 366];
+  const DOCA = { x:588, y:458 }, DE = .95;
   /* canteiros: [x topo esq, x topo dir, x base esq, x base dir] */
   const CANT = [[306, 462, 286, 478], [166, 294, 144, 274], [26, 154, 4, 132]];
   const Y0 = 366, Y1 = 490;
   const ITENS = [{ id:'trigo', x:384, y:420 }, { id:'linho', x:218, y:420 }, { id:'cebola', x:98, y:418 }];
-  const FX = 518, FY = 384, FK = 1.35;
+  const FX = 478, FY = 372, FK = 1.35;
   const dentro = (c, qx, qy) => { const yy = Y0 + (Y1 - Y0) * qy, xl = c[0] + (c[2] - c[0]) * qy, xr = c[1] + (c[3] - c[1]) * qy; return [xl + (xr - xl) * qx, yy]; };
   const rachas = c => { let d = ''; for (let k = 0; k < 8; k++) { let [x, y] = dentro(c, R(.08, .92), R(.08, .92)); d += `M${x.toFixed(1)} ${y.toFixed(1)}`; for (let j = 0; j < 4; j++) { x += R(-13, 13); y += R(-7, 7); d += ` L${x.toFixed(1)} ${y.toFixed(1)}`; if (j === 1) d += ` M${x.toFixed(1)} ${y.toFixed(1)} l${R(-8, 8).toFixed(1)} ${R(3, 7).toFixed(1)} M${x.toFixed(1)} ${y.toFixed(1)}`; } d += ' '; } return `<path d="${d}" stroke="#F8E6BC" stroke-width="1.1" fill="none" opacity=".6" transform="translate(.8 1)"/><path d="${d}" stroke="#7E5A30" stroke-width="1.2" fill="none" stroke-linejoin="round" opacity=".85"/>`; };
   const torroes = (c, cor, borda, luz, n) => Array.from({ length:n || 24 }, () => { const [x, y] = dentro(c, R(.04, .96), R(.04, .96)), r = 1.4 + (y - Y0) / (Y1 - Y0) * 2.2; return `<ellipse cx="${x.toFixed(1)}" cy="${(y + r * .5).toFixed(1)}" rx="${(r * 1.5).toFixed(1)}" ry="${(r * .6).toFixed(1)}" fill="#000" opacity=".15"/><ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(r * 1.4).toFixed(1)}" ry="${r.toFixed(1)}" fill="${cor}" stroke="${borda}" stroke-width=".7"/><path d="M${(x - r).toFixed(1)} ${(y - r * .2).toFixed(1)} q${r.toFixed(1)} ${(-r * .9).toFixed(1)} ${(2 * r).toFixed(1)} 0" stroke="${luz}" stroke-width=".9" fill="none"/>`; }).join('');
   const papiroMini = (x, y, s) => `<g class="balanca" style="animation-duration:${R(4, 6.5).toFixed(1)}s;animation-delay:${R(-4, 0).toFixed(1)}s"><ellipse cx="${x}" cy="${y}" rx="${(8 * s).toFixed(1)}" ry="${(2 * s).toFixed(1)}" fill="#1E4A1A" opacity=".4"/>${[[-7, -24], [0, -32], [8, -22], [-2, -18]].map(([dx, dy]) => { const ex = x + dx * s, ey = y + dy * s; let r = ''; for (let k = 0; k < 11; k++) { const a = Math.PI * (.95 + 1.1 * k / 10); r += `M${ex.toFixed(1)} ${ey.toFixed(1)} q${(Math.cos(a) * 4 * s).toFixed(1)} ${(Math.sin(a) * 4 * s - 1.4 * s).toFixed(1)} ${(Math.cos(a) * 7 * s).toFixed(1)} ${(Math.sin(a) * 5 * s + 1.6 * s).toFixed(1)} `; } const st = `M${x} ${y} Q${(x + dx * s * .3).toFixed(1)} ${(y + dy * s * .5).toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`; return `<path d="${st}" stroke="#2E6A22" stroke-width="${(2.4 * s).toFixed(1)}" fill="none" stroke-linecap="round"/><path d="${st}" stroke="#8ACB54" stroke-width="${(1.1 * s).toFixed(1)}" fill="none" stroke-linecap="round"/><path d="${r}" stroke="#3E7A22" stroke-width="${(1.5 * s).toFixed(1)}" fill="none" stroke-linecap="round"/><path d="${r}" stroke="#C0EA84" stroke-width="${(.7 * s).toFixed(1)}" fill="none" stroke-linecap="round"/>`; }).join('')}</g>`;
   const abelharuco = () => `<path d="M-6 1 L-22 5" stroke="#1E5A2A" stroke-width="2.4" stroke-linecap="round"/><path d="M-6 1 L-22 5" stroke="#5AC05A" stroke-width="1" stroke-linecap="round"/><path d="M-1 4 v3 M3 4 v3" stroke="#3A2A1A" stroke-width="1" stroke-linecap="round"/><path d="M-7 0 C-7 -6 4 -9 8 -4 C10 0 6 4 0 4 C-4 4 -7 3 -7 0Z" fill="url(#niAbel)" stroke="#1E5A2A" stroke-width="1"/><path d="M-5 -1 C-2 -4 2 -4 5 -2" stroke="#2E8A3A" stroke-width="1.4" fill="none"/><circle cx="8" cy="-6" r="4.4" fill="#6ACC5A" stroke="#1E5A2A" stroke-width="1"/><path d="M5 -9.6 q3 -1.6 6 .4" stroke="#E8B030" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M4 -6 h9" stroke="#12121A" stroke-width="1.7" stroke-linecap="round"/><path d="M8 -2.4 q3 1 5 -1" stroke="#2EA8E0" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M12 -6.2 L20 -4.6 L12 -4.2Z" fill="#1A1A22"/><circle cx="9" cy="-6.2" r="1.3" fill="#B8241A"/><circle cx="9.4" cy="-6.6" r=".45" fill="#fff"/><path d="M-3 -4 q3 -2 6 -1" stroke="#D8F8B0" stroke-width="1" fill="none"/>`;
-  const POUSO_A = [[290, 226], [306, 214], [322, 232]], POUSO_B = [[414, 293], [452, 293], [463, 293]];
+  const POUSO_A = [[288, 234], [304, 222], [320, 240]], POUSO_B = [[414, 293], [452, 293], [463, 293]];
   /* ---------- desenhos ---------- */
   const palmeira = (x, y, h, s, cor, esc, dir) => {
     const d = dir || 1, tx = x + d * h * .18, ty = y - h;
@@ -77,7 +77,7 @@ function jogoNilo(palco, api){
   const cantPath = (c, enc) => { const [a, b, cc, dd] = c, e = enc || 0; return `M${a + e} ${Y0 + e * .6} L${b - e} ${Y0 + e * .6} L${dd - e} ${Y1 - e * .4} L${cc + e} ${Y1 - e * .4}Z`; };
   const sulcos = (c, cor, w, op) => { const [a, b, cc, dd] = c; let s = ''; for (let k = 1; k < 8; k++) { const q = k / 8; s += `M${(a + (b - a) * q).toFixed(1)} ${Y0 + 3} L${(cc + (dd - cc) * q).toFixed(1)} ${Y1 - 3} `; } return `<path d="${s}" stroke="${cor}" stroke-width="${w}" fill="none" opacity="${op}"/>`; };
   const ondulas = (c, cor, w, op) => { const [a, b, cc, dd] = c; let s = ''; for (let r = 0; r < 9; r++) { const yy = Y0 + 8 + r * 14, q = (yy - Y0) / (Y1 - Y0), xl = a + (cc - a) * q + 4, xr = b + (dd - b) * q - 4, n = Math.round((xr - xl) / 16); s += `M${xl.toFixed(1)} ${yy}`; for (let k = 0; k < n; k++) s += ` q${((xr - xl) / n / 2).toFixed(1)} ${k % 2 ? 2 : -2} ${((xr - xl) / n).toFixed(1)} 0`; s += ' '; } return `<path d="${s}" stroke="${cor}" stroke-width="${w}" fill="none" opacity="${op}" stroke-linecap="round"/>`; };
-  const fileira = (c, fn) => { const [a, b, cc, dd] = c; let s = ''; for (let r = 0; r < 5; r++) { const yy = Y0 + 14 + r * 24, q = (yy - Y0) / (Y1 - Y0), xl = a + (cc - a) * q + 8, xr = b + (dd - b) * q - 8, n = 7; for (let k = 0; k < n; k++) s += fn(xl + (xr - xl) * (k + .5) / n, yy, .7 + q * .5, r * n + k); } return s; };
+  const fileira = (c, fn) => { const [a, b, cc, dd] = c; let s = ''; for (let r = 0; r < 5; r++) { const yy = Y0 + 14 + r * 24, q = (yy - Y0) / (Y1 - Y0), xl = a + (cc - a) * q + 8, xr = b + (dd - b) * q - 8, n = 7; for (let k = 0; k < n; k++) { const x = xl + (xr - xl) * (k + .5) / n, sc = .7 + q * .5; s += `<ellipse cx="${(x + 2 * sc).toFixed(1)}" cy="${(yy + .6).toFixed(1)}" rx="${(6 * sc).toFixed(1)}" ry="${(1.6 * sc).toFixed(1)}" fill="#1A1008" opacity=".2"/>` + fn(x, yy, sc, r * n + k); } } return s; };
   const broto = (x, y, s) => `<path d="M${x.toFixed(1)} ${y.toFixed(1)} q${(-1 * s).toFixed(1)} ${(-5 * s).toFixed(1)} ${(-5 * s).toFixed(1)} ${(-7 * s).toFixed(1)} M${x.toFixed(1)} ${y.toFixed(1)} q${(1 * s).toFixed(1)} ${(-6 * s).toFixed(1)} ${(5 * s).toFixed(1)} ${(-8 * s).toFixed(1)}" stroke="#7FD04A" stroke-width="${(2.2 * s).toFixed(1)}" fill="none" stroke-linecap="round"/>`;
   const trigo = (x, y, s) => `<path d="M${x.toFixed(1)} ${y.toFixed(1)} q-1 ${(-10 * s).toFixed(1)} 1 ${(-20 * s).toFixed(1)}" stroke="#B8862A" stroke-width="${(1.4 * s).toFixed(1)}" fill="none"/><ellipse cx="${(x + 1).toFixed(1)}" cy="${(y - 23 * s).toFixed(1)}" rx="${(2.4 * s).toFixed(1)}" ry="${(5.4 * s).toFixed(1)}" fill="#F2C24A" stroke="#A8741E" stroke-width="${(.8 * s).toFixed(1)}"/><path d="M${(x + 1).toFixed(1)} ${(y - 28 * s).toFixed(1)} l0 ${(-5 * s).toFixed(1)}" stroke="#D8A43A" stroke-width=".8"/><path d="M${(x - 3).toFixed(1)} ${(y - 6 * s).toFixed(1)} q-3 -4 -4 -8 M${(x + 3).toFixed(1)} ${(y - 9 * s).toFixed(1)} q3 -3 4 -7" stroke="#C89A3A" stroke-width="${(1.1 * s).toFixed(1)}" fill="none"/>`;
   const linho = (x, y, s) => `<path d="M${x.toFixed(1)} ${y.toFixed(1)} q1 ${(-10 * s).toFixed(1)} 0 ${(-20 * s).toFixed(1)} M${x.toFixed(1)} ${(y - 12 * s).toFixed(1)} l${(-4 * s).toFixed(1)} -4 M${x.toFixed(1)} ${(y - 16 * s).toFixed(1)} l${(4 * s).toFixed(1)} -4" stroke="#4E9A3A" stroke-width="${(1.3 * s).toFixed(1)}" fill="none"/><g fill="#7AA8FF" stroke="#2E58B8" stroke-width=".6">${[[0, -22], [-4, -18], [4, -18]].map(([dx, dy]) => `<circle cx="${(x + dx * s).toFixed(1)}" cy="${(y + dy * s).toFixed(1)}" r="${(2.6 * s).toFixed(1)}"/>`).join('')}</g><circle cx="${x.toFixed(1)}" cy="${(y - 22 * s).toFixed(1)}" r="${(.9 * s).toFixed(1)}" fill="#FFE27A"/>`;
@@ -89,80 +89,147 @@ function jogoNilo(palco, api){
     cebola:`<path d="M-20 0 C-22 18 -12 24 0 24 C12 24 22 18 20 0Z" fill="url(#niCesto)" stroke="#6E3E14" stroke-width="1.8"/><path d="M-19 8 C-8 12 8 12 19 8 M-17 16 C-6 20 6 20 17 16" stroke="#8A5A22" stroke-width="1.2" fill="none"/>${[[-11, -2], [0, -5], [11, -2], [-5, -10], [6, -10]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="7" ry="6" fill="#B04A8A" stroke="#6A1E4E" stroke-width="1.2"/><path d="M${x - 3} ${y - 2} q2 -2 4 -2" stroke="#F0B0D8" stroke-width="1.2" fill="none"/><path d="M${x} ${y - 6} l0 -4" stroke="#C8B07A" stroke-width="1.2"/>`).join('')}<path d="M-21 0 C-8 4 8 4 21 0" stroke="#5A3010" stroke-width="3.4" fill="none" stroke-linecap="round"/><path d="M-19 -1 C-8 2 8 2 19 -1" stroke="#E0A858" stroke-width="1.1" fill="none"/>`
   };
   /* rio: margens */
-  const RIO = 'M246 181 C296 190 352 199 400 214 C450 230 490 262 500 300 C508 336 514 400 500 500 L700 500 C676 420 640 340 600 296 C560 254 480 222 422 206 C362 190 302 182 254 179Z';
-  const CHEIA = 'M0 302 C120 296 250 292 350 286 C410 282 452 262 468 240 L540 236 C590 248 640 262 684 272 V412 H800 V500 H0Z';
-  const ESCADA = (() => { let d = 'M690 262', t = ''; for (let i = 0; i < 9; i++) { const x = 708 + i * 6, y = 262 + i * 17; d += ` H${x} V${y + 17}`; t += `<path d="M690 ${y} H${x}" stroke="#FCEAC8" stroke-width="2" stroke-linecap="round"/><path d="M${x - 1} ${y + 2} V${y + 16}" stroke="#7A5434" stroke-width="2" opacity=".45"/><path d="M690 ${y + 4} H${x - 2}" stroke="#8A6440" stroke-width="1" opacity=".35"/>`; } d += ' H762 V420 H690Z'; return `<path d="${d}" fill="url(#niDegrau)" stroke="#6E4A2A" stroke-width="1.3" stroke-linejoin="round"/>${t}`; })();
-  const BLOCOS = (() => { let d = ''; for (let r = 0; r < 15; r++) { const y = 248 + r * 12; d += `M676 ${y} H804 `; for (let x = 676 + (r % 2 ? 10 : 0); x < 804; x += 20) d += `M${x} ${y} v12 `; } return d; })();
-  const BLOCOS2 = (() => { let d = ''; for (let r = 0; r < 14; r++) { const y = 256 + r * 12; d += `M690 ${y} H790 `; for (let x = 690 + (r % 2 ? 9 : 0); x < 790; x += 18) d += `M${x} ${y} v12 `; } return d; })();
+  const RIO = 'M296 190 C330 196 380 206 420 222 C470 244 496 270 503 300 C510 340 512 400 498 500 L780 500 C750 440 716 380 680 330 C640 280 560 236 470 212 C400 198 340 192 304 189Z';
+  const RIO_E = 'M296 190 C330 196 380 206 420 222 C470 244 496 270 503 300 C510 340 512 400 498 500', RIO_D = 'M780 500 C750 440 716 380 680 330 C640 280 560 236 470 212 C400 198 340 192 304 189';
+  const CHEIA = 'M0 308 C120 300 250 302 345 294 C400 288 440 262 452 236 L472 236 C492 262 508 300 512 340 L508 500 H0Z';
+  const EP = t => ({ y:300 + 196 * t, xl:664 + 70 * t, xr:692 + 128 * t }), EH = t => 8 + 60 * t;
+  const CORR = (() => { const a = EP(0), b = EP(1); return `M${a.xl} ${a.y} L${a.xr} ${a.y} L${b.xr} ${b.y} L${b.xl} ${b.y}Z`; })();
+  const quadE = (ta, tb, dxa, dya, dxb, dyb, lado) => { const a = EP(ta), b = EP(tb), xa = lado ? a.xr : a.xl, xb = lado ? b.xr : b.xl; return `M${xa.toFixed(1)} ${a.y.toFixed(1)} L${(xa + dxa).toFixed(1)} ${(a.y + dya).toFixed(1)} L${(xb + dxb).toFixed(1)} ${(b.y + dyb).toFixed(1)} L${xb.toFixed(1)} ${b.y.toFixed(1)}Z`; };
+  const ESCADA = (() => {
+    const N = 12; let deg = '';
+    for (let k = 0; k < N; k++) {
+      const t0 = k / N, t1 = (k + 1) / N, tm = t0 + (t1 - t0) * .52, a = EP(t0), m = EP(tm), b = EP(t1);
+      deg += `<path d="M${a.xl.toFixed(1)} ${a.y.toFixed(1)} L${a.xr.toFixed(1)} ${a.y.toFixed(1)} L${m.xr.toFixed(1)} ${m.y.toFixed(1)} L${m.xl.toFixed(1)} ${m.y.toFixed(1)}Z" fill="url(#niDegrau)"/>`;
+      deg += `<path d="M${m.xl.toFixed(1)} ${m.y.toFixed(1)} L${m.xr.toFixed(1)} ${m.y.toFixed(1)} L${b.xr.toFixed(1)} ${b.y.toFixed(1)} L${b.xl.toFixed(1)} ${b.y.toFixed(1)}Z" fill="#B8915E"/>`;
+      deg += `<path d="M${m.xl.toFixed(1)} ${m.y.toFixed(1)} L${m.xr.toFixed(1)} ${m.y.toFixed(1)}" stroke="#FFF2D6" stroke-width="${(1 + t1 * 1.4).toFixed(1)}"/><path d="M${b.xl.toFixed(1)} ${b.y.toFixed(1)} L${b.xr.toFixed(1)} ${b.y.toFixed(1)}" stroke="#6E4A2A" stroke-width="${(.8 + t1).toFixed(1)}"/>`;
+      if (k % 3 === 1) { const x = m.xl + (m.xr - m.xl) * .62; deg += `<path d="M${x.toFixed(1)} ${(m.y + 2).toFixed(1)} l${(3 + t1 * 4).toFixed(1)} ${(-1).toFixed(1)}" stroke="#8A6440" stroke-width="1" opacity=".6"/>`; }
+    }
+    /* parede alta do lado da margem (na sombra), com fiadas de pedra */
+    const parede = quadE(0, 1, 2, -EH(0), 14, -EH(1), 1);
+    let fiadas = ''; for (let r = 1; r < 7; r++) { const q = r / 7; fiadas += `M${(EP(0).xr + 2 * q).toFixed(1)} ${(EP(0).y - EH(0) * q).toFixed(1)} L${(EP(1).xr + 14 * q).toFixed(1)} ${(EP(1).y - EH(1) * q).toFixed(1)} `; }
+    for (let k = 0; k < 14; k++) { const t = (k + .5) / 14, p = EP(t), h = EH(t), q0 = (k % 2) / 7 + .07; for (let r = 0; r < 3; r++) { const qa = q0 + r * 2 / 7; if (qa + 1 / 7 > 1) continue; fiadas += `M${(p.xr + 14 * t * qa).toFixed(1)} ${(p.y - h * qa).toFixed(1)} l${(14 * t / 7).toFixed(1)} ${(-h / 7).toFixed(1)} `; } }
+    const coroa = (() => { const a = EP(0), b = EP(1); return `M${a.xr + 2} ${a.y - EH(0)} L${b.xr + 14} ${b.y - EH(1)} L${b.xr + 40} ${b.y - EH(1) - 6} L${a.xr + 8} ${a.y - EH(0) - 2}Z`; })();
+    /* mureta do lado do rio */
+    const PM = t => 5 + 9 * t, QD = t => 34 - 26 * t;
+    const mTopo = (() => { let d = ''; for (let i = 0; i <= 10; i++) { const t = i / 10, p = EP(t); d += `${i ? 'L' : 'M'}${(p.xl - 1).toFixed(1)} ${(p.y - PM(t)).toFixed(1)} `; } for (let i = 10; i >= 0; i--) { const t = i / 10, p = EP(t); d += `L${(p.xl + 5 + 4 * t).toFixed(1)} ${(p.y - PM(t) + 1 + t).toFixed(1)} `; } return d + 'Z'; })();
+    const mFace = (() => { let d = ''; for (let i = 0; i <= 10; i++) { const t = i / 10, p = EP(t); d += `${i ? 'L' : 'M'}${(p.xl - 1).toFixed(1)} ${(p.y - PM(t)).toFixed(1)} `; } for (let i = 10; i >= 0; i--) { const t = i / 10, p = EP(t); d += `L${(p.xl - 1 - QD(t) * .35).toFixed(1)} ${(p.y + QD(t)).toFixed(1)} `; } return d + 'Z'; })();
+    let mBlocos = ''; for (let r = 1; r < 4; r++) { const q = r / 4; let d = ''; for (let i = 0; i <= 10; i++) { const t = i / 10, p = EP(t), y0 = p.y - PM(t), y1 = p.y + QD(t); d += `${i ? 'L' : 'M'}${(p.xl - 1 - QD(t) * .35 * q).toFixed(1)} ${(y0 + (y1 - y0) * q).toFixed(1)} `; } mBlocos += d; }
+    for (let k = 0; k < 16; k++) { const t = (k + .5) / 16, p = EP(t), y0 = p.y - PM(t), y1 = p.y + QD(t), r = k % 4, qa = r / 4, qb = (r + 1) / 4; mBlocos += `M${(p.xl - 1 - QD(t) * .35 * qa).toFixed(1)} ${(y0 + (y1 - y0) * qa).toFixed(1)} L${(p.xl - 1 - QD(t) * .35 * qb).toFixed(1)} ${(y0 + (y1 - y0) * qb).toFixed(1)} `; }
+    return { fundo:`<path d="${parede}" fill="url(#niPedraF)" stroke="#5E3E22" stroke-width="1.3" stroke-linejoin="round"/><path d="${fiadas}" stroke="#6E4E30" stroke-width=".9" fill="none" opacity=".55"/><path d="${coroa}" fill="#F2DAB0" stroke="#7A5434" stroke-width="1.2" stroke-linejoin="round"/><path d="M${EP(0).xr + 2} ${EP(0).y - EH(0)} L${EP(1).xr + 14} ${EP(1).y - EH(1)}" stroke="#FFF4DE" stroke-width="1.6"/>`,
+      degraus:`<path d="${CORR}" fill="#B8915E"/>${deg}<path d="${quadE(0, 1, 2, -EH(0), 14, -EH(1), 1)}" fill="none"/><path d="M${EP(0).xr} ${EP(0).y} L${EP(1).xr} ${EP(1).y}" stroke="#3A2414" stroke-width="2" opacity=".5"/>`,
+      sombra:`<path d="M${EP(0).xr} ${EP(0).y} L${EP(1).xr} ${EP(1).y} L${EP(1).xr - 30} ${EP(1).y} L${EP(0).xr - 6} ${EP(0).y}Z" fill="#2A1808" opacity=".22"/>`,
+      mureta:`<path d="${mFace}" fill="url(#niPedraL)" stroke="#5E3E22" stroke-width="1.3" stroke-linejoin="round"/><path d="${mBlocos}" stroke="#8A6440" stroke-width=".9" fill="none" opacity=".6"/><path d="${mTopo}" fill="#F6E0B8" stroke="#7A5434" stroke-width="1.1" stroke-linejoin="round"/><path d="M${EP(0).xl - 1} ${EP(0).y - PM(0)} L${EP(1).xl - 1} ${EP(1).y - PM(1)}" stroke="#FFF6E2" stroke-width="1.4"/>` };
+  })();
+  const faixasCampo = (x0, x1, y0, rows, h, inc, cores) => { let s = ''; for (let r = 0; r < rows; r++) { const ya = y0 + r * h; let x = x0 + r * inc, k = r; while (x < x1) { const w = R(16, 30) * (1 + r * .3); s += `<path d="M${x.toFixed(1)} ${ya.toFixed(1)} h${w.toFixed(1)} l${(inc * .6).toFixed(1)} ${(h - 1.2).toFixed(1)} h${(-w - inc * 1.2).toFixed(1)}Z" fill="${cores[(k++) % cores.length]}" stroke="#5E8A3A" stroke-width=".6"/>`; x += w + 1.4; } } return s; };
+  const NP = [[-46, 8, 19], [-26, -4, 25], [0, -14, 30], [28, -6, 25], [50, 8, 18], [-14, 12, 22], [16, 12, 22], [36, 14, 16], [-36, 16, 16]];
+  const NUV_ARO = (() => { let d = ''; NP.forEach(([x, y, r], i) => { let on = false; for (let a = -175; a <= 5; a += 5) { const ra = a * Math.PI / 180, px = x + Math.cos(ra) * r, py = y + Math.sin(ra) * r, fora = NP.every(([x2, y2, r2], j) => j === i || Math.hypot(px - x2, py - y2) > r2 + .5) && py < 14; if (fora) { d += `${on ? 'L' : 'M'}${px.toFixed(1)} ${py.toFixed(1)} `; on = true; } else on = false; } }); return d; })();
+  const nuvemVol = () => `<ellipse cx="2" cy="30" rx="62" ry="8" fill="#3E4864" opacity=".25"/>${NP.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#46506E" stroke="#3A425E" stroke-width="3"/>`).join('')}${NP.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#6E7898"/>`).join('')}
+      <g clip-path="url(#niNuvC)"><g filter="url(#niNuvF)">${NP.map(([x, y, r]) => `<circle cx="${x + 3}" cy="${y - 5}" r="${(r * .86).toFixed(1)}" fill="#A6AEC6"/>`).join('')}${NP.slice(0, 5).map(([x, y, r]) => `<circle cx="${x + 6}" cy="${y - 9}" r="${(r * .64).toFixed(1)}" fill="#DCDCE8"/>`).join('')}${NP.slice(0, 5).map(([x, y, r]) => `<circle cx="${x + 8}" cy="${y - 13}" r="${(r * .36).toFixed(1)}" fill="#FFF8EE"/>`).join('')}</g>
+      <path d="M-70 22 C-40 36 40 36 70 22 V40 H-70Z" fill="#4E5876" opacity=".7"/>
+      <g class="ni-nuv-esc" style="opacity:0;transition:opacity 1.2s"><rect x="-80" y="-50" width="160" height="90" fill="#2E3650" opacity=".6"/></g></g>
+      <path d="${NUV_ARO}" stroke="#FFE8C0" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".95"/>`;
+  const nuvemBranca = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})">${[[-30, 6, 14], [-12, -2, 18], [10, -6, 20], [30, 4, 14], [0, 8, 16]].map(([cx, cy, r]) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#niPuffB)"/>`).join('')}<path d="M-44 12 C-20 22 20 22 44 12 C30 20 -30 20 -44 12Z" fill="#E2D2C8" opacity=".7"/></g>`;
+  const falucaLonge = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><g style="animation:flutua ${R(3, 4.5).toFixed(1)}s ease-in-out infinite alternate"><path d="M-40 2 L30 -88 C40 -56 46 -24 42 4Z" fill="#FFF8EC" stroke="#8A7A5A" stroke-width="3"/><path d="M-50 4 C-30 8 40 8 56 2 C50 14 30 18 0 18 C-30 18 -46 14 -50 4Z" fill="#E8EEF6" stroke="#3A4A6A" stroke-width="3"/><path d="M-46 9 C-20 12 30 12 52 7" stroke="#2E7BF6" stroke-width="3" fill="none"/></g></g>`;
+  const pombal = (x, y, h) => { let fur = ''; for (let r = 0; r < 6; r++) { const yy = y - 16 - r * (h - 26) / 6, w = 13 - r * 1.2; for (let k = -1; k <= 1; k++) fur += `<ellipse cx="${(x + k * w * .6).toFixed(1)}" cy="${yy.toFixed(1)}" rx="1.8" ry="2.2" fill="#3A2214"/>`; fur += `<path d="M${(x - w - 3).toFixed(1)} ${(yy + 4).toFixed(1)} h${(2 * w + 6).toFixed(1)}" stroke="#6E4220" stroke-width="1.6" stroke-linecap="round"/>`; }
+    return `<g><path d="M${x - 22} ${y + 1} l-14 4 h40 l14 -4Z" fill="#3A2410" opacity=".2"/><path d="M${x - 16} ${y} L${x - 10} ${y - h + 14} Q${x} ${y - h - 6} ${x + 10} ${y - h + 14} L${x + 16} ${y}Z" fill="url(#niAdobe)" stroke="#7A4A26" stroke-width="1.6" stroke-linejoin="round"/><path d="M${x + 8} ${y - h + 18} L${x + 13} ${y - 2}" stroke="#9A6234" stroke-width="4" opacity=".35"/><path d="M${x - 12} ${y - 4} L${x - 7} ${y - h + 18}" stroke="#FCE6C0" stroke-width="1.6" opacity=".8"/>${fur}<circle cx="${x}" cy="${y - h + 2}" r="2.4" fill="#E8C060" stroke="#7A4A26" stroke-width=".8"/><g fill="#F4F2EC" stroke="#6A6A7A" stroke-width=".6"><path d="M${x - 6} ${y - h + 22} q3 -3 6 0 l-3 1.6Z"/><path d="M${x + 4} ${y - h + 34} q3 -3 6 0 l-3 1.6Z"/></g></g>`; };
+  const domo = (cx, y, r) => `<path d="M${cx - r} ${y} A${r} ${r * .9} 0 0 1 ${cx + r} ${y}Z" fill="url(#niDomo)" stroke="#7A4A26" stroke-width="1.4"/><path d="M${cx - r * .6} ${y - r * .5} A${r * .7} ${r * .7} 0 0 1 ${cx} ${y - r * .86}" stroke="#FCE6C0" stroke-width="1.6" fill="none" stroke-linecap="round"/><circle cx="${cx}" cy="${y - r * .9 - 2}" r="1.8" fill="#E8C060" stroke="#7A4A26" stroke-width=".7"/><circle cx="${cx + r * .3}" cy="${y - r * .35}" r="1.4" fill="#5A3418"/>`;
   const svg = `<svg viewBox="0 0 800 500" role="img" aria-label="Rio Nilo no Egito: montanhas distantes com nuvens de chuva, o rio no meio do deserto, campos, um shaduf, um nilômetro e uma vila">
     <defs>
-      ${lgd('niCeu', ['#4FA2E2', '#9CCDEE', '#F6E2C0'])}
-      ${lgd('niMonteL', ['#93AFC6', '#B9C6D4'])}${lgd('niMonte', ['#4E8E7E', '#7AAA86'])}${lgd('niMonteE', ['#2E6A62', '#4E8A6A'])}
-      ${lgd('niPlato', ['#F0C49A', '#D4966A'])}${lgd('niAreia', ['#F6DCA4', '#E2B474'])}${lgd('niDuna', ['#F8E2B0', '#E8BC7A'])}
-      ${lgd('niVerde', ['#9CCB5A', '#6AA844', '#4E8E36'])}
+      ${lgd('niCeu', ['#3E8CD8', '#7FB8E6', '#CDE4EE', '#FBDDB0'])}
+      ${lgd('niMonteL', ['#A6B2D0', '#CCCCD8'])}${lgd('niMonte', ['#7A9E9A', '#A2B8A6'])}${lgd('niMonteE', ['#2E6A62', '#4E8A6A'])}
+      ${lgd('niPlato', ['#F0C49A', '#D4966A'])}${lgd('niAreia', ['#F6D8A0', '#E8BA7A'])}${lgd('niDuna', ['#FCE4AE', '#E8B470'])}${lgd('niDuna2', ['#F8D89C', '#DCA25C'])}${lgd('niFalesia', ['#F6D4C0', '#DEA894'])}${lgd('niTalude', ['#EEC8A2', '#DCAE84'])}${lgd('niPedraF', ['#C8A47A', '#A4805A'])}${lgd('niPedraL', ['#F2D8AE', '#CFA87C'])}${lgd('niMonte2', ['#C8A46C', '#A8844E'])}${lgd('niDique', ['#D0A46A', '#8E663C'])}
+      ${lgd('niVerde', ['#AED266', '#78B24A', '#4E8E36'])}
       ${lgd('niRio', ['#7FCFE0', '#3E9EC4', '#1E6E9A'])}${lgd('niRioCheia', ['#C08A5A', '#9A643E', '#7A4A2A'])}
       ${lgd('niCheia', ['#B88C62', '#946A44'])}
       ${lgd('niSeco', ['#E6C890', '#C9A066'])}${lgd('niLama', ['#4E3C30', '#2A1E16'])}${lgd('niMolhado', ['#3A2E28', '#1A1210'])}
       ${lgd('niVerdeC', ['#8ED65A', '#4E9E36'])}${lgd('niOuro', ['#F2D27A', '#D2A040'])}
       ${lgd('niAdobe', ['#ECC48E', '#C8915A'])}${lgd('niPedra', ['#E2C298', '#B48A5E'])}${lgd('niVara', ['#D9A060', '#8A5A2A'], 1, 0)}${lgd('niBalde', ['#C9784A', '#7A3E1E'])}
-      ${lgd('niCesto', ['#E0A858', '#A86A28'])}${lgd('niMadeira', ['#B07A44', '#6E4220'], 1, 0)}${lgd('niBarro', ['#E08A54', '#9A4A22'], 1, 0)}${lgd('niPoco', ['#5A4028', '#3A2818'])}<linearGradient id="niSombraT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140C06" stop-opacity=".55"/><stop offset="1" stop-color="#140C06" stop-opacity="0"/></linearGradient>${lgd('niColuna', ['#F0D8B0', '#B8915E'], 1, 0)}${lgd('niDegrau', ['#E8CCA0', '#BC976A'])}${lgd('niTil', ['#B8D0C8', '#6E8E86'])}${lgd('niAbel', ['#7ADC6A', '#2E9A3E'])}${lgd('niFolha', ['#7FC04A', '#2E6A22'], 1, 0)}<linearGradient id="niBruma" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4E0" stop-opacity=".5"/><stop offset="1" stop-color="#FFF4E0" stop-opacity="0"/></linearGradient><linearGradient id="niReflexo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#CFEFFF" stop-opacity="0"/><stop offset=".5" stop-color="#CFEFFF" stop-opacity=".4"/><stop offset="1" stop-color="#CFEFFF" stop-opacity="0"/></linearGradient>${lgd('niVela', ['#FFFFFF', '#E8DCC2'], 1, 1)}${lgd('niCasco', ['#F4F6FA', '#B8C4D6'])}
-      ${lgd('niBufalo', ['#6A6672', '#2A262E'])}${lgd('niGarca', ['#FFFFFF', '#DCE2EE'])}${lgd('niChifre', ['#E8DCC8', '#7A6A58'], 1, 0)}${lgd('niGalab', ['#9CC8E8', '#5E90BE'])}${lgd('niBlusa', ['#FF8A5A', '#E0502E'])}
+      ${lgd('niCesto', ['#E0A858', '#A86A28'])}${lgd('niMadeira', ['#B07A44', '#6E4220'], 1, 0)}${lgd('niBarro', ['#E08A54', '#9A4A22'], 1, 0)}${lgd('niPoco', ['#5A4028', '#3A2818'])}<linearGradient id="niSombraT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#140C06" stop-opacity=".55"/><stop offset="1" stop-color="#140C06" stop-opacity="0"/></linearGradient>${lgd('niColuna', ['#F0D8B0', '#B8915E'], 1, 0)}${lgd('niDegrau', ['#E8CCA0', '#BC976A'])}${lgd('niTil', ['#B8D0C8', '#6E8E86'])}${lgd('niAbel', ['#7ADC6A', '#2E9A3E'])}${lgd('niFolha', ['#7FC04A', '#2E6A22'], 1, 0)}<linearGradient id="niBruma" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4E0" stop-opacity="0"/><stop offset=".45" stop-color="#FFF4E0" stop-opacity=".45"/><stop offset="1" stop-color="#FFF4E0" stop-opacity="0"/></linearGradient><linearGradient id="niReflexo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#CFEFFF" stop-opacity="0"/><stop offset=".5" stop-color="#CFEFFF" stop-opacity=".4"/><stop offset="1" stop-color="#CFEFFF" stop-opacity="0"/></linearGradient>${lgd('niVela', ['#FFFFFF', '#E8DCC2'], 1, 1)}${lgd('niCasco', ['#F4F6FA', '#B8C4D6'])}
+      ${lgd('niGarca', ['#FFFFFF', '#DCE2EE'])}${lgd('niGalab', ['#9CC8E8', '#5E90BE'])}${lgd('niBlusa', ['#FF8A5A', '#E0502E'])}
+      <radialGradient id="niPuff" cx=".65" cy=".28" r=".85"><stop offset="0" stop-color="#FFF9EE"/><stop offset=".35" stop-color="#E8E6EE"/><stop offset=".72" stop-color="#A4ACC4"/><stop offset="1" stop-color="#727C9A"/></radialGradient>
+      <radialGradient id="niPuffB" cx=".6" cy=".3" r=".8"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".6" stop-color="#FFF4E4"/><stop offset="1" stop-color="#EAD4C8"/></radialGradient>
+      <radialGradient id="niRaio" gradientUnits="userSpaceOnUse" cx="694" cy="62" r="520"><stop offset="0" stop-color="#FFF4D0" stop-opacity=".55"/><stop offset="1" stop-color="#FFF4D0" stop-opacity="0"/></radialGradient>
+      <radialGradient id="niHalo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF6D0" stop-opacity=".8"/><stop offset=".45" stop-color="#FFE8A0" stop-opacity=".3"/><stop offset="1" stop-color="#FFE8A0" stop-opacity="0"/></radialGradient>
+      <radialGradient id="niDomo" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FAE0B6"/><stop offset="1" stop-color="#C08850"/></radialGradient>
+      <linearGradient id="niBrumaV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF0DC" stop-opacity=".55"/><stop offset="1" stop-color="#FFF0DC" stop-opacity=".1"/></linearGradient>
+      <linearGradient id="niVeu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E86B8" stop-opacity=".55"/><stop offset="1" stop-color="#6E86B8" stop-opacity="0"/></linearGradient>
+      <radialGradient id="niLuz" gradientUnits="userSpaceOnUse" cx="694" cy="62" r="720"><stop offset="0" stop-color="#FFE2A0" stop-opacity=".3"/><stop offset=".5" stop-color="#FFD890" stop-opacity=".1"/><stop offset="1" stop-color="#FFD890" stop-opacity="0"/></radialGradient>
       <radialGradient id="niSolG" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFF6C8"/><stop offset=".55" stop-color="#FFD24A"/><stop offset="1" stop-color="#F0A81E"/></radialGradient>
       <radialGradient id="niPele1" cx=".4" cy=".35"><stop offset="0" stop-color="#C98A5A"/><stop offset="1" stop-color="#8A5530"/></radialGradient>
       <radialGradient id="niPele2" cx=".4" cy=".35"><stop offset="0" stop-color="#B07448"/><stop offset="1" stop-color="#7A4626"/></radialGradient>
       <radialGradient id="niPeso" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#9A8A78"/><stop offset=".6" stop-color="#6A5A4A"/><stop offset="1" stop-color="#3E3228"/></radialGradient>
       <radialGradient id="niVinheta" cx=".5" cy=".46" r=".78"><stop offset=".62" stop-color="#3A1E0A" stop-opacity="0"/><stop offset="1" stop-color="#3A1E0A" stop-opacity=".32"/></radialGradient>
       <linearGradient id="niNevoa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF4E0" stop-opacity="0"/><stop offset="1" stop-color="#FFF4E0" stop-opacity=".7"/></linearGradient>
-      <clipPath id="niPocoC"><path d="M690 416 V252 H790 V416Z"/></clipPath><filter id="niDesf" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>${CANT.map((c, i) => `<clipPath id="niCantC${i}"><path d="${cantPath(c)}"/></clipPath>`).join('')}
+      <clipPath id="niPocoC"><path d="${CORR}"/></clipPath><filter id="niNuvF" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3.2"/></filter><clipPath id="niNuvC">${NP.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join()}</clipPath><filter id="niDesf" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>${CANT.map((c, i) => `<clipPath id="niCantC${i}"><path d="${cantPath(c)}"/></clipPath>`).join('')}
       <clipPath id="niRioC"><path d="${RIO}"/></clipPath>
       <filter id="niGrao"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .05 0"/></filter>
     </defs>
-    <rect width="800" height="200" fill="url(#niCeu)"/>
-    <g id="ni-sol" class="toque"><circle cx="694" cy="62" r="58" fill="#FFE8A0" opacity=".25"/><circle cx="694" cy="62" r="42" fill="#FFE27A" opacity=".3"/><circle cx="694" cy="62" r="27" fill="url(#niSolG)" stroke="#F0A81E" stroke-width="2.2"/><path d="M680 52 q8 -9 20 -9" stroke="#FFF6C8" stroke-width="4" fill="none" stroke-linecap="round"/></g>
-    <g class="deriva" style="animation-duration:34s"><use href="#nuvem" x="440" y="40" width="70" height="32" style="color:#fff" opacity=".7"/><use href="#nuvem" x="560" y="96" width="52" height="24" style="color:#fff" opacity=".55"/></g>
+    <rect width="800" height="210" fill="url(#niCeu)"/>
+    <g opacity=".55" pointer-events="none">${[[120, 22], [136, 30], [152, 24], [168, 18], [106, 16]].map(([a, w]) => { const r = a * Math.PI / 180, d = w / 400, L = 760; return `<path d="M694 62 L${(694 + Math.cos(r - d) * L).toFixed(0)} ${(62 + Math.sin(r - d) * L).toFixed(0)} L${(694 + Math.cos(r + d) * L).toFixed(0)} ${(62 + Math.sin(r + d) * L).toFixed(0)}Z" fill="url(#niRaio)"/>`; }).join('')}</g>
+    <g id="ni-sol" class="toque"><circle cx="694" cy="62" r="78" fill="url(#niHalo)"/><circle cx="694" cy="62" r="28" fill="url(#niSolG)" stroke="#F2A81E" stroke-width="2"/><path d="M679 51 q8 -9 21 -9" stroke="#FFF8D8" stroke-width="4" fill="none" stroke-linecap="round"/></g>
+    <g class="deriva" style="animation-duration:40s">${nuvemBranca(470, 54, .8)}${nuvemBranca(580, 112, .55)}</g>
     <!-- planalto da Etiópia, longe -->
-    <path d="M0 150 C30 116 66 96 104 104 C134 80 176 74 210 94 C244 100 280 124 330 160 L334 184 H0Z" fill="url(#niMonteL)"/>
-    <path d="M0 184 C20 150 56 128 98 136 C130 118 170 118 204 134 C236 146 268 162 300 184Z" fill="url(#niMonte)" stroke="#3E7A6A" stroke-width="1.4"/>
-    <g fill="#3E7A62" opacity=".55">${Array.from({ length:18 }, () => { const x = R(20, 280), y = R(148, 178); return `<path d="${copa(x, y, R(6, 11), R(3, 5), 6, .3)}"/>`; }).join('')}</g>
-    <path d="M30 160 C60 146 90 144 120 150 M150 140 C180 138 210 146 236 160" stroke="#A8D0B0" stroke-width="2" fill="none" stroke-linecap="round" opacity=".6"/>
-    <path d="M0 184 C26 168 52 160 80 166 C100 158 124 160 140 172 L150 184Z" fill="url(#niMonteE)" opacity=".9"/>
-    <path id="ni-cascata" d="M176 132 C182 148 190 160 200 168 C214 176 232 180 250 182" stroke="#8ED0F0" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".75"/>
-    <!-- deserto e platô -->
-    <path d="M300 184 L312 166 H366 L374 158 H452 L462 168 H540 L552 154 H640 L650 162 H736 L748 150 H800 V190 H300Z" fill="url(#niPlato)" stroke="#B87A4E" stroke-width="1.2" stroke-linejoin="round"/>
-    <path d="M312 166 V184 M374 158 V184 M462 168 V184 M552 154 V184 M650 162 V184 M748 150 V184" stroke="#C88A5E" stroke-width="1.1" opacity=".8"/>
-    <path d="M312 167 H366 M374 159 H452 M552 155 H640 M748 151 H800" stroke="#FFE2C0" stroke-width="1.6" opacity=".8"/>
-    <rect y="150" width="800" height="40" fill="url(#niNevoa)"/>
-    <path d="M0 182 H800 V300 H0Z" fill="url(#niAreia)"/>
-    <path d="M0 214 C40 200 80 196 120 204 C150 196 176 192 200 194 C170 200 140 206 120 214 C80 206 40 210 0 222Z" fill="url(#niDuna)" opacity=".9"/>
-    <path d="M560 206 C610 196 660 200 700 208 C740 200 780 198 800 202 V214 C760 210 720 214 690 218 C650 212 600 212 560 206Z" fill="url(#niDuna)" opacity=".9"/>
-    <path d="M20 238 C40 230 70 228 96 232 M600 220 C640 214 680 216 720 222" stroke="#FFF0D0" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".8"/>
-    <!-- faixa verde do Nilo -->
-    <path id="ni-faixa" d="M0 262 C80 244 160 210 240 186 C320 190 430 205 520 220 C600 232 700 238 800 236 V500 H0Z" fill="url(#niVerde)"/>
-    <path d="M0 262 C80 244 160 210 240 186 C320 190 430 205 520 220 C600 232 700 238 800 236" stroke="#C8E890" stroke-width="2" fill="none" opacity=".8"/>
-    <g fill="#4E8E36" opacity=".55">${Array.from({ length:30 }, () => { const x = R(0, 800), y = R(300, 350); return `<path d="M${x.toFixed(0)} ${y.toFixed(0)} q2 -6 4 0 q2 -5 4 0" />`; }).join('')}</g>
-    <!-- arvoredo distante ao longo do rio -->
-    <g>${[[262, 192, .34], [300, 196, .4], [340, 200, .42], [380, 206, .46], [430, 214, .5], [540, 226, .52], [580, 232, .56], [620, 236, .6]].map(([x, y, s], i) => palmeira(x, y, 40 * s * 1.6, s, i % 2 ? '#5AA642' : '#4A9638', '#3E8030', i % 2 ? 1 : -1)).join('')}</g>
-    <rect y="176" width="800" height="78" fill="url(#niBruma)" pointer-events="none"/>
+    <path d="M0 132 L18 124 H44 L54 110 H92 L102 100 H146 L160 110 H196 L210 120 H242 C262 130 290 150 322 172 L326 196 H0Z" fill="url(#niMonteL)"/>
+    <path d="M44 124 L54 110 V132 L40 140Z M92 110 L102 100 V124 L88 128Z M196 110 L210 120 V140 L194 136Z" fill="#8A92B4" opacity=".5"/>
+    <path d="M18 124 H44 M54 110 H92 M102 100 H146 M160 110 H196 M210 120 H242" stroke="#ECEEF6" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+    <path d="M146 100 L160 110 L168 134 L150 130Z M242 120 C262 130 280 142 296 156 L270 156Z" fill="#C8CCDE" opacity=".6"/>
+    <g stroke="#9AA2C0" stroke-width="1" opacity=".55">${[[60, 116, 26], [110, 106, 30], [216, 126, 20]].map(([x, y, w]) => `<path d="M${x} ${y} h${w} M${x + 4} ${y + 6} h${w - 6}"/>`).join('')}</g>
+    <path d="M0 196 C24 162 60 144 100 150 C134 134 172 136 206 152 C236 164 266 180 296 196Z" fill="url(#niMonte)" stroke="#5E8A86" stroke-width="1.2"/>
+    <g fill="#5E8E7A" opacity=".45">${Array.from({ length:22 }, () => { const x = R(20, 280), y = R(156, 190); return `<path d="${copa(x, y, R(5, 10), R(2.6, 4.4), 6, .3)}"/>`; }).join('')}</g>
+    <path d="M30 168 C60 152 92 150 120 156 M150 146 C180 144 210 152 236 166" stroke="#D4E4D4" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".55"/>
+    <path id="ni-cascata" d="M176 140 C182 154 190 166 202 174 C220 184 262 190 298 191" stroke="#9AD6F0" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/>
+    <!-- deserto: dunas douradas e falésias de calcário -->
+    <rect y="186" width="800" height="120" fill="url(#niAreia)"/>
+    <path d="M440 198 L452 184 H520 L530 174 H600 L612 162 H700 L716 152 H800 V206 H440Z" fill="#EBC6AC" opacity=".8"/>
+    <path d="M512 246 C518 232 526 220 534 212 L544 201 C562 197 586 200 604 197 L614 190 L626 186 C650 183 676 188 700 184 L711 177 L722 172 C746 169 772 174 800 170 V254 H512Z" fill="url(#niFalesia)" stroke="#B07A62" stroke-width="1.3" stroke-linejoin="round"/>
+    <path d="M534 212 L544 201 C546 214 548 226 546 242 L530 244Z M614 190 L626 186 C628 200 630 214 628 238 L612 240 C614 222 616 206 614 190Z M711 177 L722 172 C724 190 726 210 722 236 L706 236 C710 214 712 196 711 177Z" fill="#C88672" opacity=".7"/>
+    <g fill="none" stroke-linecap="round">${[556, 572, 590, 640, 660, 684, 738, 758, 782].map((x, i) => { const y0 = x < 610 ? 200 : x < 705 ? 187 : 173; let d = `M${x} ${y0 + 2}`; for (let y = y0 + 8; y < 240; y += 8) d += ` L${(x + Math.sin(y * .3 + i) * .8).toFixed(1)} ${y}`; return `<path d="${d}" stroke="#C48A74" stroke-width="1.4" opacity=".75"/><path d="${d}" stroke="#FFEADC" stroke-width="1" opacity=".7" transform="translate(2 0)"/>`; }).join('')}</g>
+    <path d="M544 201 C562 197 586 200 604 197 M626 186 C650 183 676 188 700 184 M722 172 C746 169 772 174 800 170" stroke="#FFEFE2" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <g stroke="#D29C86" stroke-width="1" opacity=".7">${[210, 219, 228].map(y => `<path d="M${550 + (y - 200) * .1} ${y} h22 m8 0 h18 M${632} ${y - 8} h26 m6 0 h30 M${728} ${y - 14} h20 m10 0 h34"/>`).join('')}</g>
+    <path d="M500 250 C560 236 640 232 720 236 C760 236 790 238 800 240 V270 H500Z" fill="url(#niTalude)"/>
+    <path d="M0 236 C40 210 90 200 140 206 C180 200 230 194 300 194 L300 250 H0Z" fill="url(#niDuna)"/>
+    <path d="M140 206 C176 214 206 228 236 246 L140 246Z" fill="#D6A060" opacity=".45"/>
+    <path d="M10 228 C50 210 96 202 140 206" stroke="#FFF2CE" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M0 258 C34 240 80 232 130 236 C160 238 182 246 200 256 L0 270Z" fill="url(#niDuna2)"/>
+    <path d="M130 236 C160 240 184 250 204 262 L130 262Z" fill="#C88E50" opacity=".4"/><path d="M6 252 C40 238 90 232 130 236" stroke="#FFF2CE" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <g stroke="#E2B070" stroke-width="1.1" fill="none" stroke-linecap="round" opacity=".8">${Array.from({ length:16 }, () => { const x = R(10, 260), y = R(214, 258); return `<path d="M${x.toFixed(0)} ${y.toFixed(0)} q6 -2.4 12 0 t12 0"/>`; }).join('')}</g>
+    <!-- faixa verde do vale -->
+    <path id="ni-faixa" d="M0 272 C70 258 150 230 230 208 C262 200 282 194 298 192 L310 192 C380 198 460 214 540 236 C620 254 720 264 800 264 V500 H0Z" fill="url(#niVerde)"/>
+    <path d="M0 272 C70 258 150 230 230 208 C262 200 282 194 298 192 M310 192 C380 198 460 214 540 236 C620 254 720 264 800 264" stroke="#F2DCA0" stroke-width="3" fill="none"/>
+    <path d="M0 276 C70 262 150 234 230 212 M320 196 C390 202 460 218 540 240 C620 258 720 268 800 268" stroke="#3E7A2E" stroke-width="2" fill="none" opacity=".35"/>
+    <g>${faixasCampo(214, 400, 205, 3, 8, -5, ['#A8D06A', '#D4D47A', '#7CBA52', '#E6CC7E', '#94C860'])}</g>
+    <g>${faixasCampo(560, 800, 262, 2, 9, 6, ['#9CCB5A', '#D8CE78', '#78B64E', '#B8D46E'])}</g>
+    <g fill="#4E8E36" opacity=".5">${Array.from({ length:26 }, () => { const x = R(0, 800), y = R(310, 350); return `<path d="M${x.toFixed(0)} ${y.toFixed(0)} q2 -6 4 0 q2 -5 4 0"/>`; }).join('')}</g>
+    <!-- palmeirais em várias distâncias -->
+    <g>${[[300, 195, .2], [318, 197, .24], [336, 200, .26], [362, 204, .3], [390, 210, .34], [474, 218, .32], [498, 224, .36], [526, 232, .4], [552, 240, .44], [584, 248, .48]].map(([x, y, s], i) => palmeira(x, y, 40 * s * 1.6, s, i % 2 ? '#6AAE4E' : '#5AA046', '#4A8A3A', i % 2 ? 1 : -1)).join('')}</g>
+    <rect y="176" width="800" height="90" fill="url(#niBruma)" pointer-events="none"/>
+    <g>${[[612, 270, .56], [640, 276, .62], [668, 282, .66], [740, 280, .72], [776, 286, .82], [436, 232, .46], [456, 244, .52]].map(([x, y, s], i) => palmeira(x, y, 40 * s * 1.6, s, i % 2 ? '#5AA642' : '#4E9A3A', '#3E8030', i % 2 ? -1 : 1)).join('')}</g>
     <!-- rio -->
-    <path d="M246 181 C296 190 352 199 400 214 C450 230 490 262 500 300 C508 336 514 400 500 500 M700 500 C676 420 640 340 600 296 C560 254 480 222 422 206 C362 190 302 182 254 179" stroke="#8A6A44" stroke-width="9" fill="none" opacity=".55"/>
-    <path d="M246 181 C296 190 352 199 400 214 C450 230 490 262 500 300 C508 336 514 400 500 500 M700 500 C676 420 640 340 600 296 C560 254 480 222 422 206 C362 190 302 182 254 179" stroke="#D8BC88" stroke-width="5" fill="none"/>
-    <path id="ni-rio" d="${RIO}" fill="url(#niRio)" stroke="#1E5A7A" stroke-width="1.6"/>
+    <path d="${RIO_E} M${RIO_D.slice(1)}" stroke="#E2C48E" stroke-width="22" fill="none"/>
+    <path d="${RIO_E} M${RIO_D.slice(1)}" stroke="#6E4E34" stroke-width="13" fill="none"/>
+    <path d="${RIO_E} M${RIO_D.slice(1)}" stroke="#4A3222" stroke-width="7" fill="none"/>
+    <path d="${RIO_E} M${RIO_D.slice(1)}" stroke="#F6E2B8" stroke-width="23" fill="none" stroke-dasharray="1 9" stroke-linecap="round" opacity=".5"/>
+    <path id="ni-rio" d="${RIO}" fill="url(#niRio)" stroke="#1E5A7A" stroke-width="1.4"/>
     <g clip-path="url(#niRioC)" pointer-events="none">
-      <path d="M250 182 C300 190 360 198 412 212 C462 228 500 262 536 300 C572 346 590 420 600 500" stroke="#0E4A78" stroke-width="64" fill="none" opacity=".34" filter="url(#niDesf)"/>
-      <path d="${RIO}" fill="none" stroke="#D2F4FA" stroke-width="14" opacity=".55" filter="url(#niDesf)"/>
-      <g fill="#2E6A3A" opacity=".18">${[[470, 252, .5], [520, 300, .7], [610, 430, .9]].map(([x, y, k]) => `<path d="M${x} ${y} l${(-2 * k).toFixed(1)} ${(26 * k).toFixed(1)} M${x} ${y}" stroke="#2E5A2A" stroke-width="${(3 * k).toFixed(1)}"/><path d="${copa(x - 2 * k, y + 32 * k, 18 * k, 7 * k, 7, .45)}"/>`).join('')}</g>
-      <g fill="#FFFFFF" opacity=".22">${[[430, 214, 24], [492, 262, 30], [560, 360, 40], [610, 470, 50]].map(([x, y, w]) => `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="${(w * .12).toFixed(1)}"/>`).join('')}</g>
-      <path d="M444 223 q16 -5 32 -1 q-16 4 -32 1Z" fill="#E8CC94" stroke="#B08A58" stroke-width="1"/><path d="M448 222 q12 -3 24 -1" stroke="#FFF0CC" stroke-width="1" fill="none"/>
-      <path d="M624 377 q18 -7 40 -2 q-20 6 -40 2Z" fill="#E8CC94" stroke="#B08A58" stroke-width="1.2"/><path d="M630 375 q14 -4 28 -2" stroke="#FFF0CC" stroke-width="1.2" fill="none"/><g stroke="#4E8A30" stroke-width="1.2" stroke-linecap="round">${[636, 644, 652].map(x => `<path d="M${x} 376 l-1 -6 M${x + 2} 376 l2 -5"/>`).join('')}</g>
+      <path d="M220 160 L420 210 L560 300 L620 500" stroke="#CFEFFF" stroke-width="120" fill="none" opacity=".18" filter="url(#niDesf)"/>
+      <path d="M300 190 C360 198 420 214 470 236 C530 262 570 300 598 340 C622 376 640 430 650 500" stroke="#0E4A78" stroke-width="64" fill="none" opacity=".3" filter="url(#niDesf)"/>
+      <path d="${RIO}" fill="none" stroke="#D2F4FA" stroke-width="14" opacity=".5" filter="url(#niDesf)"/>
+      <g fill="#2E5A2A" opacity=".2" filter="url(#niDesf)">${[[600, 262, 30], [650, 292, 34], [700, 330, 30], [560, 244, 22]].map(([x, y, r]) => `<ellipse cx="${x - 24}" cy="${y + 14}" rx="${r}" ry="${(r * .35).toFixed(0)}"/>`).join('')}</g>
+      <path d="${RIO_E}" stroke="#4E3420" stroke-width="5" fill="none" opacity=".35"/><path d="M${RIO_D.slice(1)}" stroke="#4E3420" stroke-width="5" fill="none" opacity=".35"/>
+      <path d="M452 230 q16 -5 32 -1 q-16 4 -32 1Z" fill="#E8CC94" stroke="#B08A58" stroke-width="1"/><path d="M456 229 q12 -3 24 -1" stroke="#FFF0CC" stroke-width="1" fill="none"/>
+      <path d="M608 300 q18 -7 40 -2 q-20 6 -40 2Z" fill="#E8CC94" stroke="#B08A58" stroke-width="1.2"/><g stroke="#4E8A30" stroke-width="1.2" stroke-linecap="round">${[616, 624, 632].map(x => `<path d="M${x} 299 l-1 -6 M${x + 2} 299 l2 -5"/>`).join('')}</g>
     </g>
     <path id="ni-rio-cheia" d="${RIO}" fill="url(#niRioCheia)" style="opacity:0;transition:opacity 1.6s"/>
-    <g clip-path="url(#niRioC)" id="ni-reflexos">${[[300, 192, 20], [400, 214, 26], [470, 250, 30], [520, 300, 40], [540, 352, 50], [560, 420, 60], [590, 480, 70]].map(([x, y, w], i) => `<path class="brilha-agua" style="animation-delay:${(i * .4).toFixed(1)}s" d="M${x - w / 2} ${y} q${w / 4} -3 ${w / 2} 0 t${w / 2} 0" stroke="#E6F8FF" stroke-width="${(1 + i * .25).toFixed(1)}" fill="none" stroke-linecap="round"/>`).join('')}</g>
-    <path id="ni-centro" d="M250 182 C300 190 360 198 412 212 C462 228 500 262 536 300 C572 346 590 380 640 404" fill="none" stroke="none"/>
-    <g class="balanca" style="animation-duration:4.6s">${[[476, 262], [508, 340], [512, 372], [640, 340], [612, 300], [672, 410], [432, 222]].map(([x, y], i) => `<path d="M${x} ${y} q-3 -10 -7 -14 M${x + 2} ${y} q0 -12 1 -17 M${x + 4} ${y} q3 -8 8 -11" stroke="#2E6A22" stroke-width="${(2.4 + y / 200).toFixed(1)}" fill="none" stroke-linecap="round"/><path d="M${x} ${y} q-3 -10 -7 -14 M${x + 2} ${y} q0 -12 1 -17 M${x + 4} ${y} q3 -8 8 -11" stroke="#8ACB54" stroke-width="${(1 + y / 400).toFixed(1)}" fill="none" stroke-linecap="round"/>`).join('')}</g>
-    ${[[300, 193, .4], [404, 213, .5], [432, 223, .6], [478, 262, .8], [500, 324, 1], [636, 336, 1], [668, 404, 1.1]].map(([x, y, k]) => papiroMini(x, y, k)).join('')}
+    <g clip-path="url(#niRioC)" id="ni-reflexos">${[[330, 194, 16], [400, 212, 22], [470, 240, 30], [540, 284, 44], [560, 330, 60], [600, 400, 70], [640, 470, 80], [530, 446, 40], [580, 364, 36]].map(([x, y, w], i) => `<path class="brilha-agua" style="animation-delay:${(i * .37).toFixed(1)}s" d="M${x - w / 2} ${y} q${w / 4} -3 ${w / 2} 0 t${w / 2} 0" stroke="#F0FAFF" stroke-width="${(1 + i * .2).toFixed(1)}" fill="none" stroke-linecap="round"/>`).join('')}</g>
+    <path id="ni-centro" d="M300 190 C360 198 420 214 470 236 C530 262 570 300 598 340 C618 370 636 400 650 430" fill="none" stroke="none"/>
+    ${falucaLonge(352, 199, .13)}${falucaLonge(404, 210, .17)}
+    ${[[330, 194, .35], [372, 202, .4], [414, 216, .5], [452, 238, .6], [490, 272, .8], [508, 334, .9], [520, 228, .5], [562, 244, .6], [604, 266, .7], [648, 296, .85]].map(([x, y, k]) => papiroMini(x, y, k)).join('')}
     <!-- faluca (longe) -->
-    <g id="ni-faluca" class="toque" data-fig="faluca"><g id="ni-faluca-pos" transform="translate(490 238) scale(.42)"><g style="animation:flutua 3.4s ease-in-out infinite alternate">
-      <ellipse cx="0" cy="22" rx="74" ry="8" fill="#0E3A5A" opacity=".3"/>
+    <g id="ni-faluca" class="toque" data-fig="faluca"><g id="ni-faluca-pos" transform="translate(512 248) scale(.42)"><g style="animation:flutua 3.4s ease-in-out infinite alternate">
+      <ellipse cx="0" cy="24" rx="80" ry="9" fill="#0E3A5A" opacity=".3"/>
+      <g opacity=".35"><path d="M-60 34 C-30 40 40 40 70 32" stroke="#FFFFFF" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-40 42 C-10 46 30 46 50 40" stroke="#FFFFFF" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M20 32 L44 -60 L50 32Z" fill="#FFF6E2" opacity=".35"/></g>
+      <path d="M-74 10 L-90 30 L-84 32 L-70 16" fill="#6E4220" stroke="#3A2210" stroke-width="1.6" stroke-linejoin="round"/><path d="M-72 12 L-80 -2" stroke="#6E4220" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M-11 -58 L74 6 M-11 -58 L-70 8" stroke="#6A5A44" stroke-width="1" fill="none" opacity=".8"/>
       <path d="M-12 14 L-10 -60" stroke="#4E2E14" stroke-width="5" stroke-linecap="round"/>
       <path d="M-64 10 L36 -128" stroke="#4E2E14" stroke-width="4.6" stroke-linecap="round"/><path d="M-64 10 L36 -128" stroke="url(#niVara)" stroke-width="2.4" stroke-linecap="round"/>
       <g id="ni-vento" opacity="0" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linecap="round"><path d="M-150 -80 q20 -8 44 0 q14 5 26 0"/><path d="M-170 -40 q24 -8 50 0"/><path d="M-140 -2 q18 -6 40 0 q10 4 20 0"/></g>
@@ -172,71 +239,48 @@ function jogoNilo(palco, api){
       <path d="M36 -128 l18 -4 l-5 7 l6 4 l-19 0Z" fill="#E5392C" stroke="#8A1E14" stroke-width="1.2" stroke-linejoin="round"/>
       <path d="M-72 10 C-50 14 50 14 78 8 C72 22 56 30 34 30 H-40 C-58 30 -68 22 -72 10Z" fill="url(#niCasco)" stroke="#3A4A6A" stroke-width="2.2" stroke-linejoin="round"/>
       <path d="M-68 16 C-36 21 40 21 72 14" stroke="#2E7BF6" stroke-width="3.6" fill="none"/><path d="M-62 23 C-30 27 36 27 64 21" stroke="#FFC83D" stroke-width="2.4" fill="none"/>
-      <path d="M-74 10 C-50 13 50 13 80 7" stroke="#7A4A22" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <g fill="#E5392C" stroke="#8A1E14" stroke-width=".6">${[-52, -32, -12, 8, 28, 48].map(x => `<path d="M${x} 16 l5 7 l5 -7Z"/>`).join('')}</g><g fill="#FFFFFF" opacity=".9">${[-42, -22, -2, 18, 38].map(x => `<circle cx="${x + 5}" cy="19" r="1.4"/>`).join('')}</g>
+      <path d="M-74 10 C-50 13 50 13 80 7" stroke="#7A4A22" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M-70 8.6 C-50 11.4 50 11.4 76 5.6" stroke="#C88A50" stroke-width="1.2" fill="none" stroke-linecap="round"/>
       <g id="ni-carga"></g>
-      <g transform="translate(-48 4)"><path d="M-5 0 v-14 C-5 -20 5 -20 5 -14 V0Z" fill="#2E7BF6" stroke="#12235A" stroke-width="1.2"/><circle cx="0" cy="-22" r="5.6" fill="url(#niPele2)" stroke="#4E2A14" stroke-width="1.1"/><path d="M-5.6 -23 C-5 -30 5 -30 5.6 -23 C2 -26 -2 -26 -5.6 -23Z" fill="#2A1A10"/><circle cx="2" cy="-22" r=".9" fill="#12121A"/></g>
+      <g transform="translate(-48 4)"><path d="M-5 0 v-14 C-5 -20 5 -20 5 -14 V0Z" fill="#2E7BF6" stroke="#12235A" stroke-width="1.2"/><circle cx="0" cy="-22" r="5.6" fill="url(#niPele2)" stroke="#4E2A14" stroke-width="1.1"/><path d="M-5.6 -23 C-5 -30 5 -30 5.6 -23 C2 -26 -2 -26 -5.6 -23Z" fill="#2A1A10"/><circle cx="1" cy="-22" r=".9" fill="#12121A"/><circle cx="3.6" cy="-22" r=".9" fill="#12121A"/><path d="M.6 -19.4 q1.6 1.2 3.2 0" stroke="#4E2A14" stroke-width=".7" fill="none"/><path d="M5 -8 L14 -12" stroke="url(#niPele2)" stroke-width="3" stroke-linecap="round"/><path d="M-6 -27 C-6 -32 6 -32 6 -27Z" fill="#F6F2E8" stroke="#8A8270" stroke-width=".8"/></g>
       <rect x="-80" y="-130" width="150" height="160" fill="transparent"/>
-    </g></g>${'' }<g id="ni-faluca-hint">${brilhoHotspot(516, 196)}</g></g>
-    <!-- búfalo-d'água na margem -->
-    <g id="ni-bufalo" class="toque" style="display:none"><g transform="translate(600 322) scale(.7) translate(-590 -322)"><g id="ni-bufalo-in">
-      <ellipse cx="590" cy="318" rx="62" ry="9" fill="#164E7A" opacity=".35"/>
-      <path d="M566 312 C566 292 584 280 606 280 C630 280 650 292 652 312 C636 318 590 320 566 312Z" fill="url(#niBufalo)" stroke="#16141A" stroke-width="1.8"/>
-      <path d="M580 288 C592 282 610 282 624 286" stroke="#C8C2D4" stroke-width="3" fill="none" stroke-linecap="round" opacity=".75"/>
-      <path d="M600 284 C612 284 624 288 632 294" stroke="#FFFFFF" stroke-width="1.4" fill="none" stroke-linecap="round" opacity=".6"/>
-      <path d="M640 300 q6 4 8 10" stroke="#3E3A46" stroke-width="1.2" fill="none"/>
-      <g id="ni-buf-cab">
-        <path d="M546 286 C531 280 518 272 515 258 C514 250 520 246 525 249 C522 258 530 268 548 278Z" fill="url(#niChifre)" stroke="#3A2E24" stroke-width="1.3" stroke-linejoin="round"/>
-        <path d="M570 286 C585 280 598 272 601 258 C602 250 596 246 591 249 C594 258 586 268 568 278Z" fill="url(#niChifre)" stroke="#3A2E24" stroke-width="1.3" stroke-linejoin="round"/>
-        <path d="M519 255 l-3 -5 M597 255 l3 -5" stroke="#2A2018" stroke-width="2.6" stroke-linecap="round"/>
-        <path d="M545 293 C534 290 527 294 524 299 C532 302 540 300 547 298Z" fill="url(#niBufalo)" stroke="#16141A" stroke-width="1.2"/><path d="M542 295 C536 295 531 297 529 299" stroke="#B88A8A" stroke-width="1.4" fill="none"/>
-        <path d="M571 293 C582 290 589 294 592 299 C584 302 576 300 569 298Z" fill="url(#niBufalo)" stroke="#16141A" stroke-width="1.2"/><path d="M574 295 C580 295 585 297 587 299" stroke="#B88A8A" stroke-width="1.4" fill="none"/>
-        <path d="M546 280 C552 276 564 276 570 280 C576 288 574 304 570 314 C566 322 550 322 546 314 C542 304 540 288 546 280Z" fill="url(#niBufalo)" stroke="#16141A" stroke-width="1.6"/>
-        <path d="M550 282 C554 280 562 280 566 282" stroke="#9A94A6" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <ellipse cx="558" cy="314" rx="10.5" ry="7" fill="#8A8094" stroke="#16141A" stroke-width="1.3"/><ellipse cx="554" cy="314" rx="1.6" ry="1.2" fill="#2A2630"/><ellipse cx="562" cy="314" rx="1.6" ry="1.2" fill="#2A2630"/><path d="M553 309.6 q5 -2 10 0" stroke="#C8C0D0" stroke-width="1.2" fill="none"/>
-        <ellipse cx="551" cy="297" rx="3" ry="3.2" fill="#FFFFFF" stroke="#16141A" stroke-width=".8"/><circle cx="551.4" cy="297.6" r="2.1" fill="#140E10"/><circle cx="552.2" cy="296.6" r=".8" fill="#fff"/>
-        <ellipse cx="565" cy="297" rx="3" ry="3.2" fill="#FFFFFF" stroke="#16141A" stroke-width=".8"/><circle cx="565.4" cy="297.6" r="2.1" fill="#140E10"/><circle cx="566.2" cy="296.6" r=".8" fill="#fff"/>
-        <path d="M547 292 q4 -2 7 0 M561 292 q4 -2 7 0" stroke="#2A2630" stroke-width="1" fill="none"/>
-      </g>
-      <path d="M528 316 Q536 311 550 316 T578 316 T606 316 T634 316 T654 316 C668 318 666 328 648 330 L536 330 C516 328 516 318 528 316Z" fill="#3E9EC4" opacity=".9"/>
-      <path d="M522 316 Q536 311 550 316 T578 316 T606 316 T634 316 T660 316" stroke="#E6F8FF" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <g fill="none" stroke="#E6F8FF" stroke-linecap="round" opacity=".7"><ellipse cx="560" cy="321" rx="30" ry="4" stroke-width="1.2"/><ellipse cx="610" cy="322" rx="40" ry="5" stroke-width="1"/></g>
-    </g></g><rect x="540" y="268" width="104" height="58" fill="transparent"/></g>
-    <!-- nilômetro -->
+    </g></g>${'' }<g id="ni-faluca-hint">${brilhoHotspot(540, 206)}</g></g>
+    <!-- nilômetro: escada de pedra descendo para o rio -->
     <g id="ni-nilometro" class="toque">
-      <ellipse cx="744" cy="424" rx="70" ry="7" fill="#2A1A0A" opacity=".25"/>
-      <path d="M676 422 V236 H804 V422Z" fill="url(#niPedra)" stroke="#6E4A2A" stroke-width="1.8"/>
-      <path d="${BLOCOS}" stroke="#8A6440" stroke-width="1" fill="none" opacity=".55"/>
-      <path d="M676 422 V236" stroke="#F6E2C0" stroke-width="2" opacity=".7"/>
-      <path d="M690 416 V252 H790 V416Z" fill="url(#niPoco)" stroke="#5A3A1E" stroke-width="1.6"/>
+      ${ESCADA.fundo}
+      ${ESCADA.degraus}
       <g clip-path="url(#niPocoC)">
-        <path d="${BLOCOS2}" stroke="#2A1A0E" stroke-width="1" fill="none" opacity=".45"/>
-        ${ESCADA}
-        <g id="ni-poco-agua" style="transition:transform 2s ease-in-out"><rect id="ni-poco-cor" x="688" y="${NIVEIS[0]}" width="104" height="140" fill="#3E9EC4" opacity=".9" style="transition:fill 1.6s"/><path d="M688 ${NIVEIS[0]} h104" stroke="#FFFFFF" stroke-width="3"/><path d="M688 ${NIVEIS[0] + 3} h104" stroke="#1E4A6A" stroke-width="1" opacity=".4"/><path d="M696 ${NIVEIS[0] + 8} q6 -2 12 0 M726 ${NIVEIS[0] + 11} q6 -2 12 0 M708 ${NIVEIS[0] + 18} h20" stroke="#BFEAFF" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
-        <rect x="688" y="250" width="104" height="30" fill="url(#niSombraT)"/>
-        <rect x="688" y="250" width="12" height="170" fill="#140C06" opacity=".22"/>
+        <g id="ni-poco-agua" style="transition:transform 2s ease-in-out"><rect id="ni-poco-cor" x="640" y="${NIVEIS[0]}" width="200" height="140" fill="#3E9EC4" opacity=".86" style="transition:fill 1.6s"/><path d="M640 ${NIVEIS[0]} h200" stroke="#FFFFFF" stroke-width="2.4"/><path d="M700 ${NIVEIS[0] + 7} q8 -2 16 0 M744 ${NIVEIS[0] + 12} q8 -2 16 0 M770 ${NIVEIS[0] + 5} q8 -2 16 0" stroke="#CFEFFF" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
       </g>
-      <rect x="766" y="258" width="16" height="158" fill="url(#niColuna)" stroke="#5A3A1E" stroke-width="1.3"/>
-      <path d="M763 252 h22 v7 h-22Z" fill="#E8CCA0" stroke="#5A3A1E" stroke-width="1.2"/>
-      <path d="M769 262 V412" stroke="#FFF0D6" stroke-width="1.4" opacity=".8"/><path d="M780 262 V412" stroke="#6E4A2A" stroke-width="1.6" opacity=".5"/>
-      ${Array.from({ length:9 }, (_, i) => { const y = 270 + i * 17.4, L = i % 2 ? 7 : 14; return `<path d="M766 ${y.toFixed(1)} h${L}" stroke="#3E2410" stroke-width="1.8"/><path d="M766 ${(y + 1.6).toFixed(1)} h${L}" stroke="#FFF0D6" stroke-width="1" opacity=".8"/>${i % 2 ? '' : `<path d="M776 ${(y - 5).toFixed(1)} l2 3 l-2 3 l-2 -3Z" fill="none" stroke="#3E2410" stroke-width=".9"/>`}`; }).join('')}
-      <g>${[[NIVEIS[1], '#E5A23A'], [NIVEIS[2], '#7AC04A'], [NIVEIS[3], '#2E9E5A']].map(([y, c]) => `<path d="M764 ${y} l-7 -4.4 v8.8Z" fill="${c}" stroke="#4E2E14" stroke-width="1"/>`).join('')}</g>
-      <path d="M672 236 H808 V246 H672Z" fill="#E8CCA0" stroke="#6E4A2A" stroke-width="1.6"/><path d="M674 238 H806" stroke="#FFF4DE" stroke-width="2" stroke-linecap="round"/><path d="M700 236 V246 M736 236 V246 M772 236 V246" stroke="#8A6440" stroke-width="1"/>
-      <path d="M676 422 V400 C676 388 694 388 694 400 V422Z" fill="#2E6A8A" stroke="#5A3A1E" stroke-width="1.6"/><path d="M679 410 h12" stroke="#BFEAFF" stroke-width="1.2"/>
-      <g id="ni-nilo-hint" style="display:none">${brilhoHotspot(790, 262)}</g>
+      ${ESCADA.sombra}
+      ${ESCADA.mureta}
+      <path d="${(() => { let d = ''; for (let i = 0; i <= 10; i++) { const t = i / 10, p = EP(t), q = 34 - 26 * t; d += `${i ? 'L' : 'M'}${(p.xl - 1 - q * .35).toFixed(1)} ${(p.y + q).toFixed(1)} `; } return d; })()}" stroke="#E6F8FF" stroke-width="2" fill="none" stroke-linecap="round" opacity=".8"/>
+      <ellipse cx="685" cy="492" rx="18" ry="3.4" fill="#0E3A5A" opacity=".3"/>
+      <rect x="676" y="362" width="18" height="130" fill="url(#niColuna)" stroke="#5A3A1E" stroke-width="1.4"/>
+      <path d="M672 354 h26 v8 h-26Z" fill="#E8CCA0" stroke="#5A3A1E" stroke-width="1.3"/><path d="M674 356 h22" stroke="#FFF4DE" stroke-width="1.4"/>
+      <path d="M679.5 366 V488" stroke="#FFF0D6" stroke-width="1.6" opacity=".8"/><path d="M691 366 V488" stroke="#6E4A2A" stroke-width="1.8" opacity=".45"/>
+      ${Array.from({ length:9 }, (_, i) => { const y = 372 + i * 14, L = i % 2 ? 8 : 15; return `<path d="M676 ${y} h${L}" stroke="#3E2410" stroke-width="1.8"/><path d="M676 ${y + 1.6} h${L}" stroke="#FFF0D6" stroke-width="1" opacity=".85"/>${i % 2 ? '' : `<path d="M687 ${y - 5.4} l2 2.7 l-2 2.7 l-2 -2.7Z" fill="none" stroke="#3E2410" stroke-width=".9"/>`}`; }).join('')}
+      <path d="M676 488 q9 -3 18 0" stroke="#E6F8FF" stroke-width="1.6" fill="none"/>
+      <g>${[[NIVEIS[1], '#E5A23A'], [NIVEIS[2], '#7AC04A'], [NIVEIS[3], '#2E9E5A']].map(([y, c]) => `<path d="M674 ${y} l-8 -5 v10Z" fill="${c}" stroke="#4E2E14" stroke-width="1"/>`).join('')}</g>
+      <g id="ni-nilo-hint" style="display:none">${brilhoHotspot(790, 330)}</g>
     </g>
     <!-- vila de adobe -->
     <g id="ni-vila">
-      ${palmeira(36, 250, 70, .95, '#5AA642', '#3E8A30', 1)}${palmeira(150, 236, 62, .85, '#6AB448', '#4A9638', -1)}${palmeira(232, 226, 54, .75, '#5AA642', '#3E8A30', 1)}
-      <ellipse cx="300" cy="270" rx="26" ry="4" fill="#1E3A12" opacity=".25"/><path d="M296 270 C296 260 294 252 290 246 M298 262 C302 254 308 250 314 246" stroke="#5A3A1E" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M296 270 C296 260 294 252 290 246" stroke="#9A6A3E" stroke-width="2" fill="none" stroke-linecap="round"/>
-      <path d="${copa(300, 232, 32, 21, 12, .25)}" fill="#2E6A3A" stroke="#173A1E" stroke-width="1.6"/><path d="${copa(304, 226, 24, 15, 10, .25)}" fill="#4A8A4A" stroke="#1E4A26" stroke-width="1.1"/><path d="${copa(310, 220, 13, 8, 8, .3)}" fill="#7AB866"/>
-      <g fill="#C8A04A">${[[286, 236], [312, 238], [298, 244], [320, 228]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.8"/>`).join('')}</g>
-      <path d="M0 286 C60 272 160 268 280 272 C300 274 320 278 330 284 V296 H0Z" fill="#B48E5A" opacity=".55"/>
-      ${casa(10, 284, 46, 36, '#2E7BF6', '#F2C83A', '')}${toldo(4, 60, 254)}
-      ${casa(62, 278, 54, 44, '#1FA8A0', '#F2C83A', `<g transform="translate(104 228)"><path d="M0 6 v-6" stroke="#5A5A6A" stroke-width="1.4"/><ellipse cx="0" cy="-3" rx="7" ry="5" transform="rotate(-24)" fill="#F4F6FA" stroke="#5A6070" stroke-width="1.2"/><circle cx="2" cy="-6" r="1.2" fill="#5A6070"/></g>`)}
-      ${casa(124, 282, 42, 32, '#F2C83A', '#E5392C', `<g stroke="#8A6A2A" stroke-width="1.2" stroke-linecap="round"><path d="M130 249 l18 -4 M131 247 l18 -5 M132 250 l17 -3"/></g><path d="M128 250 q12 -8 24 -4 l-2 4Z" fill="#C8A85A" stroke="#7A5A22" stroke-width=".8"/>`)}
-      ${casa(172, 276, 58, 40, '#E5392C', '#1FA8A0', `${escadaTeto(212, 276, 40)}${varal(178, 210, 226)}`)}${zir(68, 286)}
-      <path d="M232 276 h38 v-14 h-38Z" fill="url(#niAdobe)" stroke="#8A5A32" stroke-width="1.4"/><path d="M234 264 h34" stroke="#F8DCB0" stroke-width="1.2"/>
-      <g id="ni-poupa" class="toque" transform="translate(252 262)"><g id="ni-poupa-in">
+      ${palmeira(34, 278, 92, 1.15, '#5AA642', '#3E8A30', 1)}${palmeira(148, 252, 76, .95, '#6AB448', '#4A9638', -1)}${palmeira(250, 246, 70, .85, '#5AA642', '#3E8A30', 1)}
+      <g>
+        ${casa(54, 252, 40, 26, '#2E7BF6', '#F2C83A', '')}${casa(98, 248, 34, 24, '#E5392C', '#1FA8A0', domo(115, 224, 9))}${casa(206, 250, 40, 26, '#1FA8A0', '#E5392C', '')}
+      </g>
+      <ellipse cx="300" cy="294" rx="36" ry="5" fill="#1E3A12" opacity=".25"/><path d="M296 294 C296 282 294 272 290 264 M298 284 C304 274 310 268 318 262" stroke="#5A3A1E" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M296 294 C296 282 294 272 290 264" stroke="#9A6A3E" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="${copa(300, 246, 38, 26, 13, .25)}" fill="#2E6A3A" stroke="#173A1E" stroke-width="1.6"/><path d="${copa(306, 238, 28, 18, 11, .25)}" fill="#4A8A4A" stroke="#1E4A26" stroke-width="1.1"/><path d="${copa(314, 230, 15, 9, 8, .3)}" fill="#7AB866"/>
+      <g fill="#C8A04A">${[[282, 252], [314, 254], [298, 260], [326, 242], [290, 238]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2"/>`).join('')}</g>
+      <path d="M0 304 C40 290 120 284 200 286 C262 288 312 294 344 304 V318 H0Z" fill="url(#niMonte2)"/><path d="M0 304 C40 290 120 284 200 286 C262 288 312 294 344 304" stroke="#E8C890" stroke-width="2" fill="none"/>
+      ${casa(2, 302, 64, 50, '#2E7BF6', '#F2C83A', domo(48, 252, 12))}${toldo(2, 64, 272)}
+      ${casa(74, 296, 76, 62, '#1FA8A0', '#F2C83A', `<g transform="translate(138 232)"><path d="M0 6 v-6" stroke="#5A5A6A" stroke-width="1.4"/><ellipse cx="0" cy="-3" rx="8" ry="5.6" transform="rotate(-24)" fill="#F4F6FA" stroke="#5A6070" stroke-width="1.2"/><circle cx="2" cy="-6" r="1.2" fill="#5A6070"/></g>${escadaTeto(126, 296, 62)}${varal(80, 116, 226)}`)}
+      ${pombal(166, 294, 86)}
+      ${casa(188, 300, 66, 48, '#E5392C', '#1FA8A0', `${domo(236, 252, 11)}<g stroke="#8A6A2A" stroke-width="1.3" stroke-linecap="round"><path d="M194 249 l20 -4 M195 247 l20 -5 M196 250 l19 -3"/></g><path d="M192 250 q14 -8 26 -4 l-2 4Z" fill="#C8A85A" stroke="#7A5A22" stroke-width=".8"/>`)}
+      <path d="M256 304 h46 v-16 h-46Z" fill="url(#niAdobe)" stroke="#8A5A32" stroke-width="1.4"/><path d="M258 290 h42" stroke="#F8DCB0" stroke-width="1.2"/><path d="M256 306 l-12 3 h46 l12 -3Z" fill="#3A2410" opacity=".18"/>
+      ${zir(70, 308)}
+      <g id="ni-poupa" class="toque" transform="translate(280 288)"><g id="ni-poupa-in">
         <g id="ni-crista" style="transform-origin:8px -12px;transition:transform .3s cubic-bezier(.3,1.6,.5,1);transform:scale(.55)"><path d="M6 -12 l-8 -10 l6 2 l-2 -9 l6 6 l2 -9 l3 8 l5 -7 l-1 9 l5 -3 l-6 12Z" fill="#F0A060" stroke="#7A3E14" stroke-width="1"/><path d="M-1 -21 l2 2 M3 -27 l1 3 M9 -28 l0 3 M14 -24 l-1 3" stroke="#1A1A22" stroke-width="2.2" stroke-linecap="round"/></g>
         <path d="M-12 0 C-12 -8 0 -10 6 -6 C10 -2 8 2 0 2 C-6 2 -10 2 -12 0Z" fill="#E8A070" stroke="#7A3E14" stroke-width="1.2"/>
         <path d="M-12 -2 C-16 -2 -20 0 -22 2 C-18 4 -14 2 -10 2Z" fill="#1A1A22"/>
@@ -244,21 +288,22 @@ function jogoNilo(palco, api){
         <circle cx="8" cy="-10" r="5" fill="#F0A870" stroke="#7A3E14" stroke-width="1.1"/><circle cx="9.6" cy="-11" r="1.4" fill="#12121A"/><circle cx="10" cy="-11.5" r=".5" fill="#fff"/>
         <path d="M12 -9 q8 2 12 8" stroke="#2A1A10" stroke-width="1.6" fill="none" stroke-linecap="round"/>
       </g><rect x="-24" y="-32" width="50" height="38" fill="transparent"/></g>
-      <g id="ni-arvore" class="toque"><rect x="268" y="206" width="66" height="50" fill="transparent"/></g>
-      <g id="ni-palmeira-alvo" class="toque"><rect x="128" y="160" width="50" height="40" fill="transparent"/></g>
+      <g id="ni-arvore" class="toque"><rect x="262" y="218" width="76" height="56" fill="transparent"/></g>
+      <g id="ni-palmeira-alvo" class="toque"><rect x="108" y="154" width="54" height="44" fill="transparent"/></g>
     </g>
     <!-- campos -->
     <g id="ni-campos">
+      ${CANT.map(c => `<path d="${cantPath(c, -9)}" fill="url(#niDique)" stroke="#5E3E1E" stroke-width="1.4" stroke-linejoin="round"/><path d="M${c[0] - 8} ${Y0 - 5} H${c[1] + 8}" stroke="#F6DCAC" stroke-width="2" stroke-linecap="round"/><path d="M${c[2] - 9} ${Y1 + 3.4} H${c[3] + 9}" stroke="#F2D8A8" stroke-width="1.6" stroke-linecap="round"/><path d="M${c[0] - 7} ${Y0 - 3} L${c[2] - 8} ${Y1 + 2}" stroke="#F8E2B8" stroke-width="1.2" opacity=".7"/>`).join('')}
+      <g fill="#7A5430" opacity=".55">${Array.from({ length:70 }, () => { const k = Math.floor(R(0, 3)), c = CANT[k], q = R(0, 1), y = Y0 - 4 + q * (Y1 - Y0 + 6); const xl = c[0] + (c[2] - c[0]) * q - 6, xr = c[1] + (c[3] - c[1]) * q + 6, x = R(0, 1) < .5 ? xl + R(-2, 1) : xr + R(-1, 2); return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${R(1, 2.2).toFixed(1)}" ry="${R(.6, 1.2).toFixed(1)}"/>`; }).join('')}</g>
       ${CANT.map((c, i) => `<g class="ni-cant" data-i="${i}">
-        <path d="${cantPath(c)}" fill="#8A6A3E" opacity=".6" transform="translate(0 3)"/>
         <path class="ni-seco" d="${cantPath(c)}" fill="url(#niSeco)" stroke="#9A7444" stroke-width="1.6"/>
         <g class="ni-seco" clip-path="url(#niCantC${i})">${sulcos(c, '#9A7040', 2.2, .5)}<g transform="translate(1.6 0)">${sulcos(c, '#FAE6B8', 1, .6)}</g>${rachas(c)}${torroes(c, '#D8B47A', '#8A6438', '#FAE8C0', 26)}</g>
         <g class="ni-lama" style="opacity:0;transition:opacity 2s"><path d="${cantPath(c)}" fill="url(#niLama)" stroke="#1E1410" stroke-width="1.6"/>${ondulas(c, '#5E4A3C', 1.3, .85)}<path d="${cantPath(c, 10)}" fill="none" stroke="#8A7A6E" stroke-width="1" opacity=".35"/><g clip-path="url(#niCantC${i})">${torroes(c, '#3A2C22', '#1A1210', '#9A8A7A', 18)}<path d="${cantPath(c)}" fill="url(#niReflexo)" opacity=".6"/></g><g fill="#C8B8A8" opacity=".22">${[[.3, .25], [.62, .5], [.22, .72], [.74, .86], [.5, .14], [.4, .55], [.82, .3]].map(([qx, qy]) => { const yy = Y0 + (Y1 - Y0) * qy, xl = c[0] + (c[2] - c[0]) * qy, xr = c[1] + (c[3] - c[1]) * qy, xx = xl + (xr - xl) * qx; return `<ellipse cx="${xx.toFixed(1)}" cy="${yy.toFixed(1)}" rx="${(5 + qy * 6).toFixed(1)}" ry="${(1.6 + qy).toFixed(1)}"/>`; }).join('')}</g></g>
         <g class="ni-molha" style="opacity:0;transition:opacity 1.4s"><path d="${cantPath(c)}" fill="url(#niMolhado)" stroke="#120C0A" stroke-width="1.6"/><path d="${cantPath(c, 6)}" fill="#5EA8D0" opacity=".28"/>${sulcos(c, '#8ED0F0', 1.6, .55)}<path d="${cantPath(c)}" fill="url(#niReflexo)"/><g fill="none" stroke="#E6F8FF" stroke-width="1.2" opacity=".55">${[[.3, .3], [.7, .55], [.45, .8]].map(([qx, qy]) => { const [x, y] = dentro(c, qx, qy); return `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(8 + qy * 8).toFixed(1)}" ry="${(2 + qy * 2).toFixed(1)}"/>`; }).join('')}</g></g>
         <g class="ni-brotos" style="opacity:0;transition:opacity 1s">${fileira(c, (x, y, s) => broto(x, y, s))}</g>
         <g class="ni-maduro" style="opacity:0;transition:opacity 2s"><path d="${cantPath(c)}" fill="${i === 0 ? 'url(#niOuro)' : 'url(#niVerdeC)'}" stroke="${i === 0 ? '#8A6A1E' : '#2E6A22'}" stroke-width="1.6" opacity=".9"/>${fileira(c, (x, y, s) => MADURO[i](x, y, s))}</g>
+        <path d="M${c[2]} ${Y1} L${c[0]} ${Y0} L${c[1]} ${Y0}" clip-path="url(#niCantC${i})" stroke="#2A1808" stroke-width="7" fill="none" opacity=".22"/>
       </g>`).join('')}
-      ${CANT.map(c => `<path d="${cantPath(c)}" fill="none" stroke="#9A7444" stroke-width="7" stroke-linejoin="round"/><path d="${cantPath(c)}" fill="none" stroke="#D8B47E" stroke-width="3.6" stroke-linejoin="round"/><path d="M${c[2] + 4} ${Y1 + 1} H${c[3] - 4}" stroke="#F2D8A8" stroke-width="1.4" stroke-linecap="round"/>`).join('')}
       <g stroke="#4E8A30" stroke-width="1.3" fill="none" stroke-linecap="round">${CANT.map(c => Array.from({ length:7 }, (_, k) => { const x = c[0] + 8 + k * (c[1] - c[0] - 16) / 6; return `<path d="M${x.toFixed(0)} ${Y0 - 1} q-1 -5 -4 -7 M${(x + 2).toFixed(0)} ${Y0 - 1} q1 -6 3 -8"/>`; }).join('')).join('')}</g>
       <g>${[[140, 430], [282, 440], [470, 470], [12, 400]].map(([x, y]) => `<path d="M${x} ${y} q-2 -8 -6 -12 M${x + 2} ${y} q0 -10 2 -14 M${x + 4} ${y} q3 -6 7 -9" stroke="#5E9E3A" stroke-width="1.6" fill="none" stroke-linecap="round"/>`).join('')}</g>
       <path d="M0 492 C120 488 300 490 470 494 L470 500 H0Z" fill="#7AA84A"/><g stroke="#4E8A30" stroke-width="1.4" fill="none" stroke-linecap="round">${Array.from({ length:26 }, (_, k) => { const x = 6 + k * 18 + R(-4, 4); return `<path d="M${x.toFixed(0)} 500 q-1 -6 -4 -9 M${(x + 3).toFixed(0)} 500 q1 -7 3 -10"/>`; }).join('')}</g>
@@ -321,7 +366,7 @@ function jogoNilo(palco, api){
         <rect x="${PIV.x + 10}" y="${PIV.y - 14}" width="${L1 - 4}" height="28" fill="transparent"/>
       </g>
       <g id="ni-agricultor" class="toque" style="opacity:0;transition:opacity 1s" transform="translate(${FX} ${FY}) scale(${FK})">
-        <ellipse cx="0" cy="0" rx="20" ry="4" fill="#164E7A" opacity=".35"/>
+        <path d="M-4 0 L22 -6 L30 -4 L6 2Z" fill="#2A1A0A" opacity=".2"/><ellipse cx="0" cy="0" rx="14" ry="3" fill="#2A1A0A" opacity=".3"/>
         <path d="M-5 -2 v-10 M5 -2 v-10" stroke="#8A5530" stroke-width="4.4" stroke-linecap="round"/>
         <path d="M-12 -44 C-15 -34 -17 -22 -16 -10 C-6 -7 6 -7 16 -10 C17 -22 15 -34 12 -44 C6 -48 -6 -48 -12 -44Z" fill="url(#niGalab)" stroke="#2E4A6E" stroke-width="1.4" stroke-linejoin="round"/>
         <path d="M-6 -40 C-8 -30 -9 -20 -9 -10 M4 -38 C5 -28 6 -20 7 -10 M-1 -30 C-1 -22 0 -16 0 -9" stroke="#4E78A8" stroke-width="1.1" fill="none" opacity=".7"/>
@@ -329,7 +374,7 @@ function jogoNilo(palco, api){
         <path d="M-4 -46 L0 -38 L4 -46" fill="#7AA8D4" stroke="#2E4A6E" stroke-width="1"/>
         <path d="M-11 -42 C-17 -34 -18 -26 -15 -20" stroke="#2E4A6E" stroke-width="7.4" fill="none" stroke-linecap="round"/><path d="M-11 -42 C-17 -34 -18 -26 -15 -20" stroke="#8CB8E0" stroke-width="5.2" fill="none" stroke-linecap="round"/>
         <ellipse cx="-14.6" cy="-18.4" rx="2.8" ry="3.2" fill="url(#niPele1)" stroke="#4E2A14" stroke-width=".9"/>
-        <path d="M-18 -4 Q-9 -8 0 -5 T18 -4 L20 2 L-20 2Z" fill="#3E9EC4" opacity=".92"/><path d="M-18 -4 Q-9 -8 0 -5 T18 -4" stroke="#E6F8FF" stroke-width="1.4" fill="none"/>
+        <path d="M-9 -1 h6 M3 -1 h6" stroke="#6E4020" stroke-width="2.6" stroke-linecap="round"/>
         <path id="ni-agr-braco" d="M9 -42 L18 -60" stroke="#2E4A6E" stroke-width="7.4" fill="none" stroke-linecap="round"/><path id="ni-agr-braco2" d="M9 -42 L18 -60" stroke="#8CB8E0" stroke-width="5.2" fill="none" stroke-linecap="round"/>
         <ellipse id="ni-agr-mao" cx="18" cy="-60" rx="3" ry="3.3" fill="url(#niPele1)" stroke="#4E2A14" stroke-width=".9"/>
         <path d="M-3.6 -48 v-4 h7.2 v4Z" fill="#8A5530"/>
@@ -344,7 +389,7 @@ function jogoNilo(palco, api){
         <path d="M-4.4 -51 C-2 -52.4 2 -52.4 4.4 -51 C2 -50 -2 -50 -4.4 -51Z" fill="#2A1A10"/>
         <path d="M-3 -49 q3 2.2 6 0" stroke="#6E2A10" stroke-width="1" fill="none" stroke-linecap="round"/>
         <ellipse cx="-5.4" cy="-51.6" rx="1.8" ry="1" fill="#E07A5A" opacity=".35"/><ellipse cx="5.4" cy="-51.6" rx="1.8" ry="1" fill="#E07A5A" opacity=".35"/>
-        <rect x="-22" y="-74" width="48" height="78" fill="transparent"/>
+        <rect x="-14" y="-70" width="28" height="72" fill="transparent"/>
       </g>
       <g id="ni-balde" class="toque" style="cursor:grab"><g id="ni-balde-in">
         <path d="M0 0 V${CORDA}" stroke="#8A6A3E" stroke-width="1.6"/>
@@ -362,16 +407,14 @@ function jogoNilo(palco, api){
     <rect id="ni-agua-toque" x="552" y="336" width="96" height="48" fill="transparent" class="toque"/>
     <!-- Nuri, o martim-pescador -->
     <g id="ni-nuri" class="toque" data-fig="martim">
-      <path d="M740 500 V452" stroke="#4E3018" stroke-width="10" stroke-linecap="round"/><path d="M740 500 V452" stroke="#A8784A" stroke-width="6" stroke-linecap="round"/><path d="M737 456 V496" stroke="#D8A878" stroke-width="1.4"/>
-      <ellipse cx="740" cy="452" rx="5" ry="2" fill="#7A5434" stroke="#4E3018" stroke-width="1"/>
-      <g id="ni-nuri-pos"><g id="ni-nuri-in"><g style="animation:flutua 2.8s ease-in-out infinite alternate"><svg x="700" y="388" width="86" height="72" viewBox="0 0 120 100"><use href="#f-martim"/></svg></g></g></g>
-      ${brilhoHotspot(782, 398)}
-      <rect x="700" y="384" width="90" height="116" fill="transparent"/>
+      <g id="ni-nuri-pos"><g id="ni-nuri-in"><g style="animation:flutua 2.8s ease-in-out infinite alternate"><svg x="639" y="292" width="86" height="72" viewBox="0 0 120 100"><use href="#f-martim"/></svg></g></g></g>
+      ${brilhoHotspot(722, 300)}
+      <rect x="641" y="292" width="84" height="64" fill="transparent"/>
     </g>
     <!-- nuvens de chuva sobre as montanhas -->
-    ${NUV.map((n, i) => `<g class="ni-nuvem toque" data-i="${i}"><g transform="translate(${n.x} ${n.y}) scale(${n.s})"><g class="ni-nuv-in" style="animation:flutua ${(3 + i * .5).toFixed(1)}s ease-in-out infinite alternate">
-      <use href="#nuvem" x="-56" y="-30" width="112" height="56" style="color:#8E9AB0"/><use href="#nuvem" x="-52" y="-32" width="104" height="50" class="ni-nuv-cor" style="color:#EEF2F8;transition:color 1s"/>
-      <path d="M-34 -14 q10 -8 22 -5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/>
+    ${NUV.map((n, i) => `<g class="ni-nuvem toque" data-i="${i}"><g transform="translate(${n.x} ${n.y}) scale(${n.s})">
+      <path class="ni-veu" d="M-44 24 C-46 60 -54 90 -60 ${(196 - n.y) / n.s} H52 C46 90 42 60 40 24Z" fill="url(#niVeu)" style="opacity:0;transition:opacity 1s" pointer-events="none"/>
+      <g class="ni-nuv-in" style="animation:flutua ${(3 + i * .5).toFixed(1)}s ease-in-out infinite alternate">${nuvemVol()}
       <g class="ni-nuv-hint">${brilhoHotspot(40, -26)}</g></g>
       <rect x="-60" y="-36" width="120" height="66" fill="transparent"/></g></g>`).join('')}
     <!-- primeiro plano -->
@@ -382,7 +425,8 @@ function jogoNilo(palco, api){
     ${papiroMini(26, 504, 1.9)}
     <g class="balanca" style="animation-duration:5.2s">${[[804, -10, 74, 12], [798, -22, 58, 10]].map(([x, dx, h, w]) => `<path d="M${x} 502 C${x + dx * .3} ${502 - h * .5} ${x + dx * .7} ${502 - h * .85} ${x + dx} ${502 - h} C${x + dx * .6 - w * .4} ${502 - h * .75} ${x - w} ${502 - h * .4} ${x - w} 502Z" fill="url(#niFolha)" stroke="#1E4A16" stroke-width="1.6" stroke-linejoin="round"/>`).join('')}</g>
     <g id="ni-mao" pointer-events="none"><g class="mao-dica"><circle cx="168" cy="96" r="14" fill="#fff" opacity=".35"/><path d="M160 104 C160 92 164 86 168 86 C172 86 172 92 172 96 L178 96 C184 96 186 102 184 110 L180 120 H164 Z" fill="#FFF4E6" stroke="#5A3A2A" stroke-width="2" stroke-linejoin="round"/></g></g>
-    <rect width="800" height="500" fill="url(#niVinheta)" pointer-events="none"/><rect width="800" height="500" filter="url(#niGrao)" pointer-events="none"/>
+    ${papiroMini(774, 506, 1.7)}
+    <rect width="800" height="500" fill="url(#niLuz)" pointer-events="none"/><rect width="800" height="500" fill="url(#niVinheta)" pointer-events="none"/><rect width="800" height="500" filter="url(#niGrao)" pointer-events="none"/>
   </svg>`;
   const c = criarCena(palco, svg), s = c.svg;
   const mao = el(s, '#ni-mao');
@@ -416,7 +460,7 @@ function jogoNilo(palco, api){
     if (fase !== 'cheia' || usadas[i]) { if (fase !== 'cheia') { toca('clique'); api.diz('Lá longe, nas montanhas da Etiópia, chove muito no verão.'); } return; }
     usadas[i] = true; mao.style.display = 'none'; chegando++;
     const n = NUV[i], g = nuvens[i];
-    el(g, '.ni-nuv-cor').style.color = '#9AA6BC'; el(g, '.ni-nuv-hint').style.display = 'none';
+    el(g, '.ni-nuv-esc').style.opacity = .55; const veu = el(g, '.ni-veu'); veu.style.opacity = 1; depois(3600, () => veu.style.opacity = .25); el(g, '.ni-nuv-hint').style.display = 'none';
     g.animate([{ transform:'translate(0,0)' }, { transform:'translate(0,6px)' }, { transform:'translate(0,0)' }], { duration:500 });
     toca('chuva'); c.chover(n.x - 44, n.x + 40, n.y + 18, 170, 46, '#4A86E0');
     const cas = el(s, '#ni-cascata'); cas.animate([{ strokeWidth:2.4, opacity:.75 }, { strokeWidth:6, opacity:1 }, { strokeWidth:2.4, opacity:.75 }], { duration:3400 });
@@ -429,8 +473,8 @@ function jogoNilo(palco, api){
     el(s, '#ni-poco-cor').style.fill = '#B0784A';
     el(s, '#ni-rio-cheia').style.opacity = (.3 + nivel * .22).toFixed(2);
     el(s, '#ni-cheia').style.opacity = [0, .35, .66, 1][nivel];
-    for (let k = 0; k < 4; k++) c.add({ tipo:'respingo', x:700 + k * 22, y:NIVEIS[nivel], t:k * 2, cor:'#E8C8A0' });
-    c.brilhos(718, NIVEIS[nivel] - 8, 5, '#FFE27A');
+    const pN = EP((NIVEIS[nivel] - 300) / 196); for (let k = 0; k < 4; k++) c.add({ tipo:'respingo', x:pN.xl + (pN.xr - pN.xl) * (k + .5) / 4, y:NIVEIS[nivel], t:k * 2, cor:'#E8C8A0' });
+    c.brilhos((pN.xl + pN.xr) / 2, NIVEIS[nivel] - 8, 5, '#FFE27A');
     api.hud(`<span class="chip">Cheia: ${nivel}/3</span>`);
     if (nivel === 2) api.diz('O rio está subindo! A escada com marcas é o nilômetro: ela mede a cheia.');
     if (nivel === 3) { toca('vitoria'); api.diz('Cheia boa! A água cobre os campos e traz lama do alto das montanhas.'); depois(5200, baixa); }
@@ -460,8 +504,8 @@ function jogoNilo(palco, api){
     const tx = PIV.x + yaw * Math.cos(r) * L1, ty = PIV.y + Math.sin(r) * L1;
     balde.setAttribute('transform', `translate(${tx.toFixed(1)} ${ty.toFixed(1)})`);
     baldeIn.setAttribute('transform', inc ? `rotate(${inc.toFixed(1)} 0 ${CORDA})` : '');
-    let hx, hy; if (yaw > .9) { hx = tx - 4; hy = ty + 24; } else { hx = FX + 18 * FK; hy = FY - 28 * FK; }
-    let lx = (hx - FX) / FK - 9, ly = (hy - FY) / FK + 42; const LL = Math.hypot(lx, ly), MX = 30; if (LL > MX) { lx *= MX / LL; ly *= MX / LL; }
+    let hx, hy; if (yaw > .9) { hx = PIV.x + 66 * Math.cos(r); hy = PIV.y + 66 * Math.sin(r); } else { hx = FX + 18 * FK; hy = FY - 28 * FK; }
+    let lx = (hx - FX) / FK - 9, ly = (hy - FY) / FK + 42; const LL = Math.hypot(lx, ly), MX = 34; if (LL > MX) { lx *= MX / LL; ly *= MX / LL; }
     const dB = `M9 -42 L${(9 + lx).toFixed(1)} ${(-42 + ly).toFixed(1)}`; braco.setAttribute('d', dB); braco2.setAttribute('d', dB); maoA.setAttribute('cx', (9 + lx).toFixed(1)); maoA.setAttribute('cy', (-42 + ly).toFixed(1));
   }
   poeVara();
@@ -535,7 +579,7 @@ function jogoNilo(palco, api){
   });
   /* ---------- 3. colheita: levar até a faluca ---------- */
   const fpos = el(s, '#ni-faluca-pos');
-  let fx = 490, fy = 238, fe = .42;
+  let fx = 512, fy = 248, fe = .42;
   const poeFaluca = () => fpos.setAttribute('transform', `translate(${fx.toFixed(1)} ${fy.toFixed(1)}) scale(${fe.toFixed(3)})`);
   function comecaColheita(){
     fase = 'colheita'; api.hud('<span class="chip">Colheita: 0/3</span>');
@@ -595,8 +639,8 @@ function jogoNilo(palco, api){
   el(s, '#ni-nuri').addEventListener('click', () => {
     if (nuriOcupado) return; nuriOcupado = true; const np = el(s, '#ni-nuri-pos');
     [2400, 2800, 2400, 3000].forEach((f, i) => setTimeout(() => somOn && tom(f, 0, .08, 'square', .03, f * 1.1), i * 120));
-    const a = np.animate([{ transform:'translate(0,0)' }, { transform:'translate(-90px,-60px)' }, { transform:'translate(-96px,-64px)' }, { transform:'translate(-90px,-60px)' }, { transform:'translate(-100px,10px)' }, { transform:'translate(-100px,10px)' }, { transform:'translate(0,0)' }], { duration:3200, easing:'ease-in-out' });
-    depois(1900, () => { toca('splash'); for (let k = 0; k < 6; k++) c.add({ tipo:'respingo', x:650 + sorte(-10, 10), y:462, t:k, cor:'#E6F6FF' }); });
+    const a = np.animate([{ transform:'translate(0,0)' }, { transform:'translate(-28px,-34px)' }, { transform:'translate(-32px,-38px)' }, { transform:'translate(-28px,-34px)' }, { transform:'translate(-85px,112px)' }, { transform:'translate(-85px,112px)' }, { transform:'translate(0,0)' }], { duration:3200, easing:'ease-in-out' });
+    depois(1900, () => { toca('splash'); for (let k = 0; k < 6; k++) c.add({ tipo:'respingo', x:600 + sorte(-10, 10), y:440, t:k, cor:'#E6F6FF' }); });
     a.onfinish = () => { nuriOcupado = false; };
     api.diz(fase === 'cheia' && nivel === 0 ? 'Eu sou o Nuri! Toque nas nuvens das montanhas lá longe.' : 'Eu bato as asas parado no ar e mergulho de bico para pegar peixinhos!');
   });
@@ -635,13 +679,6 @@ function jogoNilo(palco, api){
   el(s, '#ni-zir').addEventListener('click', e => { e.stopPropagation(); toca('glub'); const g = el(s, '#ni-zir-gota');
     g.animate([{ opacity:1, transform:'translateY(0)' }, { opacity:1, transform:'translateY(8px)' }, { opacity:0, transform:'translateY(10px)' }], { duration:900, iterations:2 });
     api.diz('Este pote de barro é o zir. A água passa devagar pelo barro e evapora por fora, e isso deixa a água de dentro fresquinha!'); });
-  /* búfalo bufa */
-  let bufOcupado = false;
-  el(s, '#ni-bufalo').addEventListener('click', e => { e.stopPropagation(); if (bufOcupado) return; bufOcupado = true;
-    somOn && tom(110, 0, .5, 'sawtooth', .05, 70); const cab = el(s, '#ni-buf-cab');
-    cab.animate([{ transform:'translate(0,0)' }, { transform:'translate(-2px,-6px)' }, { transform:'translate(0,0)' }], { duration:900 }).onfinish = () => bufOcupado = false;
-    for (let k = 0; k < 6; k++) c.add({ tipo:'bolha', x:570 + sorte(-5, 5), y:322, vy:sorte(.4, 1), r:sorte(1.5, 3), topo:302, f:sorte(0, 6) });
-    api.diz('O búfalo-d\'água adora se refrescar no rio. Ele ajuda no trabalho do campo.'); });
   /* garças-vaqueiras voam */
   let garOcupadas = false;
   el(s, '#ni-garcas').addEventListener('click', e => { e.stopPropagation(); if (garOcupadas) return; garOcupadas = true;
@@ -659,7 +696,7 @@ function jogoNilo(palco, api){
     api.diz('Oi! Meu avô lembra das cheias. Hoje uma grande represa controla o rio, e a água vai pelos canais.'); });
   /* tâmaras caem */
   el(s, '#ni-palmeira-alvo').addEventListener('click', e => { e.stopPropagation(); toca('pop');
-    for (let k = 0; k < 4; k++) c.add({ tipo:'semente', x:152 + sorte(-8, 8), y:180 + sorte(-4, 4), vy:sorte(-1, 0), alvoY:232 + sorte(-2, 2) });
+    for (let k = 0; k < 4; k++) c.add({ tipo:'semente', x:146 + sorte(-8, 8), y:184 + sorte(-4, 4), vy:sorte(-1, 0), alvoY:250 + sorte(-2, 2) });
     api.diz('Tâmaras! As tamareiras crescem bem no calor, perto da água do rio.'); });
   el(s, '#ni-agricultor').addEventListener('click', e => { e.stopPropagation(); if (fase === 'shaduf') return; toca('pop'); api.diz('O agricultor conhece o rio e sabe a hora certa de plantar e colher.'); });
   el(s, '#ni-sol').addEventListener('click', e => { e.stopPropagation(); toca('ok'); c.brilhos(694, 62, 6, '#FFE27A'); api.diz('No Egito quase nunca chove. O sol é forte e o deserto é seco.'); });
