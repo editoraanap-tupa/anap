@@ -2,7 +2,7 @@
 
 Aplicativo de jogos educativos sobre a água para crianças de até 12 anos, da **ANAP – Associação Amigos da Natureza da Alta Paulista**.
 
-O Pingo, uma gotinha, viaja pelo planeta em 21 paradas: Amazônia, Caatinga, Vilas sobre a água, Pantanal, Cerrado, Mata Atlântica, Pampa, Oceano, Antártica, Andes e Himalaia, Desertos, Grandes Lagos, Terra dos diques, Rio Nilo (Egito), Qanats (Irã), Poços de degraus (Índia), Dujiangyan (China), Terraços de Bali (Indonésia), Terra dos Inuit (Ártico), Chinampas (México) e De volta para casa. Em cada parada a criança toca, arrasta e descobre como a água se move e como cuidar dela.
+O Pingo, uma gotinha, viaja pelo planeta em 28 paradas: Amazônia, Caatinga, Vilas sobre a água, Pantanal, Cerrado, Mata Atlântica, Pampa, Oceano, Antártica, Andes e Himalaia, Desertos, Grandes Lagos, Terra dos diques; povos do mundo: Rio Nilo (Egito), Qanats (Irã), Poços de degraus (Índia), Dujiangyan (China), Terraços de Bali (Indonésia), Terra dos Inuit (Ártico), Chinampas (México); povos do Brasil: Lagos do pirarucu (ribeirinhos do Amazonas), Sementes do Xingu, Kalunga, Velho Chico, Marisqueiras do mangue, Caiçaras, Kaingang (Alta Paulista); e De volta para casa. Em cada parada a criança toca, arrasta e descobre como a água se move e como cuidar dela.
 
 ## Como abrir
 

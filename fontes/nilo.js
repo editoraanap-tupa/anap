@@ -178,7 +178,7 @@ function jogoNilo(palco, api){
       <rect x="-80" y="-130" width="150" height="160" fill="transparent"/>
     </g></g>${'' }<g id="ni-faluca-hint">${brilhoHotspot(516, 196)}</g></g>
     <!-- búfalo-d'água na margem -->
-    <g id="ni-bufalo" class="toque"><g transform="translate(600 322) scale(.7) translate(-590 -322)"><g id="ni-bufalo-in">
+    <g id="ni-bufalo" class="toque" style="display:none"><g transform="translate(600 322) scale(.7) translate(-590 -322)"><g id="ni-bufalo-in">
       <ellipse cx="590" cy="318" rx="62" ry="9" fill="#164E7A" opacity=".35"/>
       <path d="M566 312 C566 292 584 280 606 280 C630 280 650 292 652 312 C636 318 590 320 566 312Z" fill="url(#niBufalo)" stroke="#16141A" stroke-width="1.8"/>
       <path d="M580 288 C592 282 610 282 624 286" stroke="#C8C2D4" stroke-width="3" fill="none" stroke-linecap="round" opacity=".75"/>
